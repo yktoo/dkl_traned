@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.16 2004-11-14 14:11:30 dale Exp $
+//  $Id: ConsVars.pas,v 1.17 2004-11-27 12:38:08 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -211,8 +211,8 @@ const
 
   SAppProductSID                   = 'dktraned';
   SAppCaption                      = 'DKLang Translation Editor';
-  SAppVersion                      = 'v2.3';
-  SAppVersionSID                   = '2.3';
+  SAppVersion                      = 'v2.4';
+  SAppVersionSID                   = '2.4';
   SAppEmail                        = 'devtools@narod.ru';
 
   SRepositoryFileHeader            = SAppCaption+' '+SAppVersion+' Translation Repository File';
@@ -286,6 +286,10 @@ const
   iiFind                           = 20;
   iiFindNext                       = 21;
   iiReplace                        = 22;
+  iiBookmark                       = 23;
+  iiBookmarkAdd                    = 24;
+  iiBookmarkDelete                 = 25;
+  iiBookmarkJump                   = 26;
 
 var
    // Main tree code page
@@ -332,6 +336,8 @@ var
   function  GetCBObject(ComboBox: TComboBox): Integer;
    // Activates specified VT node if possible
   procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView, bCenter: Boolean);
+   // Returns a root VT node with specified index; nil if no such node
+  function  FindVTNodeByIndex(Tree: TBaseVirtualTree; iIndex: Integer): PVirtualNode;
    // Enables or disables the given control and changes its color for clBtnFace (for disabled) or clWindow (otherwise)
   procedure EnableWndCtl(Ctl: TWinControl; bEnable: Boolean);
    // Font to string and back conversion
@@ -452,11 +458,27 @@ uses TypInfo, Forms, Dialogs;
     Tree.BeginUpdate;
     try
       Tree.ClearSelection;
-      Tree.FocusedNode := Node;
       Tree.Selected[Node] := True;
+      Tree.FocusedNode := Node;
       if bScrollIntoView and (Node<>nil) then Tree.ScrollIntoView(Node, bCenter, False);
     finally
       Tree.EndUpdate;
+    end;
+  end;
+
+type
+  TVTHack = class(TBaseVirtualTree);
+
+  function FindVTNodeByIndex(Tree: TBaseVirtualTree; iIndex: Integer): PVirtualNode;
+  begin
+    if (iIndex<0) or (Cardinal(iIndex)>=TVTHack(Tree).RootNodeCount) then
+      Result := nil
+    else begin
+      Result := Tree.GetFirst;
+      while (Result<>nil) and (iIndex>0) do begin
+        Dec(iIndex);
+        Result := Tree.GetNextSibling(Result);
+      end;
     end;
   end;
 

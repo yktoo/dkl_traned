@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.7 2004-11-14 14:11:30 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.8 2004-11-27 12:38:08 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -61,7 +61,7 @@ smView.Caption=00000005,&View
 iToggleToolbar.Caption=00000006,&Toolbar
 iToggleToolbar.Hint=00000007,Show/hide the toolbar
 iToggleCurSrcEntry.Caption=00000008,Current so&urce entry
-iToggleCurSrcEntry.Hint=00000009,Show/hide the Current Entry panel
+iToggleCurSrcEntry.Hint=00000009,Show/hide the Current Source Entry panel
 iToggleStatusBar.Caption=00000010,&Status bar
 iToggleStatusBar.Hint=00000011,Show/hide the status bar
 smLanguage.Caption=00000012,&Language
@@ -98,10 +98,10 @@ aAbout.Caption=00000044,&About...
 aAbout.Category=00000043,Help
 aAbout.Hint=00000045,About...|Version and copyright info
 aJumpPrevUntranslated.Caption=00000047,Jump to pre&vious untranslated entry
-aJumpPrevUntranslated.Category=00000046,View
+aJumpPrevUntranslated.Category=00000046,Edit
 aJumpPrevUntranslated.Hint=00000048,Jump to previous untranslated or autotranslated entry
 aJumpNextUntranslated.Caption=00000050,Jump to ne&xt untranslated entry
-aJumpNextUntranslated.Category=00000049,View
+aJumpNextUntranslated.Category=00000049,Edit
 aJumpNextUntranslated.Hint=00000051,Jump to next untranslated or autotranslated entry
 aTranProps.Caption=00000059,&Translation properties...
 aTranProps.Category=00000058,Edit
@@ -126,13 +126,13 @@ aHelpVendorWebsite.Category=00000082,Help
 aHelpVendorWebsite.Hint=00000084,DK Software Website|Open the vendor home site in the browser
 smHelpInternet.Caption=00000087,&Internet
 aToggleFocus.Caption=00000089,Toggle &focus
-aToggleFocus.Category=00000088,View
+aToggleFocus.Category=00000088,Edit
 aToggleFocus.Hint=00000090,Toggle focus|Toggle the focus between the table and the translated value editor
 aPrevEntry.Caption=00000092,&Previous entry
-aPrevEntry.Category=00000091,View
+aPrevEntry.Category=00000091,Edit
 aPrevEntry.Hint=00000093,Previous entry|Step to previous entry
 aNextEntry.Caption=00000095,&Next entry
-aNextEntry.Category=00000094,View
+aNextEntry.Category=00000094,Edit
 aNextEntry.Hint=00000096,Next entry|Step to next entry
 dpEntryProps.Caption=00000097,Entry properties
 dpCurSrcEntry.Caption=00000098,Current source entry
@@ -141,7 +141,9 @@ cbEntryStateUntranslated.Caption=00000100,&Untranslated
 lEntryStates.Caption=00000101,Entry states
 cbEntryStateAutotranslated.Caption=00000102,&Autotranslated
 iToggleEntryProps.Caption=00000103,&Entry properties
+iToggleEntryProps.Hint=00000120,Show/hide the Entry Properties panel
 iToggleCurTranEntry.Caption=00000104,Current t&ranslated entry
+iToggleCurTranEntry.Hint=00000119,Show/hide the Current Translated Entry panel
 aFind.Caption=00000110,&Find...
 aFind.Category=00000109,Edit
 aFind.Hint=00000111,Find...|Search entries using a given pattern
@@ -151,6 +153,19 @@ aFindNext.Hint=00000114,Find next|Find the next occurence of string searched bef
 aReplace.Caption=00000116,&Replace...
 aReplace.Category=00000115,Edit
 aReplace.Hint=00000117,Replace...|Replace one string with another one
+dpBookmarks.Caption=00000118,Bookmarks
+iToggleBookmarks.Caption=00000121,&Bookmarks
+iToggleBookmarks.Hint=00000122,Show/hide the Bookmarks panel
+aBookmarkAdd.Caption=00000124,&Add bookmark
+aBookmarkAdd.Category=00000123,Edit
+aBookmarkAdd.Hint=00000125,Add bookmark|Add current entry to the bookmark list
+aBookmarkDelete.Caption=00000127,&Delete bookmark
+aBookmarkDelete.Category=00000126,Edit
+aBookmarkDelete.Hint=00000128,Delete bookmark|Remove the bookmark currently selected
+aBookmarkJump.Caption=00000130,&Jump to bookmark
+aBookmarkJump.Category=00000129,Edit
+aBookmarkJump.Hint=00000131,Jump to bookmark|Jump to bookmark currently selected in the bookmark window
+tbBookmarks.Caption=00000132,Bookmarks toolbar
 
 [$CONSTANTS]
 SBtn_Find=Find

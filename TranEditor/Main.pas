@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.16 2004-11-14 14:11:30 dale Exp $
+//  $Id: Main.pas,v 1.17 2004-11-27 12:38:08 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -46,6 +46,9 @@ type
     aAbout: TAction;
     aAddToRepository: TAction;
     aAutoTranslate: TAction;
+    aBookmarkAdd: TAction;
+    aBookmarkDelete: TAction;
+    aBookmarkJump: TAction;
     aClose: TAction;
     aExit: TAction;
     aFind: TAction;
@@ -60,18 +63,23 @@ type
     aNewOrOpen: TAction;
     aNextEntry: TAction;
     aPrevEntry: TAction;
+    aReplace: TAction;
     aSave: TAction;
     aSaveAs: TAction;
     aSettings: TAction;
     aToggleFocus: TAction;
     aTranProps: TAction;
     bAbout: TTBXItem;
+    bBookmarkAdd: TTBXItem;
+    bBookmarkDelete: TTBXItem;
+    bBookmarkJump: TTBXItem;
     bExit: TTBXItem;
     bFind: TTBXItem;
     bFindNext: TTBXItem;
     bJumpNextUntranslated: TTBXItem;
     bJumpPrevUntranslated: TTBXItem;
     bNewOrOpen: TTBXItem;
+    bReplace: TTBXItem;
     bSave: TTBXItem;
     bSaveAs: TTBXItem;
     bSettings: TTBXItem;
@@ -83,14 +91,20 @@ type
     dkLeft: TTBXDock;
     dkRight: TTBXDock;
     dkTop: TTBXDock;
+    dpBookmarks: TTBXDockablePanel;
     dpCurSrcEntry: TTBXDockablePanel;
     dpCurTranEntry: TTBXDockablePanel;
     dpEntryProps: TTBXDockablePanel;
     fpMain: TFormPlacement;
+    giBookmarks: TTBGroupItem;
     iAbout: TTBXItem;
     iAddToRepository: TTBXItem;
     iAutoTranslate: TTBXItem;
+    iBookmarkAdd: TTBXItem;
+    iBookmarkDelete: TTBXItem;
     iClose: TTBXItem;
+    iEditSepBookmarkAdd: TTBXSeparatorItem;
+    iEditSepTranProps: TTBXSeparatorItem;
     iExit: TTBXItem;
     iFileSep: TTBXSeparatorItem;
     iFind: TTBXItem;
@@ -111,9 +125,11 @@ type
     ipmTranProps: TTBXItem;
     ipmTreeSep: TTBXSeparatorItem;
     iPrevEntry: TTBXItem;
+    iReplace: TTBXItem;
     iSave: TTBXItem;
     iSaveAs: TTBXItem;
     iSettings: TTBXItem;
+    iToggleBookmarks: TTBXVisibilityToggleItem;
     iToggleCurSrcEntry: TTBXVisibilityToggleItem;
     iToggleCurTranEntry: TTBXVisibilityToggleItem;
     iToggleEntryProps: TTBXVisibilityToggleItem;
@@ -132,9 +148,12 @@ type
     mdkRight: TTBXMultiDock;
     mdkTop: TTBXMultiDock;
     MRUDisplay: TTBMRUList;
+    MRUReplace: TTBMRUList;
+    MRUSearch: TTBMRUList;
     MRUSource: TTBMRUList;
     MRUTran: TTBMRUList;
     pMain: TPanel;
+    pmBookmarks: TTBXPopupMenu;
     pmTree: TTBXPopupMenu;
     pmView: TTBXPopupMenu;
     sbarMain: TTBXStatusBar;
@@ -145,19 +164,23 @@ type
     smLanguage: TTBXSubmenuItem;
     smTools: TTBXSubmenuItem;
     smView: TTBXSubmenuItem;
+    tbBookmarks: TTBXToolbar;
     tbMain: TTBXToolbar;
     tbMenu: TTBXToolbar;
     tbSep1: TTBXSeparatorItem;
     tbSep2: TTBXSeparatorItem;
+    tbSepJumpPrevUntranslated: TTBXSeparatorItem;
+    tbSepTranProps: TTBXSeparatorItem;
+    tvBookmarks: TVirtualStringTree;
     tvMain: TVirtualStringTree;
-    MRUSearch: TTBMRUList;
-    MRUReplace: TTBMRUList;
-    aReplace: TAction;
-    iReplace: TTBXItem;
-    bReplace: TTBXItem;
+    ipmTreeSepBookmarkAdd: TTBXSeparatorItem;
+    ipmTreeBookmarkAdd: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
+    procedure aaBookmarkAdd(Sender: TObject);
+    procedure aaBookmarkDelete(Sender: TObject);
+    procedure aaBookmarkJump(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
     procedure aaFind(Sender: TObject);
@@ -171,6 +194,7 @@ type
     procedure aaNewOrOpen(Sender: TObject);
     procedure aaNextEntry(Sender: TObject);
     procedure aaPrevEntry(Sender: TObject);
+    procedure aaReplace(Sender: TObject);
     procedure aaSave(Sender: TObject);
     procedure aaSaveAs(Sender: TObject);
     procedure aaSettings(Sender: TObject);
@@ -179,26 +203,29 @@ type
     procedure cbEntryStateAutotranslatedChange(Sender: TObject);
     procedure cbEntryStateUntranslatedChange(Sender: TObject);
     procedure dklcMainLanguageChanged(Sender: TObject);
+    procedure EnableActionsNotify(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure fpMainRestorePlacement(Sender: TObject);
     procedure fpMainSavePlacement(Sender: TObject);
     procedure mCurTranEntryChange(Sender: TObject);
+    procedure tvBookmarksChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure tvBookmarksGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
+    procedure tvBookmarksGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+    procedure tvBookmarksKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainAfterItemPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect);
     procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
     procedure tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
     procedure tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-    procedure tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
     procedure tvMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
     procedure tvMainInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
-    procedure aaReplace(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -219,6 +246,8 @@ type
     FSearchMatchNode: PVirtualNode;
      // Translation repository
     FRepository: TTranRepository;
+     // A list of bookmarks
+    FBookmarks: TStringList;
      // Prop storage
     FModified: Boolean;
     FTranFileName: String;
@@ -277,6 +306,10 @@ type
     function  Find(var Params: TSearchParams): Boolean;
      // Resets the search match node
     procedure ResetSearchMatch;
+     // Updates the tvBookmarks
+    procedure RefreshBookmarks;
+     // If node focused in tvMain corresponds to a bookmark, highlights that node in tvBookmarks
+    procedure UpdateCurBookmark;
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -294,6 +327,15 @@ type
      // -- Name of the translation file currently open
     property TranFileName: String read FTranFileName write SetTranFileName;
   end;
+
+const
+   // Image indexes corresponding to node kinds
+  aiNodeKindImageIndexes: Array[TNodeKind] of Integer = (
+    -1,            // nkNone
+    iiNode_Comp,   // nkComp
+    iiNode_Prop,   // nkProp
+    iiNode_Consts, // nkConsts
+    iiNode_Const); // nkConst
 
 var
   fMain: TfMain;
@@ -328,6 +370,53 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     TranslateAllNodes(True);
   end;
 
+  procedure TfMain.aaBookmarkAdd(Sender: TObject);
+  var
+    n, nParent: PVirtualNode;
+    sBookmarkText: String;
+  begin
+    n := tvMain.FocusedNode;
+     // Add the current node to bookmarks if there is no one
+    if (n<>nil) and (FBookmarks.IndexOfObject(Pointer(n))<0) then begin
+       // Compile bookmark text
+      sBookmarkText := tvMain.Text[n, IColIdx_Name];
+      nParent := tvMain.NodeParent[n];
+      if nParent<>nil then sBookmarkText := tvMain.Text[nParent, IColIdx_Name]+'.'+sBookmarkText;
+       // Add the bookmark
+      FBookmarks.AddObject(sBookmarkText, Pointer(n));
+       // Refresh the node
+      tvMain.Invalidate; 
+       // Refresh the bookmark list
+      RefreshBookmarks;
+    end;
+  end;
+
+  procedure TfMain.aaBookmarkDelete(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    n := tvBookmarks.FocusedNode;
+    if n<>nil then begin
+      tvBookmarks.BeginUpdate;
+      try
+         // Remove the bookmark
+        FBookmarks.Delete(n.Index);
+         // Refresh the node
+        tvMain.Invalidate;
+         // Refresh the bookmark list
+        RefreshBookmarks;
+      finally
+        tvBookmarks.EndUpdate;
+      end;
+    end;
+  end;
+
+  procedure TfMain.aaBookmarkJump(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    n := tvBookmarks.FocusedNode;
+    if n<>nil then ActivateVTNode(tvMain, PVirtualNode(FBookmarks.Objects[n.Index]), True, True);
+  end;
+
   procedure TfMain.aaClose(Sender: TObject);
   begin
     CloseProject(True);
@@ -348,7 +437,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   var SParams: TSearchParams;
   begin
     SParams := SearchParams;
-    SParams.Flags := SParams.Flags-[sfReplace];
+    SParams.Flags := SParams.Flags-[sfEntireScope, sfReplace];
     Find(SParams); 
   end;
 
@@ -573,6 +662,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     FreeAndNil(FLangSource);
     FreeAndNil(FDisplayTranslations);
     FreeAndNil(FTranslations);
+    FBookmarks.Clear;
     FModified        := False;
     FSourceFileName  := '';
     FDisplayFileName := '';
@@ -666,11 +756,13 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   end;
 
   procedure TfMain.EnableActions;
-  var bOpenFiles, bFocusedNode, bSelection: Boolean;
+  var bOpenFiles, bFocusedNode, bSelection, bBookmarkVis, bBookmarkSel: Boolean;
   begin
     bOpenFiles   := FLangSource<>nil;
     bFocusedNode := bOpenFiles and (tvMain.FocusedNode<>nil);
     bSelection   := bOpenFiles and (tvMain.SelectedCount>0);
+    bBookmarkVis := dpBookmarks.Visible;
+    bBookmarkSel := bOpenFiles and (tvBookmarks.FocusedNode<>nil);
      // File
     aSave.Enabled                      := bOpenFiles;
     aSaveAs.Enabled                    := bOpenFiles;
@@ -678,18 +770,26 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
      // Edit
     aFind.Enabled                      := bOpenFiles;
     aFindNext.Enabled                  := bOpenFiles and (sfSearchMade in SearchParams.Flags);
+    aBookmarkAdd.Enabled               := bOpenFiles and bBookmarkVis;
+    aBookmarkDelete.Enabled            := bBookmarkVis and bBookmarkSel;
+    aBookmarkJump.Enabled              := bBookmarkVis and bBookmarkSel;
     aTranProps.Enabled                 := bOpenFiles;
-     // View                           
+     // View
     aPrevEntry.Enabled                 := bFocusedNode;
     aNextEntry.Enabled                 := bFocusedNode;
     aJumpPrevUntranslated.Enabled      := bOpenFiles;
     aJumpNextUntranslated.Enabled      := bOpenFiles;
-     // Tools                          
+     // Tools
     aAddToRepository.Enabled           := bSelection;
     aAutoTranslate.Enabled             := bSelection;
      // Misc
     cbEntryStateUntranslated.Enabled   := bSelection;
     cbEntryStateAutotranslated.Enabled := bSelection;
+  end;
+
+  procedure TfMain.EnableActionsNotify(Sender: TObject);
+  begin
+    EnableActions;
   end;
 
   function TfMain.Find(var Params: TSearchParams): Boolean;
@@ -894,7 +994,9 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
      // Create the repository
     FRepository := TTranRepository.Create;
      // Initialize language items
-    InitLanguages; 
+    InitLanguages;
+     // Create bookmark list
+    FBookmarks := TStringList.Create;
      // Update the tree
     UpdateTree;
   end;
@@ -902,6 +1004,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.FormDestroy(Sender: TObject);
   begin
     CloseProject(False);
+    FBookmarks.Free;
     FRepository.Free;
   end;
 
@@ -1032,7 +1135,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       if Node=nil then Node := tvMain.GetFirst else Node := tvMain.GetNext(Node)
     else
       Node := tvMain.GetPrevious(Node);
-     // Look for next/previous untranslated node 
+     // Look for next/previous untranslated node
     while Node<>nil do begin
       if GetNodeTranStates(Node)*[dktsUntranslated, dktsAutotranslated]<>[] then begin
         ActivateVTNode(tvMain, Node, True, True);
@@ -1062,6 +1165,13 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
       if Result then DoLoad(sSourceFile, sDisplayFile, sTranFile);
     end;
+  end;
+
+  procedure TfMain.RefreshBookmarks;
+  begin
+    tvBookmarks.RootNodeCount := FBookmarks.Count;
+    tvBookmarks.Invalidate;
+    EnableActions;
   end;
 
   procedure TfMain.ResetSearchMatch;
@@ -1135,6 +1245,32 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       end;
   end;
 
+  procedure TfMain.tvBookmarksChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+  begin
+    EnableActions;
+  end;
+
+  procedure TfMain.tvBookmarksGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
+  begin
+    case Kind of
+      ikNormal, ikSelected: ImageIndex := iiBookmark;
+      ikState: ImageIndex := aiNodeKindImageIndexes[GetNodeKind(PVirtualNode(FBookmarks.Objects[Node.Index]))];
+    end;
+  end;
+
+  procedure TfMain.tvBookmarksGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+  begin
+    CellText := FBookmarks[Node.Index];
+  end;
+
+  procedure TfMain.tvBookmarksKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
+  begin
+    if (CharCode=VK_RETURN) and (Shift=[]) then begin
+      DoDefault := False;
+      aBookmarkJump.Execute;
+    end;
+  end;
+
   procedure TfMain.tvMainAfterItemPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect);
   begin
      // If this is a search match
@@ -1172,6 +1308,9 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     ResetSearchMatch;
     UpdateEntryProps;
+    UpdateCurEntry;
+    UpdateCurBookmark;
+    EnableActions;
   end;
 
   procedure TfMain.tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -1186,23 +1325,16 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     if Allowed then ResetSearchMatch;
   end;
 
-  procedure TfMain.tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-  begin
-    UpdateCurEntry;
-    EnableActions;
-  end;
-
   procedure TfMain.tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
   begin
-    case Column of
-      IColIdx_Name:
-        case GetNodeKind(Node) of
-          nkComp:   ImageIndex := iiNode_Comp;
-          nkProp:   ImageIndex := iiNode_Prop;
-          nkConsts: ImageIndex := iiNode_Consts;
-          nkConst:  ImageIndex := iiNode_Const;
+    case Kind of
+      ikNormal, ikSelected:
+        case Column of
+          IColIdx_Name: ImageIndex := aiNodeKindImageIndexes[GetNodeKind(Node)];
+          IColIdx_Translated: if dktsUntranslated in GetNodeTranStates(Node) then ImageIndex := iiUntranslated;
         end;
-      IColIdx_Translated: if dktsUntranslated in GetNodeTranStates(Node) then ImageIndex := iiUntranslated;
+       // Draw a bookmark image if node is bookmarked
+      ikState: if (Column=IColIdx_Name) and (FBookmarks.IndexOfObject(Pointer(Node))>=0) then ImageIndex := iiBookmark;
     end;
   end;
 
@@ -1340,6 +1472,18 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     Caption := Format('[%s%s] - %s', [ExtractFileName(DisplayTranFileName), asMod[Modified], SAppCaption]);
     Application.Title := Caption;
+  end;
+
+  procedure TfMain.UpdateCurBookmark;
+  var
+    n: PVirtualNode;
+    idxBookmark: Integer;
+  begin
+    n := tvMain.FocusedNode;
+    if n<>nil then begin
+      idxBookmark := FBookmarks.IndexOfObject(Pointer(n));
+      if idxBookmark>=0 then ActivateVTNode(tvBookmarks, FindVTNodeByIndex(tvBookmarks, idxBookmark), True, True);
+    end;
   end;
 
   procedure TfMain.UpdateCurEntry;

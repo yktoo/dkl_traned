@@ -1,7 +1,7 @@
 unit ConsVars;
 
 interface
-uses Windows, Messages, SysUtils, Classes, Contnrs, Graphics, VirtualTrees, DKLang;
+uses Windows, Messages, SysUtils, Classes, Contnrs, Controls, Graphics, VirtualTrees, DKLang;
 
 type
    // Exception
@@ -132,6 +132,7 @@ const
   SDlgTitle_Error                  = 'Error';
   SDlgTitle_Confirm                = 'Confirm';
   SDlgTitle_SelectLangSourceFile   = 'Select a language source file';
+  SDlgTitle_SelectDisplayFile      = 'Select a translation file used for display';
   SDlgTitle_SelectTranFile         = 'Select a translation file';
   SDlgTitle_SaveTranFileAs         = 'Select a translation file to save to';
 
@@ -177,6 +178,7 @@ const
   SRegKey_Toolbars                 = SRegKey_Root+'\Toolbars';
   SRegSection_MainWindow           = 'MainWindow';
   SRegSection_MRUSource            = 'MRUSource';
+  SRegSection_MRUDisplay           = 'MRUDisplay';
   SRegSection_MRUTranslation       = 'MRUTranslation';
   SRegSection_MRUTargetApp         = 'MRUTargetApp'; 
   SRegSection_Preferences          = 'Preferences';
@@ -238,12 +240,13 @@ var
 
    // Проверяет существование файла. Если он не существует, вызывает Exception
   procedure CheckFileExists(const sFileName: String);
-
    // Activates specified VT node if possible
-  procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView: Boolean);
+  procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView, bCenter: Boolean);
+   // Enables or disables the given control and changes its color for clBtnFace (for disabled) or clWindow (otherwise)
+  procedure EnableWndCtl(Ctl: TWinControl; bEnable: Boolean);
 
 implementation
-uses Forms;
+uses TypInfo, Forms;
 
   procedure TranEdError(const sMsg: String);
   begin
@@ -305,12 +308,25 @@ uses Forms;
     if not FileExists(sFileName) then raise Exception.CreateFmt(SErrMsg_FileDoesntExist, [sFileName]);
   end;
 
-  procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView: Boolean);
+  procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView, bCenter: Boolean);
   begin
-    Tree.ClearSelection;
-    Tree.FocusedNode := Node;
-    Tree.Selected[Node] := True;
-    if bScrollIntoView and (Node<>nil) then Tree.ScrollIntoView(Node, False, False);
+    Tree.BeginUpdate;
+    try
+      Tree.ClearSelection;
+      Tree.FocusedNode := Node;
+      Tree.Selected[Node] := True;
+      if bScrollIntoView and (Node<>nil) then Tree.ScrollIntoView(Node, bCenter, False);
+    finally
+      Tree.EndUpdate;
+    end;
+  end;
+
+  procedure EnableWndCtl(Ctl: TWinControl; bEnable: Boolean);
+  var pi: PPropInfo;
+  begin
+    Ctl.Enabled := bEnable;
+    pi := GetPropInfo(Ctl, 'Color', [tkInteger]);
+    if pi<>nil then SetOrdProp(Ctl, pi, iif(bEnable, clWindow, clBtnFace));
   end;
 
    //===================================================================================================================

@@ -1264,13 +1264,19 @@ object fMain: TfMain
   object MRUTran: TTBMRUList
     MaxItems = 30
     Prefix = 'MRU'
-    Left = 196
+    Left = 256
     Top = 56
   end
   object MRUTargetApp: TTBMRUList
     MaxItems = 30
     Prefix = 'MRU'
-    Left = 252
+    Left = 320
+    Top = 56
+  end
+  object MRUDisplay: TTBMRUList
+    MaxItems = 30
+    Prefix = 'MRU'
+    Left = 200
     Top = 56
   end
 end

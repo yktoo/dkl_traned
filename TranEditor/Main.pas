@@ -22,28 +22,36 @@ type
     Kind: TNodeKind;  // Node kind
     case TNodeKind of
       nkComp: (
-        CompSource: TComponentSource;             // Link to component source
-        TranComp:   TDKLang_CompTranslation);     // Link to component translation
+        CompSource: TComponentSource;              // Link to component source
+        DisplComp:  TDKLang_CompTranslation;       // Link to display-component-translation
+        TranComp:   TDKLang_CompTranslation);      // Link to component translation
       nkProp: (
-        pSrcProp:  PPropertySource;               // Link to property source
-        pTranProp: PDKLang_PropValueTranslation); // Link to property translation
+        pSrcProp:   PPropertySource;               // Link to property source
+        pDisplProp: PDKLang_PropValueTranslation;  // Link to display-property-translation
+        pTranProp:  PDKLang_PropValueTranslation); // Link to property translation
       nkConst: (
-        pSrcConst: PDKLang_Constant;              // Link to constant source 
-        pTranConst: PDKLang_Constant);            // Link to constant translation
+        pSrcConst:   PDKLang_Constant;              // Link to constant source
+        pDisplConst: PDKLang_Constant;              // Link to display-constant-translation
+        pTranConst:  PDKLang_Constant);             // Link to constant translation
   end;
 
   TfMain = class(TForm)
     aAbout: TAction;
     aClose: TAction;
     aExit: TAction;
+    aJumpNextUntranslated: TAction;
+    aJumpPrevUntranslated: TAction;
     alMain: TActionList;
     aNew: TAction;
     aOpen: TAction;
     aSave: TAction;
     aSaveAs: TAction;
     aSettings: TAction;
+    aTranProps: TAction;
     bAbout: TTBXItem;
     bExit: TTBXItem;
+    bJumpNextUntranslated: TTBXItem;
+    bJumpPrevUntranslated: TTBXItem;
     bNew: TTBXItem;
     bOpen: TTBXItem;
     bSave: TTBXItem;
@@ -57,15 +65,23 @@ type
     iClose: TTBXItem;
     iExit: TTBXItem;
     iFileSep: TTBXSeparatorItem;
+    iJumpNextUntranslated: TTBXItem;
+    iJumpPrevUntranslated: TTBXItem;
     ilMain: TTBImageList;
     iNew: TTBXItem;
     iOpen: TTBXItem;
     iSave: TTBXItem;
     iSaveAs: TTBXItem;
+    iSepJumpPrevUntranslated: TTBXSeparatorItem;
     iSettings: TTBXItem;
     iToggleStatusBar: TTBXVisibilityToggleItem;
     iToggleToolbar: TTBXVisibilityToggleItem;
+    iTranProps: TTBXItem;
     iViewSep1: TTBXSeparatorItem;
+    MRUDisplay: TTBMRUList;
+    MRUSource: TTBMRUList;
+    MRUTargetApp: TTBMRUList;
+    MRUTran: TTBMRUList;
     pMain: TPanel;
     sbarMain: TTBXStatusBar;
     smEdit: TTBXSubmenuItem;
@@ -76,20 +92,8 @@ type
     tbMain: TTBXToolbar;
     tbMenu: TTBXToolbar;
     tbSep1: TTBXSeparatorItem;
-    tvMain: TVirtualStringTree;
-    MRUSource: TTBMRUList;
-    MRUTran: TTBMRUList;
-    aTranProps: TAction;
-    iTranProps: TTBXItem;
-    MRUTargetApp: TTBMRUList;
-    aJumpNextUntranslated: TAction;
-    aJumpPrevUntranslated: TAction;
-    iSepJumpPrevUntranslated: TTBXSeparatorItem;
-    iJumpNextUntranslated: TTBXItem;
-    iJumpPrevUntranslated: TTBXItem;
     tbSep2: TTBXSeparatorItem;
-    bJumpNextUntranslated: TTBXItem;
-    bJumpPrevUntranslated: TTBXItem;
+    tvMain: TVirtualStringTree;
     procedure aaAbout(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
@@ -120,6 +124,8 @@ type
   private
      // Language source storage
     FLangSource: TLangSource;
+     // Translations used for display; nil if no translation was open
+    FDisplayTranslations: TDKLang_CompTranslations;
      // Loaded or new translations
     FTranslations: TDKLang_CompTranslations;
      // Flag that command line parameters have been checked
@@ -128,15 +134,16 @@ type
     FModified: Boolean;
     FTranFileName: String;
     FSourceFileName: String;
+    FDisplayFileName: String;
      // Redisplays the language source tree
     procedure UpdateTree;
      // Checks whether translation file is modified and asks to save it
     function  CheckSave: Boolean;
      // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
      //   clicked OK
-    function  OpenFiles(const sLangSrcFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
+    function  OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
      // File loading/saving
-    procedure DoLoad(const sLangSrcFileName, sTranFileName: String);
+    procedure DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
     procedure DoSave(const sFileName: String);
      // Updates form caption
     procedure UpdateCaption;
@@ -148,6 +155,10 @@ type
     function  GetNodeKind(Node: PVirtualNode): TNodeKind;
      // Returns True if node is a value still untranslated
     function  IsNodeUntranslated(Node: PVirtualNode): Boolean;
+     // Tries to locate the next (bNext=True) or previous (bNext=False) untranslated node
+    procedure LocateUntranslatedNode(bNext: Boolean);
+     // Initially adjusts the VT column widths
+    procedure AdjustVTColumnWidth;
      // App events
     procedure AppHint(Sender: TObject);
     procedure AppIdle(Sender: TObject; var Done: Boolean);
@@ -157,6 +168,8 @@ type
     function  GetDisplayTranFileName: String;
   public
      // Props
+     // -- Name of the file used for display-translation. Empty string if no such translation was open
+    property DisplayFileName: String read FDisplayFileName;
      // -- Displayed name of translation file currently open
     property DisplayTranFileName: String read GetDisplayTranFileName;
      // -- True, if editor contents was saved since last save
@@ -366,40 +379,23 @@ type
   end;
 
   procedure TfMain.aaJumpNextUntranslated(Sender: TObject);
-  var Node: PVirtualNode;
   begin
-    Node := tvMain.FocusedNode;
-    if Node=nil then Node := tvMain.GetFirst else Node := tvMain.GetNext(Node);
-    while Node<>nil do begin
-      if IsNodeUntranslated(Node) then begin
-        ActivateVTNode(tvMain, Node, True);
-        Break;
-      end;
-      Node := tvMain.GetNext(Node);
-    end;
+    LocateUntranslatedNode(True);
   end;
 
   procedure TfMain.aaJumpPrevUntranslated(Sender: TObject);
-  var Node: PVirtualNode;
   begin
-    Node := tvMain.GetPrevious(tvMain.FocusedNode);
-    while Node<>nil do begin
-      if IsNodeUntranslated(Node) then begin
-        ActivateVTNode(tvMain, Node, True);
-        Break;
-      end;
-      Node := tvMain.GetPrevious(Node);
-    end;
+    LocateUntranslatedNode(False);
   end;
 
   procedure TfMain.aaNew(Sender: TObject);
   begin
-    OpenFiles(FSourceFileName, '', True);
+    OpenFiles(FSourceFileName, FDisplayFileName, '', True);
   end;
 
   procedure TfMain.aaOpen(Sender: TObject);
   begin
-    OpenFiles(FSourceFileName, FTranFileName, False);
+    OpenFiles(FSourceFileName, FDisplayFileName, FTranFileName, False);
   end;
 
   procedure TfMain.aaSave(Sender: TObject);
@@ -432,6 +428,17 @@ type
     if EditTranslationProps(FTranslations, MRUTargetApp.Items) then Modified := True;
   end;
 
+  procedure TfMain.AdjustVTColumnWidth;
+  var i, iWidth: Integer;
+  begin
+     // Make the widths of all columns equal except for 'ID' column
+    with tvMain.Header.Columns do begin
+      iWidth := (tvMain.ClientWidth-Items[IColIdx_ID].Width) div (Count-1);
+      for i := 0 to Count-1 do
+        if i<>IColIdx_ID then Items[i].Width := iWidth;
+    end;
+  end;
+
   procedure TfMain.AppHint(Sender: TObject);
   begin
     sbarMain.Panels[0].Caption := Application.Hint;
@@ -440,7 +447,7 @@ type
   procedure TfMain.AppIdle(Sender: TObject; var Done: Boolean);
   var
     i: Integer;
-    sSrcFile, sTranFile: String;
+    sSrcFile, sDisplFile, sTranFile: String;
 
     procedure UseFile(const sFileName: String);
     var sExt: String;
@@ -450,9 +457,12 @@ type
          // If the file has language source file extension
         if AnsiSameText(sExt, SLangSourceFileDotExt) then begin
           if sSrcFile='' then sSrcFile := sFileName;
-         // Else assume it a translation file
+         // Else if translation file is empty, fill it with name supplied
         end else if sTranFile='' then
-          sTranFile := sFileName;
+          sTranFile := sFileName
+         // Else assume it a display-translation file name
+        else if sDisplFile='' then
+          sDisplFile := sFileName;
       end;
     end;
 
@@ -460,10 +470,11 @@ type
     if not FCmdLineChecked then begin
       FCmdLineChecked := True;
        // Check command line parameters
-      sSrcFile  := '';
-      sTranFile := '';
-      for i := 1 to 2 do UseFile(ParamStr(i));
-      if sSrcFile<>'' then DoLoad(sSrcFile, sTranFile) else OpenFiles(sSrcFile, sTranFile, False);
+      sSrcFile   := '';
+      sDisplFile := '';
+      sTranFile  := '';
+      for i := 1 to 3 do UseFile(ParamStr(i));
+      if sSrcFile<>'' then DoLoad(sSrcFile, sDisplFile, sTranFile) else OpenFiles(sSrcFile, sDisplFile, sTranFile, False);
     end;
   end;
 
@@ -483,17 +494,19 @@ type
   procedure TfMain.CloseProject(bUpdateDisplay: Boolean);
   begin
     FreeAndNil(FLangSource);
+    FreeAndNil(FDisplayTranslations);
     FreeAndNil(FTranslations);
-    FModified       := False;
-    FSourceFileName := '';
-    FTranFileName   := '';
+    FModified        := False;
+    FSourceFileName  := '';
+    FDisplayFileName := '';
+    FTranFileName    := '';
     if bUpdateDisplay then begin
       UpdateCaption;
       UpdateTree;
     end;
   end;
 
-  procedure TfMain.DoLoad(const sLangSrcFileName, sTranFileName: String);
+  procedure TfMain.DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
   var sDiff: String;
   begin
      // Destroy former langsource storage and translations
@@ -501,6 +514,11 @@ type
     try
        // Create (and load) new langsource
       FLangSource := TLangSource.Create(sLangSrcFileName);
+       // Create and load, if needed, display-translations
+      if sDisplayFileName<>'' then begin
+        FDisplayTranslations := TDKLang_CompTranslations.Create;
+        FDisplayTranslations.LoadFromFile(sDisplayFileName);
+      end;
        // Create (and load, if needed) translations
       FTranslations := TDKLang_CompTranslations.Create;
       if sTranFileName<>'' then FTranslations.LoadFromFile(sTranFileName);
@@ -508,11 +526,13 @@ type
       sDiff := FLangSource.CompareStructureWith(FTranslations);
        // Show the differences unless this is a new translation 
       if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff);
-       // Update properties
-      FModified       := False;
-      FSourceFileName := sLangSrcFileName;
-      FTranFileName   := sTranFileName;
+       // Update the properties
+      FModified        := False;
+      FSourceFileName  := sLangSrcFileName;
+      FDisplayFileName := sDisplayFileName;
+      FTranFileName    := sTranFileName;
       MRUSource.Add(FSourceFileName);
+      MRUDisplay.Add(FDisplayFileName);
       if FTranFileName<>'' then MRUTran.Add(FTranFileName);
       UpdateCaption;
        // Reload the tree
@@ -579,6 +599,7 @@ type
   begin
     TBRegLoadPositions(Self, HKEY_CURRENT_USER, SRegKey_Root);
     MRUSource.LoadFromRegIni   (fpMain.RegIniFile, SRegSection_MRUSource);
+    MRUDisplay.LoadFromRegIni  (fpMain.RegIniFile, SRegSection_MRUDisplay);
     MRUTran.LoadFromRegIni     (fpMain.RegIniFile, SRegSection_MRUTranslation);
     MRUTargetApp.LoadFromRegIni(fpMain.RegIniFile, SRegSection_MRUTargetApp);
   end;
@@ -587,6 +608,7 @@ type
   begin
     TBRegSavePositions(Self, HKEY_CURRENT_USER, SRegKey_Toolbars);
     MRUSource.SaveToRegIni   (fpMain.RegIniFile, SRegSection_MRUSource);
+    MRUDisplay.SaveToRegIni  (fpMain.RegIniFile, SRegSection_MRUDisplay);
     MRUTran.SaveToRegIni     (fpMain.RegIniFile, SRegSection_MRUTranslation);
     MRUTargetApp.SaveToRegIni(fpMain.RegIniFile, SRegSection_MRUTargetApp);
   end;
@@ -612,13 +634,36 @@ type
     end;
   end;
 
-  function TfMain.OpenFiles(const sLangSrcFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
-  var sSourceFile, sTranFile: String;
+  procedure TfMain.LocateUntranslatedNode(bNext: Boolean);
+  var Node: PVirtualNode;
   begin
-    sSourceFile := sLangSrcFileName;
-    sTranFile   := sTranFileName;
-    Result := SelectLangFiles(sSourceFile, sTranFile, MRUSource.Items, MRUTran.Items, bNewMode);
-    if Result then DoLoad(sSourceFile, sTranFile);
+     // Determine the start node for operation
+    Node := tvMain.FocusedNode;
+    if bNext then
+      if Node=nil then Node := tvMain.GetFirst else Node := tvMain.GetNext(Node)
+    else
+      Node := tvMain.GetPrevious(Node);
+     // Look for next/previous untranslated node 
+    while Node<>nil do begin
+      if IsNodeUntranslated(Node) then begin
+        ActivateVTNode(tvMain, Node, True, True);
+        tvMain.FocusedColumn := IColIdx_Translated;
+        Exit;
+      end;
+      if bNext then Node := tvMain.GetNext(Node) else Node := tvMain.GetPrevious(Node);
+    end;
+     // Beep if not found
+    MessageBeep(MB_OK); 
+  end;
+
+  function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
+  var sSourceFile, sDisplayFile, sTranFile: String;
+  begin
+    sSourceFile  := sLangSrcFileName;
+    sTranFile    := sTranFileName;
+    sDisplayFile := sDisplayFileName;
+    Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items, bNewMode);
+    if Result then DoLoad(sSourceFile, sDisplayFile, sTranFile);
   end;
 
   procedure TfMain.SetModified(Value: Boolean);
@@ -698,14 +743,20 @@ type
             case Column of
               IColIdx_Name:       s := p.pSrcProp.sPropName;
               IColIdx_ID:         s := IntToStr(p.pSrcProp.iID);
-              IColIdx_Original:   s := MultilineToLine(p.pSrcProp.sValue);
+              IColIdx_Original: begin
+                if p.pDisplProp=nil then s := p.pSrcProp.sValue else s := p.pDisplProp.sValue;
+                s := MultilineToLine(s);
+              end;
               IColIdx_Translated: s := MultilineToLine(p.pTranProp.sValue);
             end;
           nkConsts: if Column=IColIdx_Name then s := SNode_Constants;
           nkConst:
             case Column of
               IColIdx_Name:       s := p.pSrcConst.sName;
-              IColIdx_Original:   s := MultilineToLine(p.pSrcConst.sDefValue);
+              IColIdx_Original: begin
+                if p.pDisplConst=nil then s := p.pSrcConst.sDefValue else s := p.pDisplConst.sDefValue;
+                s := MultilineToLine(s);
+              end;
               IColIdx_Translated: s := MultilineToLine(p.pTranConst.sDefValue);
             end;
         end;
@@ -735,18 +786,24 @@ type
      // Initialize node data (bind the node with corresponding objects) and chil count
     case p.Kind of
       nkComp: begin
-        p.CompSource := FLangSource.ComponentSources[Node.Index];
-        p.TranComp   := FTranslations.FindComponentName(p.CompSource.CompName);
+        p.CompSource  := FLangSource.ComponentSources[Node.Index];
+        if FDisplayTranslations<>nil then
+          p.DisplComp := FDisplayTranslations.FindComponentName(p.CompSource.CompName);
+        p.TranComp    := FTranslations.FindComponentName(p.CompSource.CompName);
         Sender.ChildCount[Node] := p.CompSource.PropertySources.Count;
       end;
       nkProp: begin
-        p.pSrcProp := pParent.CompSource.PropertySources[Node.Index];
-        if pParent.TranComp<>nil then p.pTranProp := pParent.TranComp.FindPropByID(p.pSrcProp.iID);
+        p.pSrcProp     := pParent.CompSource.PropertySources[Node.Index];
+        if (FDisplayTranslations<>nil) and (pParent.DisplComp<>nil) then
+          p.pDisplProp := pParent.DisplComp.FindPropByID(p.pSrcProp.iID);
+        p.pTranProp    := pParent.TranComp.FindPropByID(p.pSrcProp.iID);
       end;
       nkConsts: Sender.ChildCount[Node] := FLangSource.Constants.Count;
       nkConst: begin
-        p.pSrcConst  := FLangSource.Constants[Node.Index];
-        p.pTranConst := FTranslations.Constants.FindConstName(p.pSrcConst.sName);
+        p.pSrcConst     := FLangSource.Constants[Node.Index];
+        if FDisplayTranslations<>nil then
+          p.pDisplConst := FDisplayTranslations.Constants.FindConstName(p.pSrcConst.sName);
+        p.pTranConst    := FTranslations.Constants.FindConstName(p.pSrcConst.sName);
       end;
     end;
      // Expand the whole tree
@@ -804,7 +861,9 @@ type
   end;
 
   procedure TfMain.UpdateTree;
-  var iRootCount: Integer;
+  var
+    iRootCount: Integer;
+    bFirstShow: Boolean;
   begin
      // If no project open
     if FLangSource=nil then begin
@@ -812,6 +871,7 @@ type
       tvMain.Clear;
      // Else display the project in the tree
     end else begin
+      bFirstShow := not tvMain.Visible;
       tvMain.BeginUpdate;
       try
          // Number of root nodes equals to number of components
@@ -824,6 +884,8 @@ type
       finally
         tvMain.EndUpdate;
       end;
+       // If the tree is shown the first time, adjust column widths
+      if bFirstShow then AdjustVTColumnWidth;  
       tvMain.Show;
       tvMain.SetFocus;
     end;

@@ -53,7 +53,6 @@ object dOpenFiles: TdOpenFiles
       Font.Style = []
       ItemHeight = 13
       ParentFont = False
-      Sorted = True
       TabOrder = 0
       OnChange = AdjustOKCancel
     end
@@ -81,7 +80,6 @@ object dOpenFiles: TdOpenFiles
       Font.Style = []
       ItemHeight = 13
       ParentFont = False
-      Sorted = True
       TabOrder = 5
       OnChange = AdjustOKCancel
     end
@@ -109,7 +107,6 @@ object dOpenFiles: TdOpenFiles
       Font.Style = []
       ItemHeight = 13
       ParentFont = False
-      Sorted = True
       TabOrder = 3
       OnChange = AdjustOKCancel
     end

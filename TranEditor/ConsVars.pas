@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.12 2004-09-25 07:29:40 dale Exp $
+//  $Id: ConsVars.pas,v 1.13 2004-10-13 11:00:45 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -182,8 +182,8 @@ const
 
   SAppProductSID                   = 'dktraned';
   SAppCaption                      = 'DKLang Translation Editor';
-  SAppVersion                      = 'v2.1';
-  SAppVersionSID                   = '2.1';
+  SAppVersion                      = 'v2.2';
+  SAppVersionSID                   = '2.2';
   SAppEmail                        = 'devtools@narod.ru';
 
   SRepositoryFileHeader            = SAppCaption+' '+SAppVersion+' Translation Repository File';

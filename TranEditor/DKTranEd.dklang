@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.4 2004-09-25 07:29:40 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.5 2004-11-11 16:54:41 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -142,8 +142,13 @@ lEntryStates.Caption=00000101,Entry states
 cbEntryStateAutotranslated.Caption=00000102,&Autotranslated
 iToggleEntryProps.Caption=00000103,&Entry properties
 iToggleCurTranEntry.Caption=00000104,Current t&ranslated entry
+aFind.Caption=00000110,&Find or replace...
+aFind.Category=00000109,Edit
+aFind.Hint=00000111,Find or replace...|Search entries using a given pattern, and optionally replace it with another
 
 [$CONSTANTS]
+SBtn_Find=Find
+SBtn_Replace=Replace
 SConfirm_FileNotSaved=Translation file "%s" is modified but not saved. Do you wish to save it?
 SDiffDesc_AddComponent=+ Component: [%s]
 SDiffDesc_AddConstant=+ Constant "%s"
@@ -184,4 +189,24 @@ SStatusBar_ConstCount=Const: %d/%d
 SStatusBar_PropCount=Prop: %d/%d
 SStatusBar_ReposEntryCount=Repository: %d entries
 STranFileFilter=DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*
+
+[dFind]
+Caption=00000001,Find or replace
+bCancel.Caption=00000003,Close
+lPattern.Caption=00000004,&Search for:
+gbOptions.Caption=00000006,Options
+cbCaseSensitive.Caption=00000007,&Case sensitive
+cbWholeWords.Caption=00000008,&Whole words only
+cbSelOnly.Caption=00000010,Search selecte&d only
+rgOrigin.Caption=00000011,Origin
+rgOrigin.Items=00000012,Fro&m the focused entry\n&Entire scope\n
+rgDirection.Caption=00000013,Direction
+rgDirection.Items=00000014,&Forward\n&Backward\n
+cbPrompt.Caption=00000015,&Prompt on replace
+bAll.Caption=00000016,Replace &all
+cbReplace.Caption=00000017,&Replace with:
+gbScope.Caption=00000018,Scope
+cbSearchNames.Caption=00000019,Search entry &names
+cbSearchOriginal.Caption=00000020,Search &original values
+cbSearchTranslated.Caption=00000021,Search &translated values
 

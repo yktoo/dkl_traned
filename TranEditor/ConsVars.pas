@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.13 2004-10-13 11:00:45 dale Exp $
+//  $Id: ConsVars.pas,v 1.14 2004-11-11 16:54:41 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -177,6 +177,33 @@ type
     property Translations[wLangID1, wLangID2: LANGID; const sValue1: String]: String read GetTranslations write SetTranslations;
   end;
 
+   //===================================================================================================================
+   // Search and replace
+   //===================================================================================================================
+
+  TSearchFlag = (
+    sfReplace,          // Perform a replace rather than search
+    sfCaseSensitive,    // Use case-sensitive search
+    sfWholeWordsOnly,   // Find whole words only
+    sfSelectedOnly,     // Search selected only
+    sfPromptOnReplace,  // Prompt on replace
+    sfEntireScope,      // Search entire scope. Otherwise, start search from the focused entry
+    sfSearchNames,      // Search entry names
+    sfSearchOriginal,   // Search original values
+    sfSearchTranslated, // Search translated values
+    sfBackward,         // Search backwards. Otherwise, search forward
+    sfReplaceAll);      // Replace all occurences rather than the first one
+  TSearchFlags = set of TSearchFlag;
+
+  TSearchParams = record
+    sSearchPattern:  String;       // Search pattern
+    sReplacePattern: String;       // Replace pattern
+    Flags:           TSearchFlags; // Search flags
+  end;
+
+   // A callback procedure used to start search/replace from the Find dialog
+  TFindCallback = procedure(var Params: TSearchParams) of object;
+
 const
   S_CRLF                           = #13#10;
 
@@ -258,6 +285,12 @@ var
   sSetting_RepositoryDir:     String;
   bSetting_ReposRemovePrefix: Boolean;
   bSetting_ReposAutoAdd:      Boolean;
+   // Search parameters
+  SearchParams:               TSearchParams = (
+    sSearchPattern:  '';
+    sReplacePattern: '';
+    Flags:           [sfPromptOnReplace, sfSearchTranslated]);
+    
    // A global IDKWeb instance
   DKWeb: IDKWeb;
 

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.13 2004-09-25 07:29:40 dale Exp $
+//  $Id: Main.pas,v 1.14 2004-11-11 16:54:41 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -44,15 +44,25 @@ type
 
   TfMain = class(TForm)
     aAbout: TAction;
+    aAddToRepository: TAction;
+    aAutoTranslate: TAction;
     aClose: TAction;
     aExit: TAction;
+    aFind: TAction;
+    aHelpCheckUpdates: TAction;
+    aHelpProductWebsite: TAction;
+    aHelpSupport: TAction;
+    aHelpVendorWebsite: TAction;
     aJumpNextUntranslated: TAction;
     aJumpPrevUntranslated: TAction;
     alMain: TActionList;
     aNewOrOpen: TAction;
+    aNextEntry: TAction;
+    aPrevEntry: TAction;
     aSave: TAction;
     aSaveAs: TAction;
     aSettings: TAction;
+    aToggleFocus: TAction;
     aTranProps: TAction;
     bAbout: TTBXItem;
     bExit: TTBXItem;
@@ -61,94 +71,88 @@ type
     bNewOrOpen: TTBXItem;
     bSave: TTBXItem;
     bSaveAs: TTBXItem;
+    bSettings: TTBXItem;
+    bTranProps: TTBXItem;
+    cbEntryStateAutotranslated: TTBXCheckBox;
+    cbEntryStateUntranslated: TTBXCheckBox;
     dkBottom: TTBXDock;
+    dklcMain: TDKLanguageController;
     dkLeft: TTBXDock;
     dkRight: TTBXDock;
     dkTop: TTBXDock;
+    dpCurSrcEntry: TTBXDockablePanel;
+    dpCurTranEntry: TTBXDockablePanel;
+    dpEntryProps: TTBXDockablePanel;
     fpMain: TFormPlacement;
     iAbout: TTBXItem;
+    iAddToRepository: TTBXItem;
+    iAutoTranslate: TTBXItem;
     iClose: TTBXItem;
     iExit: TTBXItem;
     iFileSep: TTBXSeparatorItem;
+    iHelpCheckUpdates: TTBXItem;
+    iHelpProductWebsite: TTBXItem;
+    iHelpSupport: TTBXItem;
+    iHelpVendorWebsite: TTBXItem;
     iJumpNextUntranslated: TTBXItem;
     iJumpPrevUntranslated: TTBXItem;
     ilMain: TTBImageList;
     iNewOrOpen: TTBXItem;
+    iNextEntry: TTBXItem;
+    ipmJumpNextUntranslated: TTBXItem;
+    ipmJumpPrevUntranslated: TTBXItem;
+    ipmNextEntry: TTBXItem;
+    ipmPrevEntry: TTBXItem;
+    ipmTranProps: TTBXItem;
+    ipmTreeSep: TTBXSeparatorItem;
+    iPrevEntry: TTBXItem;
     iSave: TTBXItem;
     iSaveAs: TTBXItem;
     iSettings: TTBXItem;
+    iToggleCurSrcEntry: TTBXVisibilityToggleItem;
+    iToggleCurTranEntry: TTBXVisibilityToggleItem;
+    iToggleEntryProps: TTBXVisibilityToggleItem;
+    iToggleFocus: TTBXItem;
     iToggleStatusBar: TTBXVisibilityToggleItem;
     iToggleToolbar: TTBXVisibilityToggleItem;
+    iToolsSep: TTBXSeparatorItem;
     iTranProps: TTBXItem;
     iViewSep1: TTBXSeparatorItem;
+    iViewSep2: TTBXSeparatorItem;
+    lEntryStates: TTBXLabel;
+    mCurSrcEntry: TMemo;
+    mCurTranEntry: TMemo;
+    mdkBottom: TTBXMultiDock;
+    mdkLeft: TTBXMultiDock;
+    mdkRight: TTBXMultiDock;
+    mdkTop: TTBXMultiDock;
     MRUDisplay: TTBMRUList;
     MRUSource: TTBMRUList;
     MRUTran: TTBMRUList;
     pMain: TPanel;
+    pmTree: TTBXPopupMenu;
+    pmView: TTBXPopupMenu;
     sbarMain: TTBXStatusBar;
     smEdit: TTBXSubmenuItem;
     smFile: TTBXSubmenuItem;
     smHelp: TTBXSubmenuItem;
+    smHelpInternet: TTBXSubmenuItem;
     smLanguage: TTBXSubmenuItem;
+    smTools: TTBXSubmenuItem;
     smView: TTBXSubmenuItem;
     tbMain: TTBXToolbar;
     tbMenu: TTBXToolbar;
     tbSep1: TTBXSeparatorItem;
     tbSep2: TTBXSeparatorItem;
     tvMain: TVirtualStringTree;
-    iToggleCurSrcEntry: TTBXVisibilityToggleItem;
-    bTranProps: TTBXItem;
-    bSettings: TTBXItem;
-    pmTree: TTBXPopupMenu;
-    pmView: TTBXPopupMenu;
-    ipmJumpPrevUntranslated: TTBXItem;
-    ipmJumpNextUntranslated: TTBXItem;
-    ipmTreeSep: TTBXSeparatorItem;
-    ipmTranProps: TTBXItem;
-    aAddToRepository: TAction;
-    aAutoTranslate: TAction;
-    smTools: TTBXSubmenuItem;
-    iAutoTranslate: TTBXItem;
-    iAddToRepository: TTBXItem;
-    iToolsSep: TTBXSeparatorItem;
-    dklcMain: TDKLanguageController;
-    aHelpCheckUpdates: TAction;
-    aHelpProductWebsite: TAction;
-    aHelpSupport: TAction;
-    aHelpVendorWebsite: TAction;
-    smHelpInternet: TTBXSubmenuItem;
-    iHelpVendorWebsite: TTBXItem;
-    iHelpSupport: TTBXItem;
-    iHelpProductWebsite: TTBXItem;
-    iHelpCheckUpdates: TTBXItem;
-    aToggleFocus: TAction;
-    aPrevEntry: TAction;
-    aNextEntry: TAction;
-    iViewSep2: TTBXSeparatorItem;
-    iNextEntry: TTBXItem;
-    iPrevEntry: TTBXItem;
-    iToggleFocus: TTBXItem;
-    mdkTop: TTBXMultiDock;
-    mdkLeft: TTBXMultiDock;
-    mdkRight: TTBXMultiDock;
-    mdkBottom: TTBXMultiDock;
-    dpEntryProps: TTBXDockablePanel;
-    dpCurSrcEntry: TTBXDockablePanel;
-    mCurSrcEntry: TMemo;
-    dpCurTranEntry: TTBXDockablePanel;
-    mCurTranEntry: TMemo;
-    cbEntryStateUntranslated: TTBXCheckBox;
-    lEntryStates: TTBXLabel;
-    cbEntryStateAutotranslated: TTBXCheckBox;
-    iToggleEntryProps: TTBXVisibilityToggleItem;
-    iToggleCurTranEntry: TTBXVisibilityToggleItem;
-    ipmNextEntry: TTBXItem;
-    ipmPrevEntry: TTBXItem;
+    iFind: TTBXItem;
+    bFind: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
+    procedure aaFind(Sender: TObject);
     procedure aaHelpCheckUpdates(Sender: TObject);
     procedure aaHelpProductWebsite(Sender: TObject);
     procedure aaHelpSupport(Sender: TObject);
@@ -156,10 +160,16 @@ type
     procedure aaJumpNextUntranslated(Sender: TObject);
     procedure aaJumpPrevUntranslated(Sender: TObject);
     procedure aaNewOrOpen(Sender: TObject);
+    procedure aaNextEntry(Sender: TObject);
+    procedure aaPrevEntry(Sender: TObject);
     procedure aaSave(Sender: TObject);
     procedure aaSaveAs(Sender: TObject);
     procedure aaSettings(Sender: TObject);
+    procedure aaToggleFocus(Sender: TObject);
     procedure aaTranProps(Sender: TObject);
+    procedure cbEntryStateAutotranslatedChange(Sender: TObject);
+    procedure cbEntryStateUntranslatedChange(Sender: TObject);
+    procedure dklcMainLanguageChanged(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -168,6 +178,7 @@ type
     procedure mCurTranEntryChange(Sender: TObject);
     procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
     procedure tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
+    procedure tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -177,13 +188,6 @@ type
     procedure tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
-    procedure aaToggleFocus(Sender: TObject);
-    procedure aaPrevEntry(Sender: TObject);
-    procedure aaNextEntry(Sender: TObject);
-    procedure dklcMainLanguageChanged(Sender: TObject);
-    procedure cbEntryStateUntranslatedChange(Sender: TObject);
-    procedure cbEntryStateAutotranslatedChange(Sender: TObject);
-    procedure tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -256,6 +260,8 @@ type
     procedure TranslateNodeFromRepository(Node: PVirtualNode);
      // Translates all nodes (bSelectedOnly=False) or just selected ones (bSelectedOnly=True)
     procedure TranslateAllNodes(bSelectedOnly: Boolean);
+     // Callback searching procedure
+    procedure FindCallback(var Params: TSearchParams);
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -279,7 +285,8 @@ var
 
 implementation
 {$R *.dfm}
-uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
+uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps,
+  udFind, StrUtils;
 
    //===================================================================================================================
    //  TfMain
@@ -314,6 +321,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.aaExit(Sender: TObject);
   begin
     Close;
+  end;
+
+  procedure TfMain.aaFind(Sender: TObject);
+  begin
+    ShowFindDialog(FindCallback);
   end;
 
   procedure TfMain.aaHelpCheckUpdates(Sender: TObject);
@@ -632,7 +644,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     aSave.Enabled                      := bOpenFiles;
     aSaveAs.Enabled                    := bOpenFiles;
     aClose.Enabled                     := bOpenFiles;
-     // Edit                           
+     // Edit
+    aFind.Enabled                      := bOpenFiles;
     aTranProps.Enabled                 := bOpenFiles;
      // View                           
     aPrevEntry.Enabled                 := bFocusedNode;
@@ -645,6 +658,105 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
      // Misc
     cbEntryStateUntranslated.Enabled   := bSelection;
     cbEntryStateAutotranslated.Enabled := bSelection;
+  end;
+
+  procedure TfMain.FindCallback(var Params: TSearchParams);
+  var
+    n: PVirtualNode;
+    sSearch: String;
+    iPatLen: Integer;
+    pData: PNodeData;
+    bMatches: Boolean;
+
+    function GetLastSelected: PVirtualNode;
+    begin
+      Result := tvMain.GetLast;
+      while (Result<>nil) and not (vsSelected in Result.States) do Result := tvMain.GetPrevious(Result);
+    end;
+
+    function GetPreviousSelected(Node: PVirtualNode): PVirtualNode;
+    begin
+      Result := Node;
+      repeat
+        Result := tvMain.GetPrevious(Result);
+        if Result=nil then Break
+        else if vsSelected in Result.States then Exit;
+      until False;
+    end;
+
+    function Matches(const s: String): Boolean;
+    const NoWordChars = [#0..'/', ':'..'@', '['..'`', '{'..#137, '«', '»'];
+    var iPos: Integer;
+    begin
+      if sfCaseSensitive in Params.Flags then iPos := AnsiPos(sSearch, s) else iPos := AnsiPos(sSearch, AnsiUpperCase(s));
+      Result := iPos>0;
+       // If whole words are accepted only
+      if Result and (sfWholeWordsOnly in Params.Flags) then
+        Result := ((iPos=1) or (s[iPos-1] in NoWordChars)) and ((iPos>Length(s)-iPatLen) or (s[iPos+iPatLen] in NoWordChars));
+    end;
+
+  begin
+     // Prepare the pattern
+    sSearch := Params.sSearchPattern;
+    if not (sfCaseSensitive in Params.Flags) then sSearch := AnsiUpperCase(sSearch);
+    iPatLen := Length(sSearch);
+     // Determine the start of the search
+    n := tvMain.FocusedNode;
+     // -- Restart search
+    if (n=nil) or
+       (sfEntireScope in Params.Flags) or
+       ((sfSelectedOnly in Params.Flags) and not (vsSelected in n.States)) then
+       // -- Search selection only
+      if sfSelectedOnly in Params.Flags then
+        if sfBackward in Params.Flags then n := GetLastSelected else n := tvMain.GetFirstSelected
+       // -- Search all nodes
+      else
+        if sfBackward in Params.Flags then n := tvMain.GetLast else n := tvMain.GetFirst
+     // -- Continue search
+    else
+      if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
+     // Search through the nodes
+    while n<>nil do begin
+      pData := tvMain.GetNodeData(n);
+      bMatches := False;
+       // We do not search anything but translated value in Replace mode
+      if not (sfReplace in Params.Flags) then begin
+         // Test Name
+        if not bMatches and (sfSearchNames in Params.Flags) then
+          case pData.Kind of
+            nkComp:  bMatches := Matches(pData.CompSource.CompName);
+            nkProp:  bMatches := Matches(pData.pSrcProp.sPropName);
+            nkConst: bMatches := Matches(pData.pSrcConst.sName);
+          end;
+         // Test Original Value
+        if not bMatches and (sfSearchOriginal in Params.Flags) then
+          case pData.Kind of
+            nkProp:  if pData.pDisplProp=nil  then bMatches := Matches(pData.pSrcProp.sValue)     else bMatches := Matches(pData.pDisplProp.sValue);
+            nkConst: if pData.pDisplConst=nil then bMatches := Matches(pData.pSrcConst.sDefValue) else bMatches := Matches(pData.pDisplConst.sDefValue);
+          end;
+      end;
+       // Finally, test Translated Value
+      if not bMatches and (sfSearchTranslated in Params.Flags) then
+        case pData.Kind of
+          nkProp:  bMatches := Matches(pData.pTranProp.sValue);
+          nkConst: bMatches := Matches(pData.pTranConst.sDefValue);
+        end;
+       // Found the match?
+      if bMatches then begin
+        ActivateVTNode(tvMain, n, True, False);
+         // If Replace mode
+        if sfReplace in Params.Flags then begin
+          //!!! write replace code
+        end;
+         // If this isn't 'Replace all' call, then exit after a match has been successfully located
+        if Params.Flags*[sfReplace, sfReplaceAll]<>[sfReplace, sfReplaceAll] then Break; 
+      end;
+       // Advance to the next/previous node
+      if sfSelectedOnly in Params.Flags then
+        if sfBackward in Params.Flags then n := GetPreviousSelected(n) else n := tvMain.GetNextSelected(n)
+      else
+        if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
+    end;
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

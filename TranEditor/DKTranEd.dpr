@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DKTranEd.dpr,v 1.4 2004-09-11 17:58:01 dale Exp $
+//  $Id: DKTranEd.dpr,v 1.5 2004-11-11 16:54:41 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -15,7 +15,8 @@ uses
   udOpenFiles in 'udOpenFiles.pas' {dOpenFiles},
   udDiffLog in 'udDiffLog.pas' {dDiffLog},
   udTranProps in 'udTranProps.pas' {dTranProps},
-  dkWebUtils in '..\..\dkWebUtils.pas';
+  dkWebUtils in '..\..\dkWebUtils.pas',
+  udFind in 'udFind.pas' {dFind};
 
 {$R *.res}
 

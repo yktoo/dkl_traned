@@ -1,10 +1,16 @@
+//**********************************************************************************************************************
+//  $Id: udAbout.pas,v 1.4 2004-09-11 17:58:01 dale Exp $
+//----------------------------------------------------------------------------------------------------------------------
+//  DKLang Translation Editor
+//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//**********************************************************************************************************************
 unit udAbout;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls;
+  ExtCtrls, StdCtrls, DKLang;
 
 type
   TdAbout = class(TForm)
@@ -15,6 +21,7 @@ type
     lOK: TLabel;
     lEmailTitle: TLabel;
     lEmail: TLabel;
+    dklcMain: TDKLanguageController;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure FormCreate(Sender: TObject);
     procedure lWebsiteClick(Sender: TObject);
@@ -30,17 +37,19 @@ type
 
 implementation
 {$R *.dfm}
-uses ShellAPI, ConsVars;
+uses ShellAPI, dkWebUtils, ConsVars;
 
 const
-  RSolid: TRect = (Left: 10; Top: 0; Right: 290; Bottom: 200); // Прямоугольник сплошной области картинки
-  CTransp = clWhite;                                           // Прозрачный цвет
+   // Opaque region
+  RSolid: TRect = (Left: 10; Top: 0; Right: 290; Bottom: 200);
+   // Transparent color
+  CTransp = clWhite;
 
   procedure ShowAbout;
   begin
     with TdAbout.Create(Application) do
       try
-        lWebsite.Caption := SAppWebsite;
+        lWebsite.Caption := DKWeb.MainSiteURI;
         lEmail.Caption   := SAppEmail;
         ShowModal;
       finally
@@ -132,7 +141,7 @@ const
 
   procedure TdAbout.lWebsiteClick(Sender: TObject);
   begin
-    ShellExecute(Handle, 'open', PChar(SAppWebsite), nil, nil, SW_SHOWNORMAL);
+    DKWeb.Open_Index;
   end;
 
   procedure TdAbout.WMNCHitTest(var Msg: TWMNCHitTest);

@@ -2,7 +2,7 @@ object dAbout: TdAbout
   Left = 573
   Top = 309
   BorderStyle = bsNone
-  Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
+  Caption = 'About'
   ClientHeight = 200
   ClientWidth = 300
   Color = clBtnFace
@@ -1902,5 +1902,22 @@ object dAbout: TdAbout
     ParentFont = False
     Transparent = True
     OnClick = lEmailClick
+  end
+  object dklcMain: TDKLanguageController
+    IgnoreList.Strings = (
+      '*.Font.Name'
+      '*.SecondaryShortCuts'
+      'lEmail.Caption'
+      'lVersion.Caption'
+      'lWebsite.Caption')
+    Left = 252
+    Top = 132
+    LangData = {
+      06006441626F7574010100000001000000070043617074696F6E010700000005
+      00694D61696E000008006C56657273696F6E000008006C576562736974650000
+      0D006C576562736974655469746C65010100000004000000070043617074696F
+      6E0003006C4F4B010100000005000000070043617074696F6E000B006C456D61
+      696C5469746C65010100000006000000070043617074696F6E0006006C456D61
+      696C0000}
   end
 end

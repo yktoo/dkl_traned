@@ -1,3 +1,9 @@
+//**********************************************************************************************************************
+//  $Id: Main.pas,v 1.11 2004-09-11 17:58:01 dale Exp $
+//----------------------------------------------------------------------------------------------------------------------
+//  DKLang Translation Editor
+//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//**********************************************************************************************************************
 unit Main;
 
 interface
@@ -109,27 +115,57 @@ type
     ipmJumpNextUntranslated: TTBXItem;
     ipmTreeSep: TTBXSeparatorItem;
     ipmTranProps: TTBXItem;
-    aWebsite: TAction;
-    iWebsite: TTBXItem;
     aAddToRepository: TAction;
     aAutoTranslate: TAction;
     smTools: TTBXSubmenuItem;
     iAutoTranslate: TTBXItem;
     iAddToRepository: TTBXItem;
     iToolsSep: TTBXSeparatorItem;
+    dklcMain: TDKLanguageController;
+    aHelpCheckUpdates: TAction;
+    aHelpProductWebsite: TAction;
+    aHelpSupport: TAction;
+    aHelpVendorWebsite: TAction;
+    smHelpInternet: TTBXSubmenuItem;
+    iHelpVendorWebsite: TTBXItem;
+    iHelpSupport: TTBXItem;
+    iHelpProductWebsite: TTBXItem;
+    iHelpCheckUpdates: TTBXItem;
+    aToggleFocus: TAction;
+    aPrevEntry: TAction;
+    aNextEntry: TAction;
+    iViewSep2: TTBXSeparatorItem;
+    iNextEntry: TTBXItem;
+    iPrevEntry: TTBXItem;
+    iToggleFocus: TTBXItem;
     procedure aaAbout(Sender: TObject);
+    procedure aaAddToRepository(Sender: TObject);
+    procedure aaAutoTranslate(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
+    procedure aaHelpCheckUpdates(Sender: TObject);
+    procedure aaHelpProductWebsite(Sender: TObject);
+    procedure aaHelpSupport(Sender: TObject);
+    procedure aaHelpVendorWebsite(Sender: TObject);
+    procedure aaJumpNextUntranslated(Sender: TObject);
+    procedure aaJumpPrevUntranslated(Sender: TObject);
+    procedure aaMarkTranslated(Sender: TObject);
+    procedure aaMarkUntranslated(Sender: TObject);
     procedure aaNewOrOpen(Sender: TObject);
     procedure aaSave(Sender: TObject);
     procedure aaSaveAs(Sender: TObject);
     procedure aaSettings(Sender: TObject);
+    procedure aaTranProps(Sender: TObject);
+    procedure dpCurrentEntryResize(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure fpMainRestorePlacement(Sender: TObject);
     procedure fpMainSavePlacement(Sender: TObject);
+    procedure mCurTranEntryChange(Sender: TObject);
+    procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
     procedure tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
+    procedure tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
@@ -138,18 +174,10 @@ type
     procedure tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
-    procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
-    procedure aaTranProps(Sender: TObject);
-    procedure aaJumpPrevUntranslated(Sender: TObject);
-    procedure aaJumpNextUntranslated(Sender: TObject);
-    procedure dpCurrentEntryResize(Sender: TObject);
-    procedure mCurTranEntryChange(Sender: TObject);
-    procedure tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-    procedure aaMarkUntranslated(Sender: TObject);
-    procedure aaMarkTranslated(Sender: TObject);
-    procedure aaWebsite(Sender: TObject);
-    procedure aaAddToRepository(Sender: TObject);
-    procedure aaAutoTranslate(Sender: TObject);
+    procedure aaToggleFocus(Sender: TObject);
+    procedure aaPrevEntry(Sender: TObject);
+    procedure aaNextEntry(Sender: TObject);
+    procedure dklcMainLanguageChanged(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -202,6 +230,12 @@ type
     procedure AppIdle(Sender: TObject; var Done: Boolean);
      // Applies current setting
     procedure ApplySettings;
+     // Initializes language items
+    procedure InitLanguages;
+     // Language item click event
+    procedure LangItemClick(Sender: TObject);
+     // Updates selection mark at language items
+    procedure UpdateLangItems;
      // Updates status bar info
     procedure UpdateStatusBar;
      // Marks selected entries translated (bTranslated=True) or untranslated (bTranslated=False)
@@ -272,6 +306,26 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     Close;
   end;
 
+  procedure TfMain.aaHelpCheckUpdates(Sender: TObject);
+  begin
+    DKWeb.Open_VerCheck;
+  end;
+
+  procedure TfMain.aaHelpProductWebsite(Sender: TObject);
+  begin
+    DKWeb.Open_ViewInfo;
+  end;
+
+  procedure TfMain.aaHelpSupport(Sender: TObject);
+  begin
+    DKWeb.Open_Support;
+  end;
+
+  procedure TfMain.aaHelpVendorWebsite(Sender: TObject);
+  begin
+    DKWeb.Open_Index;
+  end;
+
   procedure TfMain.aaJumpNextUntranslated(Sender: TObject);
   begin
     LocateUntranslatedNode(True);
@@ -297,6 +351,20 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     OpenFiles(FSourceFileName, FDisplayFileName, FTranFileName);
   end;
 
+  procedure TfMain.aaNextEntry(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    n := tvMain.GetNext(tvMain.FocusedNode);
+    if n<>nil then ActivateVTNode(tvMain, n, True, True);
+  end;
+
+  procedure TfMain.aaPrevEntry(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    n := tvMain.GetPrevious(tvMain.FocusedNode);
+    if n<>nil then ActivateVTNode(tvMain, n, True, True);
+  end;
+
   procedure TfMain.aaSave(Sender: TObject);
   begin
     if FTranFileName='' then aaSaveAs(Sender) else DoSave(FTranFileName);
@@ -307,9 +375,9 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     with TSaveDialog.Create(Self) do
       try
         DefaultExt := STranFileExt;
-        Filter     := STranFileFilter;
+        Filter     := ConstVal('STranFileFilter');
         Options    := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing];
-        Title      := SDlgTitle_SaveTranFileAs;
+        Title      := ConstVal('SDlgTitle_SaveTranFileAs');
         FileName   := DisplayTranFileName;
         if Execute then DoSave(FileName);
       finally
@@ -322,14 +390,18 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     if EditSettings then ApplySettings;
   end;
 
+  procedure TfMain.aaToggleFocus(Sender: TObject);
+  begin
+    if tvMain.Visible and dpCurrentEntry.Visible then
+      if tvMain.Focused then begin
+        if mCurTranEntry.CanFocus then mCurTranEntry.SetFocus;
+      end else
+        if tvMain.CanFocus then tvMain.SetFocus;
+  end;
+
   procedure TfMain.aaTranProps(Sender: TObject);
   begin
     if EditTranslationProps(FTranslations, FLangIDSource, FLangIDTran) then Modified := True;
-  end;
-
-  procedure TfMain.aaWebsite(Sender: TObject);
-  begin
-    ShellExecute(Handle, nil, PChar(SAppWebsite), nil, nil, SW_SHOWNORMAL);
   end;
 
   procedure TfMain.AddNodeTranslationToRepository(Node: PVirtualNode);
@@ -409,7 +481,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     Result := not Modified;
     if not Result then
-      case MessageBox(Handle, PChar(Format(SConfirm_FileNotSaved, [DisplayTranFileName])), PChar(SDlgTitle_Confirm), MB_ICONEXCLAMATION or MB_YESNOCANCEL) of
+      case MessageBox(Handle, PChar(Format(ConstVal('SConfirm_FileNotSaved'), [DisplayTranFileName])), PChar(ConstVal('SDlgTitle_Confirm')), MB_ICONEXCLAMATION or MB_YESNOCANCEL) of
         IDYES: begin
           aSave.Execute;
           Result := not Modified;
@@ -433,10 +505,15 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
   end;
 
+  procedure TfMain.dklcMainLanguageChanged(Sender: TObject);
+  begin
+    UpdateLangItems;
+  end;
+
   procedure TfMain.DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
   var
     sDiff: String;
-    iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts: Integer;
+    iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer;
     bAutoTranslate: Boolean;
   begin
      // Destroy former langsource storage and translations
@@ -460,7 +537,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
         FLangIDTran   := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_LangID],       0);
       end;
        // Now compare the source and the translation and update the latter
-      sDiff := FLangSource.CompareStructureWith(FTranslations, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts);
+      sDiff := FLangSource.CompareStructureWith(
+        FTranslations,
+        iCntAddedComps, iCntAddedProps, iCntAddedConsts,
+        iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts,
+        iCntComps, iCntProps, iCntConsts);
        // Update the properties
       FModified        := False;
       FSourceFileName  := sLangSrcFileName;
@@ -472,7 +553,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       UpdateCaption;
        // Show the differences unless this is a new translation
       bAutoTranslate := False; 
-      if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, bAutoTranslate);
+      if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts, bAutoTranslate);
        // Reload the tree
       UpdateTree;
     except
@@ -511,15 +592,27 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   end;
 
   procedure TfMain.EnableActions;
-  var bOpenFiles: Boolean;
+  var bOpenFiles, bFocusedNode, bSelection: Boolean;
   begin
-    bOpenFiles := FLangSource<>nil;
+    bOpenFiles   := FLangSource<>nil;
+    bFocusedNode := bOpenFiles and (tvMain.FocusedNode<>nil);
+    bSelection   := bOpenFiles and (tvMain.SelectedCount>0);
+     // File
     aSave.Enabled                 := bOpenFiles;
     aSaveAs.Enabled               := bOpenFiles;
     aClose.Enabled                := bOpenFiles;
+     // Edit
+    aMarkTranslated.Enabled       := bSelection;
+    aMarkUntranslated.Enabled     := bSelection;
     aTranProps.Enabled            := bOpenFiles;
+     // View
+    aPrevEntry.Enabled            := bFocusedNode;
+    aNextEntry.Enabled            := bFocusedNode;
     aJumpPrevUntranslated.Enabled := bOpenFiles;
     aJumpNextUntranslated.Enabled := bOpenFiles;
+     // Tools
+    aAddToRepository.Enabled      := bSelection;
+    aAutoTranslate.Enabled        := bSelection;
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -539,6 +632,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     tvMain.NodeDataSize := SizeOf(TNodeData);
      // Create the repository
     FRepository := TTranRepository.Create;
+     // Initialize language items
+    InitLanguages; 
      // Update the tree
     UpdateTree;
   end;
@@ -554,21 +649,24 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     rif := fpMain.RegIniFile;
      // Load toolbar props
-    TBRegLoadPositions(Self, HKEY_CURRENT_USER, SRegKey_Root);
+    TBRegLoadPositions(Self, HKEY_CURRENT_USER, SRegKey_Toolbars);
      // Restore MRUs
     MRUSource.LoadFromRegIni (rif, SRegSection_MRUSource);
     MRUDisplay.LoadFromRegIni(rif, SRegSection_MRUDisplay);
     MRUTran.LoadFromRegIni   (rif, SRegSection_MRUTranslation);
      // Load settings
-    sSetting_InterfaceFont     := rif.ReadString(SRegSection_Preferences, 'InterfaceFont',     FontToStr(Font));
-    sSetting_TableFont         := rif.ReadString(SRegSection_Preferences, 'TableFont',         sSetting_InterfaceFont);
-    sSetting_RepositoryDir     := rif.ReadString(SRegSection_Preferences, 'RepositoryPath',    ExtractFileDir(ParamStr(0)));
-    bSetting_ReposRemovePrefix := rif.ReadBool  (SRegSection_Preferences, 'ReposRemovePrefix', True);
-    bSetting_ReposAutoAdd      := rif.ReadBool  (SRegSection_Preferences, 'ReposAutoAdd',      True);
+    LangManager.LanguageID     := rif.ReadInteger(SRegSection_Preferences, 'Language',          ILangID_USEnglish);
+    sbarMain.Visible           := rif.ReadBool   (SRegSection_Preferences, 'StatusBarVisible',  True);
+    sSetting_InterfaceFont     := rif.ReadString (SRegSection_Preferences, 'InterfaceFont',     FontToStr(Font));
+    sSetting_TableFont         := rif.ReadString (SRegSection_Preferences, 'TableFont',         sSetting_InterfaceFont);
+    sSetting_RepositoryDir     := rif.ReadString (SRegSection_Preferences, 'RepositoryPath',    ExtractFileDir(ParamStr(0)));
+    bSetting_ReposRemovePrefix := rif.ReadBool   (SRegSection_Preferences, 'ReposRemovePrefix', True);
+    bSetting_ReposAutoAdd      := rif.ReadBool   (SRegSection_Preferences, 'ReposAutoAdd',      True);
      // Load the repository
     FRepository.LoadFromFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
      // Apply loaded settings
     ApplySettings;
+    UpdateLangItems;
     UpdateStatusBar;
   end;
 
@@ -583,11 +681,13 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     MRUDisplay.SaveToRegIni(rif, SRegSection_MRUDisplay);
     MRUTran.SaveToRegIni   (rif, SRegSection_MRUTranslation);
      // Save settings
-    rif.WriteString(SRegSection_Preferences, 'InterfaceFont',     sSetting_InterfaceFont);
-    rif.WriteString(SRegSection_Preferences, 'TableFont',         sSetting_TableFont);
-    rif.WriteString(SRegSection_Preferences, 'RepositoryPath',    sSetting_RepositoryDir);
-    rif.WriteBool  (SRegSection_Preferences, 'ReposRemovePrefix', bSetting_ReposRemovePrefix);
-    rif.WriteBool  (SRegSection_Preferences, 'ReposAutoAdd',      bSetting_ReposAutoAdd);
+    rif.WriteInteger(SRegSection_Preferences, 'Language',          LangManager.LanguageID);
+    rif.WriteBool   (SRegSection_Preferences, 'StatusBarVisible',  sbarMain.Visible);
+    rif.WriteString (SRegSection_Preferences, 'InterfaceFont',     sSetting_InterfaceFont);
+    rif.WriteString (SRegSection_Preferences, 'TableFont',         sSetting_TableFont);
+    rif.WriteString (SRegSection_Preferences, 'RepositoryPath',    sSetting_RepositoryDir);
+    rif.WriteBool   (SRegSection_Preferences, 'ReposRemovePrefix', bSetting_ReposRemovePrefix);
+    rif.WriteBool   (SRegSection_Preferences, 'ReposAutoAdd',      bSetting_ReposAutoAdd);
      // Save the repository
     FRepository.SaveToFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
   end;
@@ -602,6 +702,21 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     if Node=nil then Result := nkNone else Result := PNodeData(tvMain.GetNodeData(Node)).Kind;
   end;
 
+  procedure TfMain.InitLanguages;
+  var
+    i: Integer;
+    tbi: TTBCustomItem;
+  begin
+    smLanguage.Clear;
+    for i := 0 to LangManager.LanguageCount-1 do begin
+      tbi := TTBXItem.Create(Self);
+      tbi.Caption := LangManager.LanguageNames[i];
+      tbi.Tag     := LangManager.LanguageIDs[i];
+      tbi.OnClick := LangItemClick;
+      smLanguage.Add(tbi);
+    end;
+  end;
+
   function TfMain.IsNodeUntranslated(Node: PVirtualNode): Boolean;
   var p: PNodeData;
   begin
@@ -611,6 +726,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       nkProp:  Result := dklptsUntranslated in p.pTranProp.States;
       nkConst: Result := dklcsUntranslated  in p.pTranConst.States;
     end;
+  end;
+
+  procedure TfMain.LangItemClick(Sender: TObject);
+  begin
+    LangManager.LanguageID := TComponent(Sender).Tag;
   end;
 
   procedure TfMain.LocateUntranslatedNode(bNext: Boolean);
@@ -798,7 +918,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
               end;
               IColIdx_Translated: s := MultilineToLine(p.pTranProp.sValue);
             end;
-          nkConsts: if Column=IColIdx_Name then s := SNode_Constants;
+          nkConsts: if Column=IColIdx_Name then s := ConstVal('SNode_Constants');
           nkConst:
             case Column of
               IColIdx_Name:       s := p.pSrcConst.sName;
@@ -945,6 +1065,14 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
   end;
 
+  procedure TfMain.UpdateLangItems;
+  var i: Integer;
+  begin
+    for i := 0 to smLanguage.Count-1 do
+      with smLanguage[i] do
+        Checked := Tag=LangManager.LanguageID;
+  end;
+
   procedure TfMain.UpdateStatusBar;
   var
     n: PVirtualNode;
@@ -978,10 +1106,10 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
      // Update status bar
     with sbarMain.Panels do begin
-      Items[ISBPanelIdx_CompCount].Caption       := Format(SStatusBar_CompCount,       [iCntComp]);
-      Items[ISBPanelIdx_PropCount].Caption       := Format(SStatusBar_PropCount,       [iCntProp, iCntPropUntr]);
-      Items[ISBPanelIdx_ConstCount].Caption      := Format(SStatusBar_ConstCount,      [iCntConst, iCntConstUntr]);
-      Items[ISBPanelIdx_ReposEntryCount].Caption := Format(SStatusBar_ReposEntryCount, [FRepository.EntryCount]);
+      Items[ISBPanelIdx_CompCount].Caption       := Format(ConstVal('SStatusBar_CompCount'),       [iCntComp]);
+      Items[ISBPanelIdx_PropCount].Caption       := Format(ConstVal('SStatusBar_PropCount'),       [iCntProp, iCntPropUntr]);
+      Items[ISBPanelIdx_ConstCount].Caption      := Format(ConstVal('SStatusBar_ConstCount'),      [iCntConst, iCntConstUntr]);
+      Items[ISBPanelIdx_ReposEntryCount].Caption := Format(ConstVal('SStatusBar_ReposEntryCount'), [FRepository.EntryCount]);
     end;
   end;
 

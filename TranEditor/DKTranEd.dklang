@@ -1,0 +1,182 @@
+;***********************************************************************************************************************
+;  $Id: DKTranEd.dklang,v 1.1 2004-09-11 17:58:01 dale Exp $
+;-----------------------------------------------------------------------------------------------------------------------
+;  DKLang Translation Editor
+;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+;***********************************************************************************************************************
+
+[dTranProps]
+Caption=00000001,Translation properties
+lSrcLang.Caption=00000002,&Source Language (used for Translation Repository):
+lTranLang.Caption=00000003,&Translation language:
+lAuthor.Caption=00000004,&Author:
+lAdditionalParams.Caption=00000005,A&dditional parameters (in the format 'Name=Value'):
+lTargetApp.Caption=00000006,&Target Application/Version:
+bOK.Caption=00000007,OK
+bCancel.Caption=00000008,Cancel
+
+[dSettings]
+Caption=00000001,Program settings
+bOK.Caption=00000002,OK
+bCancel.Caption=00000003,Cancel
+tsRepository.Caption=00000004,Repository
+lReposPath.Caption=00000005,&Translation Repository path:
+lRemovePrefix.Caption=00000006,(in this case you'll have to assign shortcuts manually later)
+bBrowseReposPath.Caption=00000007,&Browse...
+cbRemovePrefix.Caption=00000008,&Remove prefix character ('&&') when adding strings to the Repository
+cbAutoAddStrings.Caption=00000009,&Automatically add new translations to the Repository
+tsInterface.Caption=00000010,Interface
+bInterfaceFont.Caption=00000013,&Interface font...
+bTableFont.Caption=00000014,&Table font...
+
+[dOpenFiles]
+Caption=00000001,Open language files
+lSource.Caption=00000002,&Language source file:
+bSourceFileBrowse.Caption=00000003,&Browse...
+bTranFileBrowse.Caption=00000004,Bro&wse...
+bDisplayFileBrowse.Caption=00000005,Brow&se...
+cbUseDisplayFile.Caption=00000006,&Use the following translation file to display the values (instead of ones of the source file):
+rbNewTran.Caption=00000007,&Create new translation
+rbOpenTran.Caption=00000008,&Open an existing translation file:
+bOK.Caption=00000009,OK
+bCancel.Caption=00000010,Cancel
+
+[dDiffLog]
+Caption=00000001,Differences found
+bClose.Caption=00000002,Close
+gbTotals.Caption=00000003,Totals
+cbAutoTranslate.Caption=00000004,&Automatically translate all untranslated entries using Translation Repository
+
+[dAbout]
+Caption=00000001,About
+lWebsiteTitle.Caption=00000004,Internet:
+lOK.Caption=00000005,Œ 
+lEmailTitle.Caption=00000006,Contact E-mail:
+
+[fMain]
+tbMenu.Caption=00000002,Main Menu
+smFile.Caption=00000003,&File
+smEdit.Caption=00000004,&Edit
+smView.Caption=00000005,&View
+iToggleToolbar.Caption=00000006,&Toolbar
+iToggleToolbar.Hint=00000007,Show/hide the toolbar
+iToggleCurrentEntry.Caption=00000008,&Current Entry
+iToggleCurrentEntry.Hint=00000009,Show/hide the Current Entry panel
+iToggleStatusBar.Caption=00000010,&Status bar
+iToggleStatusBar.Hint=00000011,Show/hide the status bar
+smLanguage.Caption=00000012,&Language
+smTools.Caption=00000013,&Tools
+smHelp.Caption=00000014,&Help
+tbMain.Caption=00000015,Toolbar
+dpCurrentEntry.Caption=00000016,Current Entry
+sbarMain.Panels[1].Hint=00000018,Total number of component entries
+sbarMain.Panels[2].Hint=00000020,Number of component property entries total/untranslated
+sbarMain.Panels[3].Hint=00000022,Number of constant entries total/untranslated
+sbarMain.Panels[4].Hint=00000024,Number of Repository entries
+aNewOrOpen.Caption=00000026,&New or Open...
+aNewOrOpen.Category=00000025,File
+aNewOrOpen.Hint=00000027,New or Open...|Create new translation or open an existing one
+aSave.Caption=00000029,&Save
+aSave.Category=00000028,File
+aSave.Hint=00000030,Save|Save the current translation
+aSaveAs.Caption=00000032,Save &as...
+aSaveAs.Category=00000031,File
+aSaveAs.Hint=00000033,Save as...|Save the current translation into another file
+aClose.Caption=00000035,&Close
+aClose.Category=00000034,File
+aClose.Hint=00000036,Close|Close the files currently open
+aExit.Caption=00000038,&Exit
+aExit.Category=00000037,File
+aExit.Hint=00000039,Exit|Exit the program
+aSettings.Caption=00000041,Program settings...
+aSettings.Category=00000040,Tools
+aSettings.Hint=00000042,Program settings...|View or modify the program settings
+aAbout.Caption=00000044,&About...
+aAbout.Category=00000043,Help
+aAbout.Hint=00000045,About...|Version and copyright info
+aJumpPrevUntranslated.Caption=00000047,Jump to pre&vious untranslated entry
+aJumpPrevUntranslated.Category=00000046,View
+aJumpPrevUntranslated.Hint=00000048,Jump to previous untranslated entry
+aJumpNextUntranslated.Caption=00000050,Jump to ne&xt untranslated entry
+aJumpNextUntranslated.Category=00000049,View
+aJumpNextUntranslated.Hint=00000051,Jump to next untranslated entry
+aMarkTranslated.Caption=00000053,Mark as t&ranslated
+aMarkTranslated.Category=00000052,Edit
+aMarkTranslated.Hint=00000054,Mark as translated|Mark selected entries as translated
+aMarkUntranslated.Caption=00000056,Mark as &untranslated
+aMarkUntranslated.Category=00000055,Edit
+aMarkUntranslated.Hint=00000057,Mark as untranslated|Mark selected entries as untranslated
+aTranProps.Caption=00000059,&Translation properties...
+aTranProps.Category=00000058,Edit
+aTranProps.Hint=00000060,Translation properties...|View or modify the translation properties
+aAutoTranslate.Caption=00000065,A&utotranslate selected
+aAutoTranslate.Category=00000064,Tools
+aAutoTranslate.Hint=00000066,Autotranslate selected|Autotranslate untranslated entries currently selected with using translation repository
+aAddToRepository.Caption=00000068,Add selected to &Repository
+aAddToRepository.Category=00000067,Tools
+aAddToRepository.Hint=00000069,Add selected to Repository|Add selected entries to Translation Repository
+aHelpCheckUpdates.Caption=00000074,Check for &updates
+aHelpCheckUpdates.Category=00000073,Help
+aHelpCheckUpdates.Hint=00000075,Check for updates|Check for program updates on the web
+aHelpProductWebsite.Caption=00000077,DKLang Translation Editor ho&me site
+aHelpProductWebsite.Category=00000076,Help
+aHelpProductWebsite.Hint=00000078,DKLang Translation Editor home site|Open the program home site in the browser
+aHelpSupport.Caption=00000080,Product &support
+aHelpSupport.Category=00000079,Help
+aHelpSupport.Hint=00000081,Product support|Open the product support page in the browser
+aHelpVendorWebsite.Caption=00000083,DK Software &Website
+aHelpVendorWebsite.Category=00000082,Help
+aHelpVendorWebsite.Hint=00000084,DK Software Website|Open the vendor home site in the browser
+smHelpInternet.Caption=00000087,&Internet
+aToggleFocus.Caption=00000089,Toggle &focus
+aToggleFocus.Category=00000088,View
+aToggleFocus.Hint=00000090,Toggle focus|Toggle the focus between the table and the translated value editor
+aPrevEntry.Caption=00000092,&Previous entry
+aPrevEntry.Category=00000091,View
+aPrevEntry.Hint=00000093,Previous entry|Step to previous entry
+aNextEntry.Caption=00000095,&Next entry
+aNextEntry.Category=00000094,View
+aNextEntry.Hint=00000096,Next entry|Step to next entry
+
+[$CONSTANTS]
+SConfirm_FileNotSaved=Translation file "%s" is modified but not saved. Do you wish to save it?
+SDiffDesc_AddComponent=+ Component: [%s]
+SDiffDesc_AddConstant=+ Constant "%s"
+SDiffDesc_AddProperty=+ Property "%s" (ID=%d)
+SDiffDesc_ExcessiveEntries=The following entries were found excessive and deleted from the translation:
+SDiffDesc_MissingEntries=The following entries were not found and were added to the translation:
+SDiffDesc_RemoveComponent=- Component: [%s]
+SDiffDesc_RemoveConstant=- Constant "%s"
+SDiffDesc_RemoveProperty=- Component "%s", property with ID=%d
+SDiffTotalsText=;Components;Properties;Constants\nAdded;%d;%d;%d\nRemoved;%d;%d;%d\nTotal;%d;%d;%d
+SDlgTitle_Confirm=Confirm
+SDlgTitle_Error=Error
+SDlgTitle_Info=Info
+SDlgTitle_SaveTranFileAs=Select a translation file to save to
+SDlgTitle_SelectDisplayFile=Select a translation file used for display
+SDlgTitle_SelectLangSourceFile=Select a language source file
+SDlgTitle_SelectTranFile=Select a translation file
+SDlgTitle_SelReposPath=Select translation repository path:
+SErrMsg_CharMissing="%s" missing
+SErrMsg_ConstNameMissing=Constant name missing
+SErrMsg_DuplicateCompName=Duplicate component name: "%s"
+SErrMsg_DuplicatePropID=Duplicate property ID: %d
+SErrMsg_DuplicatePropName=Duplicate property name: "%s"
+SErrMsg_FileDoesntExist=File "%s" doesn't exist
+SErrMsg_InvalidCompName=Invalid component name: "%s"
+SErrMsg_LoadLangSourceFailed=Error loading language source:\nLine %d: %s
+SErrMsg_PropIDInvalid=Invalid property ID
+SErrMsg_PropIDMissing=Property ID missing
+SErrMsg_PropNameMissing=Property name missing
+SErrMsg_SectionlessEntry=Sectionless entries are not allowed
+SErrMsg_SectionNameMissing=Section name missing
+SErrMsg_SrcAndTranLangsAreSame=Source and translation languages should be different
+SErrMsg_WrongSectionName=Wrong section name format: "%s"
+SLangSourceFileFilter=DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*
+SNode_Constants=Constants
+SStatusBar_CompCount=Comp: %d
+SStatusBar_ConstCount=Const: %d/%d
+SStatusBar_PropCount=Prop: %d/%d
+SStatusBar_ReposEntryCount=Repository: %d entries
+STranFileFilter=DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*
+

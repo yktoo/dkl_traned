@@ -2,7 +2,7 @@ object dSettings: TdSettings
   Left = 459
   Top = 268
   BorderStyle = bsDialog
-  Caption = 'Translation Manager settings'
+  Caption = 'Program settings'
   ClientHeight = 190
   ClientWidth = 447
   Color = clBtnFace
@@ -57,9 +57,9 @@ object dSettings: TdSettings
       object lReposPath: TLabel
         Left = 8
         Top = 8
-        Width = 134
+        Width = 137
         Height = 13
-        Caption = '&Translation repository path:'
+        Caption = '&Translation Repository path:'
         FocusControl = eReposPath
       end
       object lRemovePrefix: TLabel
@@ -72,7 +72,7 @@ object dSettings: TdSettings
       object eReposPath: TEdit
         Left = 8
         Top = 24
-        Width = 324
+        Width = 329
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         Color = clBtnFace
@@ -92,20 +92,22 @@ object dSettings: TdSettings
       object cbRemovePrefix: TCheckBox
         Left = 8
         Top = 52
-        Width = 333
+        Width = 409
         Height = 17
+        Anchors = [akLeft, akTop, akRight]
         Caption = 
-          '&Remove prefix character ('#39'&&'#39') when adding strings to repositor' +
-          'y'
+          '&Remove prefix character ('#39'&&'#39') when adding strings to the Repos' +
+          'itory'
         TabOrder = 2
         OnClick = AdjustOKCancel
       end
       object cbAutoAddStrings: TCheckBox
         Left = 8
         Top = 92
-        Width = 261
+        Width = 409
         Height = 17
-        Caption = '&Automatically add new translations to repository'
+        Anchors = [akLeft, akTop, akRight]
+        Caption = '&Automatically add new translations to the Repository'
         TabOrder = 3
         OnClick = AdjustOKCancel
       end
@@ -114,14 +116,14 @@ object dSettings: TdSettings
       Caption = 'Interface'
       ImageIndex = 1
       object lInterfaceFont: TLabel
-        Left = 132
+        Left = 164
         Top = 12
         Width = 12
         Height = 13
         Caption = '...'
       end
       object lTableFont: TLabel
-        Left = 132
+        Left = 164
         Top = 40
         Width = 12
         Height = 13
@@ -130,7 +132,7 @@ object dSettings: TdSettings
       object bInterfaceFont: TButton
         Left = 8
         Top = 8
-        Width = 117
+        Width = 149
         Height = 23
         Caption = '&Interface font...'
         TabOrder = 0
@@ -139,12 +141,36 @@ object dSettings: TdSettings
       object bTableFont: TButton
         Left = 8
         Top = 36
-        Width = 117
+        Width = 149
         Height = 23
         Caption = '&Table font...'
         TabOrder = 1
         OnClick = bTableFontClick
       end
     end
+  end
+  object dklcMain: TDKLanguageController
+    IgnoreList.Strings = (
+      '*.Font.Name'
+      '*.SecondaryShortCuts'
+      'lInterfaceFont.Caption'
+      'lTableFont.Caption')
+    Left = 8
+    Top = 152
+    LangData = {
+      09006453657474696E6773010100000001000000070043617074696F6E010F00
+      00000300624F4B010100000002000000070043617074696F6E0007006243616E
+      63656C010100000003000000070043617074696F6E00060070634D61696E0000
+      0C0074735265706F7369746F7279010100000004000000070043617074696F6E
+      000A006C5265706F7350617468010100000005000000070043617074696F6E00
+      0D006C52656D6F7665507265666978010100000006000000070043617074696F
+      6E000A00655265706F7350617468000010006242726F7773655265706F735061
+      7468010100000007000000070043617074696F6E000E00636252656D6F766550
+      7265666978010100000008000000070043617074696F6E00100063624175746F
+      416464537472696E6773010100000009000000070043617074696F6E000B0074
+      73496E7465726661636501010000000A000000070043617074696F6E000E006C
+      496E74657266616365466F6E7400000A006C5461626C65466F6E7400000E0062
+      496E74657266616365466F6E7401010000000D000000070043617074696F6E00
+      0A00625461626C65466F6E7401010000000E000000070043617074696F6E00}
   end
 end

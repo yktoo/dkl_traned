@@ -35,7 +35,7 @@ object dDiffLog: TdDiffLog
     Left = 8
     Top = 8
     Width = 575
-    Height = 317
+    Height = 309
     Anchors = [akLeft, akTop, akRight, akBottom]
     ReadOnly = True
     ScrollBars = ssBoth
@@ -45,9 +45,9 @@ object dDiffLog: TdDiffLog
   end
   object gbTotals: TGroupBox
     Left = 8
-    Top = 328
+    Top = 320
     Width = 575
-    Height = 65
+    Height = 73
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Totals'
     TabOrder = 1
@@ -55,7 +55,7 @@ object dDiffLog: TdDiffLog
       Left = 2
       Top = 15
       Width = 571
-      Height = 48
+      Height = 56
       Align = alClient
       BorderStyle = bsNone
       ItemHeight = 13
@@ -76,5 +76,18 @@ object dDiffLog: TdDiffLog
     Checked = True
     State = cbChecked
     TabOrder = 2
+  end
+  object dklcMain: TDKLanguageController
+    IgnoreList.Strings = (
+      '*.Font.Name'
+      '*.SecondaryShortCuts')
+    Left = 468
+    Top = 376
+    LangData = {
+      080064446966664C6F67010100000001000000070043617074696F6E01050000
+      00060062436C6F7365010100000002000000070043617074696F6E0005006D4D
+      61696E000008006762546F74616C73010100000003000000070043617074696F
+      6E0008006C62546F74616C7300000F0063624175746F5472616E736C61746501
+      0100000004000000070043617074696F6E00}
   end
 end

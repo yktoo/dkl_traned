@@ -1,10 +1,16 @@
+//**********************************************************************************************************************
+//  $Id: udSettings.pas,v 1.5 2004-09-11 17:58:01 dale Exp $
+//----------------------------------------------------------------------------------------------------------------------
+//  DKLang Translation Editor
+//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//**********************************************************************************************************************
 unit udSettings;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, ComCtrls;
+  StdCtrls, ExtCtrls, ComCtrls, DKLang;
 
 type
   TdSettings = class(TForm)
@@ -23,6 +29,7 @@ type
     bTableFont: TButton;
     lInterfaceFont: TLabel;
     lTableFont: TLabel;
+    dklcMain: TDKLanguageController;
     procedure bBrowseReposPathClick(Sender: TObject);
     procedure bInterfaceFontClick(Sender: TObject);
     procedure bTableFontClick(Sender: TObject);
@@ -69,7 +76,7 @@ uses ConsVars, FileCtrl;
   var s: String;
   begin
     s := eReposPath.Text;
-    if SelectDirectory(SDlgTitle_SelReposPath, '', s) then eReposPath.Text := s;
+    if SelectDirectory(ConstVal('SDlgTitle_SelReposPath'), '', s) then eReposPath.Text := s;
   end;
 
   procedure TdSettings.bInterfaceFontClick(Sender: TObject);

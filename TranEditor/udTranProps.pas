@@ -1,3 +1,9 @@
+//**********************************************************************************************************************
+//  $Id: udTranProps.pas,v 1.6 2004-09-11 17:58:01 dale Exp $
+//----------------------------------------------------------------------------------------------------------------------
+//  DKLang Translation Editor
+//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//**********************************************************************************************************************
 unit udTranProps;
 
 interface
@@ -22,6 +28,7 @@ type
     MRUTargetApp: TTBMRUList;
     lSrcLang: TLabel;
     cbSrcLang: TComboBox;
+    dklcMain: TDKLanguageController;
     procedure bOKClick(Sender: TObject);
     procedure AdjustOKCancel(Sender: TObject);
   private
@@ -98,7 +105,7 @@ const
      // Get LangIDs
     FSrcLangID  := GetCBObject(cbSrcLang);
     FTranLangID := GetCBObject(cbTranLang);
-    if FSrcLangID=FTranLangID then TranEdError(SErrMsg_SrcAndTranLangsAreSame);
+    if FSrcLangID=FTranLangID then TranEdError(ConstVal('SErrMsg_SrcAndTranLangsAreSame'));
      // Update translation params
     FTranslations.Params.Clear;
     with FTranslations.Params do begin

@@ -1,10 +1,16 @@
+//**********************************************************************************************************************
+//  $Id: udOpenFiles.pas,v 1.5 2004-09-11 17:58:01 dale Exp $
+//----------------------------------------------------------------------------------------------------------------------
+//  DKLang Translation Editor
+//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//**********************************************************************************************************************
 unit udOpenFiles;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls;
+  StdCtrls, ExtCtrls, DKLang;
 
 type
   TdOpenFiles = class(TForm)
@@ -21,6 +27,7 @@ type
     cbUseDisplayFile: TCheckBox;
     rbNewTran: TRadioButton;
     rbOpenTran: TRadioButton;
+    dklcMain: TDKLanguageController;
     procedure bSourceFileBrowseClick(Sender: TObject);
     procedure bTranFileBrowseClick(Sender: TObject);
     procedure bOKClick(Sender: TObject);
@@ -92,10 +99,10 @@ uses ConsVars;
     with TOpenDialog.Create(Self) do
       try
         DefaultExt := STranFileExt;
-        Filter     := STranFileFilter;
+        Filter     := ConstVal('STranFileFilter');
         FileName   := cbDisplayFile.Text;
         Options    := [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing];
-        Title      := SDlgTitle_SelectDisplayFile;
+        Title      := ConstVal('SDlgTitle_SelectDisplayFile');
         if Execute then begin
           cbDisplayFile.Text := FileName;
           AdjustOKCancel(nil);
@@ -130,10 +137,10 @@ uses ConsVars;
     with TOpenDialog.Create(Self) do
       try
         DefaultExt := SLangSourceFileExt;
-        Filter     := SLangSourceFileFilter;
+        Filter     := ConstVal('SLangSourceFileFilter');
         FileName   := cbSourceFile.Text;
         Options    := [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing];
-        Title      := SDlgTitle_SelectLangSourceFile;
+        Title      := ConstVal('SDlgTitle_SelectLangSourceFile');
         if Execute then begin
           cbSourceFile.Text := FileName;
           AdjustOKCancel(nil);
@@ -148,10 +155,10 @@ uses ConsVars;
     with TSaveDialog.Create(Self) do
       try
         DefaultExt := STranFileExt;
-        Filter     := STranFileFilter;
+        Filter     := ConstVal('STranFileFilter');
         FileName   := cbTranFile.Text;
         Options    := [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing];
-        Title      := SDlgTitle_SelectTranFile;
+        Title      := ConstVal('SDlgTitle_SelectTranFile');
         if Execute then begin
           cbTranFile.Text := FileName;
           AdjustOKCancel(nil);

@@ -175,7 +175,8 @@ const
   SRegKey_Root                     = 'Software\DKSoftware\DKTranEd';
   SRegKey_Toolbars                 = SRegKey_Root+'\Toolbars';
   SRegSection_MainWindow           = 'MainWindow';
-//  SRegSection_OpenMRU              = 'OpenMRU';
+  SRegSection_MRUSource            = 'MRUSource';
+  SRegSection_MRUTranslation       = 'MRUTranslation';
   SRegSection_Preferences          = 'Preferences';
 
    // Main tree column indexes

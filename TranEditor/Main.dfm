@@ -508,36 +508,8 @@ object fMain: TfMain
       end
       object smEdit: TTBXSubmenuItem
         Caption = '&Edit'
-        object iLangAdd: TTBXItem
-          Action = aLangAdd
-        end
-        object iLangRemove: TTBXItem
-          Action = aLangRemove
-        end
-        object iLangReplace: TTBXItem
-          Action = aLangReplace
-        end
-        object iEditSep1: TTBXSeparatorItem
-        end
-        object iConstAdd: TTBXItem
-          Action = aConstAdd
-        end
-        object iConstDelete: TTBXItem
-          Action = aConstDelete
-        end
-        object iConstRename: TTBXItem
-          Action = aConstRename
-        end
-        object iEditSep2: TTBXSeparatorItem
-        end
-        object iReposAddCurProp: TTBXItem
-          Action = aReposAddCurProp
-        end
-        object iReposAddAllProps: TTBXItem
-          Action = aReposAddAllProps
-        end
-        object iReposAutoTranslate: TTBXItem
-          Action = aReposAutoTranslate
+        object iTranProps: TTBXItem
+          Action = aTranProps
         end
       end
       object smView: TTBXSubmenuItem
@@ -855,6 +827,14 @@ object fMain: TfMain
       ImageIndex = 7
       ShortCut = 16496
       OnExecute = aaAbout
+    end
+    object aTranProps: TAction
+      Category = 'Edit'
+      Caption = '&Translation properties...'
+      Hint = 
+        'Translation properties...|View or modify the translation propert' +
+        'ies'
+      OnExecute = aaTranProps
     end
   end
   object ilMain: TTBImageList
@@ -1509,6 +1489,16 @@ object fMain: TfMain
     OnSavePlacement = fpMainSavePlacement
     OnRestorePlacement = fpMainRestorePlacement
     Left = 88
+    Top = 56
+  end
+  object MRUSource: TTBMRUList
+    Prefix = 'MRU'
+    Left = 140
+    Top = 56
+  end
+  object MRUTran: TTBMRUList
+    Prefix = 'MRU'
+    Left = 196
     Top = 56
   end
 end

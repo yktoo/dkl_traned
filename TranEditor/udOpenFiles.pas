@@ -28,6 +28,9 @@ type
     FTranFile: String;
      // ≈сли True - то это диалог создани€ трансл€ции, иначе - диалог открыти€ существующей
     FNewMode: Boolean;
+     // Source and translation MRU list
+    FSourceMRUStrings: TStrings;
+    FTranMRUStrings: TStrings;
   protected
     procedure InitializeDialog;
     function  Execute: Boolean;
@@ -35,19 +38,21 @@ type
 
    // ќтображает диалог создани€/открыти€ трансл€ции. ≈сли bNewMode=True, то вызвано создание, при этом недоступно поле
    //   файла трансл€ции, иначе вызвано открытие, доступны оба пол€
-  function SelectLangFiles(var sSourceFile, sTranFile: String; bNewMode: Boolean): Boolean;
+  function SelectLangFiles(var sSourceFile, sTranFile: String; SourceMRUStrings, TranMRUStrings: TStrings; bNewMode: Boolean): Boolean;
 
 implementation
 {$R *.dfm}
 uses ConsVars;
 
-  function SelectLangFiles(var sSourceFile, sTranFile: String; bNewMode: Boolean): Boolean;
+  function SelectLangFiles(var sSourceFile, sTranFile: String; SourceMRUStrings, TranMRUStrings: TStrings; bNewMode: Boolean): Boolean;
   begin
     with TdOpenFiles.Create(Application) do
       try
-        FSourceFile := sSourceFile;
-        FTranFile   := sTranFile;
-        FNewMode    := bNewMode;
+        FSourceFile       := sSourceFile;
+        FTranFile         := sTranFile;
+        FSourceMRUStrings := SourceMRUStrings;
+        FTranMRUStrings   := TranMRUStrings;
+        FNewMode          := bNewMode;
         Result := Execute;
         if Result then begin
           sSourceFile := FSourceFile;
@@ -124,13 +129,16 @@ uses ConsVars;
 
   procedure TdOpenFiles.InitializeDialog;
   begin
+    cbSource.Items.Assign(FSourceMRUStrings);
     cbSource.Text := FSourceFile;
     if FNewMode then begin
       lTran.Hide;
       cbTran.Hide;
       bTranBrowse.Hide;
-    end else
+    end else begin
+      cbTran.Items.Assign(FTranMRUStrings);
       cbTran.Text := FTranFile;
+    end;
     AdjustOKCancel(nil);  
   end;
 

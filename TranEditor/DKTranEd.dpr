@@ -8,7 +8,8 @@ uses
   udSettings in 'udSettings.pas' {dSettings},
   udAbout in 'udAbout.pas' {dAbout},
   udOpenFiles in 'udOpenFiles.pas' {dOpenFiles},
-  udDiffLog in 'udDiffLog.pas' {dDiffLog};
+  udDiffLog in 'udDiffLog.pas' {dDiffLog},
+  udTranProps in 'udTranProps.pas' {dTranProps};
 
 {$R *.res}
 

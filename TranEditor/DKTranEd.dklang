@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.1 2004-09-11 17:58:01 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.2 2004-09-12 15:53:55 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -60,15 +60,14 @@ smEdit.Caption=00000004,&Edit
 smView.Caption=00000005,&View
 iToggleToolbar.Caption=00000006,&Toolbar
 iToggleToolbar.Hint=00000007,Show/hide the toolbar
-iToggleCurrentEntry.Caption=00000008,&Current Entry
-iToggleCurrentEntry.Hint=00000009,Show/hide the Current Entry panel
+iToggleCurSrcEntry.Caption=00000008,Current so&urce entry
+iToggleCurSrcEntry.Hint=00000009,Show/hide the Current Entry panel
 iToggleStatusBar.Caption=00000010,&Status bar
 iToggleStatusBar.Hint=00000011,Show/hide the status bar
 smLanguage.Caption=00000012,&Language
 smTools.Caption=00000013,&Tools
 smHelp.Caption=00000014,&Help
 tbMain.Caption=00000015,Toolbar
-dpCurrentEntry.Caption=00000016,Current Entry
 sbarMain.Panels[1].Hint=00000018,Total number of component entries
 sbarMain.Panels[2].Hint=00000020,Number of component property entries total/untranslated
 sbarMain.Panels[3].Hint=00000022,Number of constant entries total/untranslated
@@ -100,12 +99,6 @@ aJumpPrevUntranslated.Hint=00000048,Jump to previous untranslated entry
 aJumpNextUntranslated.Caption=00000050,Jump to ne&xt untranslated entry
 aJumpNextUntranslated.Category=00000049,View
 aJumpNextUntranslated.Hint=00000051,Jump to next untranslated entry
-aMarkTranslated.Caption=00000053,Mark as t&ranslated
-aMarkTranslated.Category=00000052,Edit
-aMarkTranslated.Hint=00000054,Mark as translated|Mark selected entries as translated
-aMarkUntranslated.Caption=00000056,Mark as &untranslated
-aMarkUntranslated.Category=00000055,Edit
-aMarkUntranslated.Hint=00000057,Mark as untranslated|Mark selected entries as untranslated
 aTranProps.Caption=00000059,&Translation properties...
 aTranProps.Category=00000058,Edit
 aTranProps.Hint=00000060,Translation properties...|View or modify the translation properties
@@ -137,6 +130,14 @@ aPrevEntry.Hint=00000093,Previous entry|Step to previous entry
 aNextEntry.Caption=00000095,&Next entry
 aNextEntry.Category=00000094,View
 aNextEntry.Hint=00000096,Next entry|Step to next entry
+dpEntryProps.Caption=00000097,Entry properties
+dpCurSrcEntry.Caption=00000098,Current source entry
+dpCurTranEntry.Caption=00000099,Current translated entry
+cbEntryStateUntranslated.Caption=00000100,&Untranslated
+lEntryStates.Caption=00000101,Entry states
+cbEntryStateAutotranslated.Caption=00000102,&Autotranslated
+iToggleEntryProps.Caption=00000103,&Entry properties
+iToggleCurTranEntry.Caption=00000104,Current t&ranslated entry
 
 [$CONSTANTS]
 SConfirm_FileNotSaved=Translation file "%s" is modified but not saved. Do you wish to save it?

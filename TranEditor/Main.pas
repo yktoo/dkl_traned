@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.11 2004-09-11 17:58:01 dale Exp $
+//  $Id: Main.pas,v 1.12 2004-09-12 15:53:55 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -76,7 +76,6 @@ type
     iNewOrOpen: TTBXItem;
     iSave: TTBXItem;
     iSaveAs: TTBXItem;
-    iSepJumpPrevUntranslated: TTBXSeparatorItem;
     iSettings: TTBXItem;
     iToggleStatusBar: TTBXVisibilityToggleItem;
     iToggleToolbar: TTBXVisibilityToggleItem;
@@ -97,20 +96,11 @@ type
     tbSep1: TTBXSeparatorItem;
     tbSep2: TTBXSeparatorItem;
     tvMain: TVirtualStringTree;
-    dpCurrentEntry: TTBXDockablePanel;
-    mCurSrcEntry: TMemo;
-    mCurTranEntry: TMemo;
-    iToggleCurrentEntry: TTBXVisibilityToggleItem;
+    iToggleCurSrcEntry: TTBXVisibilityToggleItem;
     bTranProps: TTBXItem;
     bSettings: TTBXItem;
-    aMarkTranslated: TAction;
-    aMarkUntranslated: TAction;
-    iMarkUntranslated: TTBXItem;
-    iMarkTranslated: TTBXItem;
     pmTree: TTBXPopupMenu;
     pmView: TTBXPopupMenu;
-    ipmMarkTranslated: TTBXItem;
-    ipmMarkUntranslated: TTBXItem;
     ipmJumpPrevUntranslated: TTBXItem;
     ipmJumpNextUntranslated: TTBXItem;
     ipmTreeSep: TTBXSeparatorItem;
@@ -138,6 +128,22 @@ type
     iNextEntry: TTBXItem;
     iPrevEntry: TTBXItem;
     iToggleFocus: TTBXItem;
+    mdkTop: TTBXMultiDock;
+    mdkLeft: TTBXMultiDock;
+    mdkRight: TTBXMultiDock;
+    mdkBottom: TTBXMultiDock;
+    dpEntryProps: TTBXDockablePanel;
+    dpCurSrcEntry: TTBXDockablePanel;
+    mCurSrcEntry: TMemo;
+    dpCurTranEntry: TTBXDockablePanel;
+    mCurTranEntry: TMemo;
+    cbEntryStateUntranslated: TTBXCheckBox;
+    lEntryStates: TTBXLabel;
+    cbEntryStateAutotranslated: TTBXCheckBox;
+    iToggleEntryProps: TTBXVisibilityToggleItem;
+    iToggleCurTranEntry: TTBXVisibilityToggleItem;
+    ipmNextEntry: TTBXItem;
+    ipmPrevEntry: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
@@ -149,14 +155,11 @@ type
     procedure aaHelpVendorWebsite(Sender: TObject);
     procedure aaJumpNextUntranslated(Sender: TObject);
     procedure aaJumpPrevUntranslated(Sender: TObject);
-    procedure aaMarkTranslated(Sender: TObject);
-    procedure aaMarkUntranslated(Sender: TObject);
     procedure aaNewOrOpen(Sender: TObject);
     procedure aaSave(Sender: TObject);
     procedure aaSaveAs(Sender: TObject);
     procedure aaSettings(Sender: TObject);
     procedure aaTranProps(Sender: TObject);
-    procedure dpCurrentEntryResize(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
@@ -178,6 +181,9 @@ type
     procedure aaPrevEntry(Sender: TObject);
     procedure aaNextEntry(Sender: TObject);
     procedure dklcMainLanguageChanged(Sender: TObject);
+    procedure cbEntryStateUntranslatedChange(Sender: TObject);
+    procedure cbEntryStateAutotranslatedChange(Sender: TObject);
+    procedure tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -192,6 +198,8 @@ type
     FCmdLineChecked: Boolean;
      // Update current entry editor flag
     FUpdatingCurEntryEditor: Boolean;
+     // Update entry properties flag
+    FUpdatingEntryProps: Boolean;
      // Translation repository
     FRepository: TTranRepository;
      // Prop storage
@@ -219,8 +227,8 @@ type
     procedure CloseProject(bUpdateDisplay: Boolean);
      // Return the kind of Node
     function  GetNodeKind(Node: PVirtualNode): TNodeKind;
-     // Returns True if node is a value still untranslated
-    function  IsNodeUntranslated(Node: PVirtualNode): Boolean;
+     // Returns translation states of a node
+    function  GetNodeTranStates(Node: PVirtualNode): TDKLang_TranslationStates;
      // Tries to locate the next (bNext=True) or previous (bNext=False) untranslated node
     procedure LocateUntranslatedNode(bNext: Boolean);
      // Initially adjusts the VT column widths
@@ -238,8 +246,10 @@ type
     procedure UpdateLangItems;
      // Updates status bar info
     procedure UpdateStatusBar;
-     // Marks selected entries translated (bTranslated=True) or untranslated (bTranslated=False)
-    procedure MarkTranslated(bTranslated: Boolean);
+     // Updates the entry properties info
+    procedure UpdateEntryProps;
+     // Changes selected entry translation states
+    procedure ChangeSelEntryStates(AddStates, RemoveStates: TDKLang_TranslationStates);
      // Adds translation for Node to translation repository, if possible
     procedure AddNodeTranslationToRepository(Node: PVirtualNode);
      // Translates the Node by using translation repository, if possible
@@ -336,16 +346,6 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     LocateUntranslatedNode(False);
   end;
 
-  procedure TfMain.aaMarkTranslated(Sender: TObject);
-  begin
-    MarkTranslated(True);
-  end;
-
-  procedure TfMain.aaMarkUntranslated(Sender: TObject);
-  begin
-    MarkTranslated(False);
-  end;
-
   procedure TfMain.aaNewOrOpen(Sender: TObject);
   begin
     OpenFiles(FSourceFileName, FDisplayFileName, FTranFileName);
@@ -392,11 +392,10 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
 
   procedure TfMain.aaToggleFocus(Sender: TObject);
   begin
-    if tvMain.Visible and dpCurrentEntry.Visible then
-      if tvMain.Focused then begin
-        if mCurTranEntry.CanFocus then mCurTranEntry.SetFocus;
-      end else
-        if tvMain.CanFocus then tvMain.SetFocus;
+    if tvMain.Focused then begin
+      if mCurTranEntry.CanFocus then mCurTranEntry.SetFocus;
+    end else
+      if tvMain.CanFocus then tvMain.SetFocus;
   end;
 
   procedure TfMain.aaTranProps(Sender: TObject);
@@ -410,9 +409,9 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     p := tvMain.GetNodeData(Node);
     if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
       case p.Kind of
-        nkProp: if not (dklptsUntranslated in p.pTranProp.States) then
+        nkProp: if not (dktsUntranslated in p.pTranProp.TranStates) then
           FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.sValue)]     := ReposFixPrefixChar(p.pTranProp.sValue);
-        nkConst: if not (dklcsUntranslated in p.pTranConst.States) then
+        nkConst: if not (dktsUntranslated in p.pTranConst.TranStates) then
           FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.sDefValue)] := ReposFixPrefixChar(p.pTranConst.sDefValue);
       end;
   end;
@@ -475,6 +474,43 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
      // Adjust table font
     FontFromStr(tvMain.Font, sSetting_TableFont);
     cTreeCodePage := CharsetToCP(tvMain.Font.Charset);
+  end;
+
+  procedure TfMain.cbEntryStateAutotranslatedChange(Sender: TObject);
+  begin
+    if FUpdatingEntryProps then Exit;
+    if cbEntryStateAutotranslated.Checked then
+      ChangeSelEntryStates([dktsAutotranslated], [])
+    else
+      ChangeSelEntryStates([], [dktsAutotranslated]);
+  end;
+
+  procedure TfMain.cbEntryStateUntranslatedChange(Sender: TObject);
+  begin
+    if FUpdatingEntryProps then Exit;
+    if cbEntryStateUntranslated.Checked then
+      ChangeSelEntryStates([dktsUntranslated], [])
+    else
+      ChangeSelEntryStates([], [dktsUntranslated]);
+  end;
+
+  procedure TfMain.ChangeSelEntryStates(AddStates, RemoveStates: TDKLang_TranslationStates);
+  var
+    n: PVirtualNode;
+    p: PNodeData;
+  begin
+     // Iterate through the selected nodes
+    n := tvMain.GetFirstSelected;
+    while n<>nil do begin
+      p := tvMain.GetNodeData(n);
+      case p.Kind of
+        nkProp:  with p.pTranProp^  do TranStates := TranStates+AddStates-RemoveStates;
+        nkConst: with p.pTranConst^ do TranStates := TranStates+AddStates-RemoveStates;
+      end;
+      n := tvMain.GetNextSelected(n);
+    end;
+    tvMain.Invalidate;
+    UpdateStatusBar;
   end;
 
   function TfMain.CheckSave: Boolean;
@@ -586,11 +622,6 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     MRUTran.Add(FTranFileName);
   end;
 
-  procedure TfMain.dpCurrentEntryResize(Sender: TObject);
-  begin
-    mCurSrcEntry.Width := dpCurrentEntry.ClientWidth div 2;
-  end;
-
   procedure TfMain.EnableActions;
   var bOpenFiles, bFocusedNode, bSelection: Boolean;
   begin
@@ -598,21 +629,22 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     bFocusedNode := bOpenFiles and (tvMain.FocusedNode<>nil);
     bSelection   := bOpenFiles and (tvMain.SelectedCount>0);
      // File
-    aSave.Enabled                 := bOpenFiles;
-    aSaveAs.Enabled               := bOpenFiles;
-    aClose.Enabled                := bOpenFiles;
-     // Edit
-    aMarkTranslated.Enabled       := bSelection;
-    aMarkUntranslated.Enabled     := bSelection;
-    aTranProps.Enabled            := bOpenFiles;
-     // View
-    aPrevEntry.Enabled            := bFocusedNode;
-    aNextEntry.Enabled            := bFocusedNode;
-    aJumpPrevUntranslated.Enabled := bOpenFiles;
-    aJumpNextUntranslated.Enabled := bOpenFiles;
-     // Tools
-    aAddToRepository.Enabled      := bSelection;
-    aAutoTranslate.Enabled        := bSelection;
+    aSave.Enabled                      := bOpenFiles;
+    aSaveAs.Enabled                    := bOpenFiles;
+    aClose.Enabled                     := bOpenFiles;
+     // Edit                           
+    aTranProps.Enabled                 := bOpenFiles;
+     // View                           
+    aPrevEntry.Enabled                 := bFocusedNode;
+    aNextEntry.Enabled                 := bFocusedNode;
+    aJumpPrevUntranslated.Enabled      := bOpenFiles;
+    aJumpNextUntranslated.Enabled      := bOpenFiles;
+     // Tools                          
+    aAddToRepository.Enabled           := bSelection;
+    aAutoTranslate.Enabled             := bSelection;
+     // Misc
+    cbEntryStateUntranslated.Enabled   := bSelection;
+    cbEntryStateAutotranslated.Enabled := bSelection;
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -702,6 +734,17 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     if Node=nil then Result := nkNone else Result := PNodeData(tvMain.GetNodeData(Node)).Kind;
   end;
 
+  function TfMain.GetNodeTranStates(Node: PVirtualNode): TDKLang_TranslationStates;
+  var p: PNodeData;
+  begin
+    p := tvMain.GetNodeData(Node);
+    case p.Kind of
+      nkProp:  Result := p.pTranProp.TranStates;
+      nkConst: Result := p.pTranConst.TranStates;
+      else     Result := [];
+    end;
+  end;
+
   procedure TfMain.InitLanguages;
   var
     i: Integer;
@@ -714,17 +757,6 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       tbi.Tag     := LangManager.LanguageIDs[i];
       tbi.OnClick := LangItemClick;
       smLanguage.Add(tbi);
-    end;
-  end;
-
-  function TfMain.IsNodeUntranslated(Node: PVirtualNode): Boolean;
-  var p: PNodeData;
-  begin
-    Result := False;
-    p := tvMain.GetNodeData(Node);
-    case p.Kind of
-      nkProp:  Result := dklptsUntranslated in p.pTranProp.States;
-      nkConst: Result := dklcsUntranslated  in p.pTranConst.States;
     end;
   end;
 
@@ -744,7 +776,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       Node := tvMain.GetPrevious(Node);
      // Look for next/previous untranslated node 
     while Node<>nil do begin
-      if IsNodeUntranslated(Node) then begin
+      if GetNodeTranStates(Node)*[dktsUntranslated, dktsAutotranslated]<>[] then begin
         ActivateVTNode(tvMain, Node, True, True);
         Exit;
       end;
@@ -752,24 +784,6 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
      // Beep if not found
     MessageBeep(MB_OK); 
-  end;
-
-  procedure TfMain.MarkTranslated(bTranslated: Boolean);
-  var
-    n: PVirtualNode;
-    p: PNodeData;
-  begin
-    n := tvMain.GetFirstSelected;
-    while n<>nil do begin
-      p := tvMain.GetNodeData(n);
-      case p.Kind of
-        nkProp:  if bTranslated then Exclude(p.pTranProp.States,  dklptsUntranslated) else Include(p.pTranProp.States,  dklptsUntranslated);
-        nkConst: if bTranslated then Exclude(p.pTranConst.States, dklcsUntranslated)  else Include(p.pTranConst.States, dklcsUntranslated);
-      end;
-      n := tvMain.GetNextSelected(n);
-    end;
-    tvMain.Invalidate;
-    UpdateStatusBar;
   end;
 
   procedure TfMain.mCurTranEntryChange(Sender: TObject);
@@ -826,21 +840,25 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
       case p.Kind of
         nkProp:
-          if dklptsUntranslated in p.pTranProp.States then begin
+          if dktsUntranslated in p.pTranProp.TranStates then begin
             s := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.sValue)];
             if s<>'' then begin
-              p.pTranProp.sValue := s;
-              Exclude(p.pTranProp.States, dklptsUntranslated);
+              with p.pTranProp^ do begin
+                sValue     := s;
+                TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
+              end;
               Modified := True;
             end;
           end;
         nkConst:
-          if dklcsUntranslated in p.pTranConst.States then begin
+          if dktsUntranslated in p.pTranConst.TranStates then begin
             s := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.sDefValue)];
             if s<>'' then begin
-              p.pTranConst.sDefValue := s;
-              p.pTranConst.sValue    := s;
-              Exclude(p.pTranConst.States, dklcsUntranslated);
+              with p.pTranConst^ do begin
+                sDefValue  := s;
+                sValue     := s;
+                TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
+              end;
               Modified := True;
             end;
           end;
@@ -850,7 +868,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
   begin
      // Paint untranslated values shaded
-    if (Column=IColIdx_Translated) and IsNodeUntranslated(Node) then
+    if (Column=IColIdx_Translated) and (dktsUntranslated in GetNodeTranStates(Node)) then
       with TargetCanvas do begin
         Brush.Color := CBack_UntranslatedValue;
         FillRect(CellRect);
@@ -863,6 +881,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
      // Paint the background depending on node kind
     ItemColor   := aColors[GetNodeKind(Node)];
     EraseAction := eaColor;
+  end;
+
+  procedure TfMain.tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
+  begin
+    UpdateEntryProps;
   end;
 
   procedure TfMain.tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -892,7 +915,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
           nkConsts: ImageIndex := iiNode_Consts;
           nkConst:  ImageIndex := iiNode_Const;
         end;
-      IColIdx_Translated: if IsNodeUntranslated(Node) then ImageIndex := iiUntranslated;
+      IColIdx_Translated: if dktsUntranslated in GetNodeTranStates(Node) then ImageIndex := iiUntranslated;
     end;
   end;
 
@@ -1000,13 +1023,13 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       nkProp:
         with p.pTranProp^ do begin
           sValue := s;
-          Exclude(States, dklptsUntranslated);
+          TranStates := TranStates-[dktsUntranslated, dktsAutotranslated];
         end;
       nkConst:
         with p.pTranConst^ do begin
-          sValue    := s;
-          sDefValue := sValue;
-          Exclude(States, dklcsUntranslated);
+          sValue     := s;
+          sDefValue  := sValue;
+          TranStates := TranStates-[dktsUntranslated, dktsAutotranslated];
         end;
       else Exit;
     end;
@@ -1018,8 +1041,10 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
 
   procedure TfMain.tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
   begin
-     // Draw root nodes, and untranslated entries, in bold
-    if (TextType=ttNormal) and ((Sender.NodeParent[Node]=nil) or ((Column=IColIdx_Translated) and IsNodeUntranslated(Node))) then
+     // Draw root nodes, and untranslated/autotranslated entries, in bold
+    if (TextType=ttNormal) and
+       ((Sender.NodeParent[Node]=nil) or
+        ((Column=IColIdx_Translated) and (GetNodeTranStates(Node)*[dktsUntranslated, dktsAutotranslated]<>[]))) then
       TargetCanvas.Font.Style := [fsBold];
   end;
 
@@ -1065,6 +1090,48 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
   end;
 
+  procedure TfMain.UpdateEntryProps;
+  type TFlagState = (fsUnknown, fsOff, fsOn, fsMixed);
+  const aCBStates: Array[TFlagState] of TCheckBoxState = (cbUnchecked, cbUnchecked, cbChecked, cbGrayed);
+  var
+    StUntranslated, StAutotranslated: TFlagState;
+    n: PVirtualNode;
+    TS: TDKLang_TranslationStates;
+
+     // Tests TS for a specified translation state and updates State appropriately
+    procedure TestState(TranState: TDKLang_TranslationState; var State: TFlagState);
+    begin
+      case State of
+        fsUnknown:   if TranState in TS then State := fsOn else State := fsOff;
+        fsOff, fsOn: if (TranState in TS)<>(State=fsOn) then State := fsMixed;
+      end;
+    end;
+
+  begin
+    StUntranslated   := fsUnknown;
+    StAutotranslated := fsUnknown;
+     // Iterate through the selected nodes
+    n := tvMain.GetFirstSelected;
+    while n<>nil do begin
+       // Get node translation states
+      TS := GetNodeTranStates(n);
+       // Update state vars
+      if GetNodeKind(n) in [nkProp, nkConst] then begin
+        TestState(dktsUntranslated,   StUntranslated);
+        TestState(dktsAutotranslated, StAutotranslated);
+      end;
+      n := tvMain.GetNextSelected(n);
+    end;
+     // Apply the determined properties
+    FUpdatingEntryProps := True;
+    try
+      cbEntryStateUntranslated.State   := aCBStates[StUntranslated];
+      cbEntryStateAutotranslated.State := aCBStates[StAutotranslated];
+    finally
+      FUpdatingEntryProps := False;
+    end;
+  end;
+
   procedure TfMain.UpdateLangItems;
   var i: Integer;
   begin
@@ -1094,11 +1161,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
           nkComp: Inc(iCntComp);
           nkProp: begin
             Inc(iCntProp);
-            if dklptsUntranslated in p.pTranProp.States then Inc(iCntPropUntr);
+            if dktsUntranslated in p.pTranProp.TranStates then Inc(iCntPropUntr);
           end;
           nkConst: begin
             Inc(iCntConst);
-            if dklcsUntranslated in p.pTranConst.States then Inc(iCntConstUntr);
+            if dktsUntranslated in p.pTranConst.TranStates then Inc(iCntConstUntr);
           end;
         end;
         n := tvMain.GetNext(n);

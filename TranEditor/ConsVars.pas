@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.10 2004-09-11 17:58:01 dale Exp $
+//  $Id: ConsVars.pas,v 1.11 2004-09-12 15:53:55 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -693,7 +693,7 @@ uses TypInfo, Forms, Dialogs;
            // If not found
           if pTranProp=nil then begin
              // Add the property to Translations
-            TranComp.Add(pSrcProp.iID, pSrcProp.sValue, [dklptsUntranslated]);
+            TranComp.Add(pSrcProp.iID, pSrcProp.sValue, [dktsUntranslated]);
              // Log the difference
             AddLine('    '+ConstVal('SDiffDesc_AddProperty'), [pSrcProp.sPropName, pSrcProp.iID]);
             Inc(iCntAddedProps);
@@ -715,7 +715,7 @@ uses TypInfo, Forms, Dialogs;
          // If not found
         if pTranConst=nil then begin
            // Add the constant to Translations
-          Translations.Constants.Add(pSrcConst.sName, pSrcConst.sDefValue, [dklcsUntranslated]);
+          Translations.Constants.Add(pSrcConst.sName, pSrcConst.sDefValue, [dktsUntranslated]);
            // Log the difference
           AddLine(ConstVal('SDiffDesc_AddConstant'), [pSrcConst.sName]);
           Inc(iCntAddedConsts);

@@ -1,9 +1,9 @@
-TargetApplication=DKTranEd v2.2
+TargetApplication=DKTranEd v2.4
 Author=Petran Liket
 SourceLANGID=1033
 LANGID=1043
-Generator=DKLang Translation Editor v2.2
-LastModified=2004-10-25 22:09:01
+Generator=DKLang Translation Editor v2.4
+LastModified=2004-12-05 14:04:55
 
 [dAbout]
 00000001=Over
@@ -142,8 +142,61 @@ LastModified=2004-10-25 22:09:01
 00000106=ID
 00000107=Standaard waarde
 00000108=Vertaling
+00000109=Bewerken
+00000110=Zoeken...
+00000111=Zoeken...|Zoek elementen via een opgegeven waarde
+00000112=Bewerken
+00000113=Zoek volgende
+00000114=Zoek volgende|Zoek naar de volgende opgegeven waarde
+00000115=Bewerken
+00000116=Vervang...
+00000117=Vervang...|Vervang het zoekresultaat door een opgegeven waarde
+00000118=Bladwijzers
+00000119=Toon/verberg het huidige vertaalde element venster
+00000120=Toon/verberg het element eigenschappen venster
+00000121=Bladwijzers
+00000122=Toon/verberg het bladwijzer venster
+00000123=Bewerken
+00000124=Voeg bladwijzer toe
+00000125=Voeg bladwijzer toe|Voeg huidig element toe aan de lijst met bladwijzers
+00000126=Bewerken
+00000127=Verwijder bladwijzer
+00000128=Verwijder bladwijzer|Verwijder geselecteerde bladwijzer uit de lijst
+00000129=Bewerken
+00000130=Ga naar bladwijzer
+00000131=Ga naar bladwijzer|Ga naar de geselecteerde bladwijzer
+00000132=Bladwijzer werkbalk
+
+[dFind]
+00000001=Zoek en vervang
+00000003=Sluiten
+00000004=Zoeken naar:
+00000006=Opties
+00000007=Hoofdletter gevoelig
+00000008=Alleen hele woorden
+00000010=Zoek binnen selectie
+00000011=Zoeken vanaf
+00000012=Het huidige element\nGehele bestand\n
+00000013=Zoekrichting
+00000014=Vooruit\nAchteruit\n
+00000015=Waarschuw bij vervanging
+00000016=Vervang alles
+00000017=Vervang door:
+00000018=Zoekgebied
+00000019=Zoek binnen elementnamen
+00000020=Zoek binnen originele elementen
+00000021=Zoek binnen vertaalde elementen
+
+[dPromptReplace]
+00000001=Bevesig vervanging
+00000009=Ja
+00000010=Annuleren
+00000012=Vervang alles
+00000013=Nee
 
 [$CONSTANTS]
+SBtn_Find=Zoeken
+SBtn_Replace=Vervang
 SConfirm_FileNotSaved=Taalbestand "%s" is gewijzigd maar niet opgeslagen. Nu opslaan?
 SDiffDesc_AddComponent=+ Component: [%s]
 SDiffDesc_AddConstant=+ Constante "%s"
@@ -178,6 +231,9 @@ SErrMsg_SectionNameMissing=Sectie naam ontbreekt
 SErrMsg_SrcAndTranLangsAreSame=Bron en taalbestanden mogen niet gelijk zijn
 SErrMsg_WrongSectionName=Verkeerde sectienaam formaat: "%s"
 SLangSourceFileFilter=DKLang bronbestanden (*.dklang)|*.dklang|All Files (*.*)|*.*
+SMsg_NoSearchResults="%s" niet gevonden.
+SMsg_PromptReplace=Vervangen "%s"?
+SMsg_ReplacedInfo=Vervangen %d maal "%s".
 SNode_Constants=Constanten
 SStatusBar_CompCount=Comp: %d
 SStatusBar_ConstCount=Const: %d/%d

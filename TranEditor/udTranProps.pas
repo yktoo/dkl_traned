@@ -11,8 +11,8 @@ type
     pMain: TPanel;
     bOK: TButton;
     bCancel: TButton;
-    lLang: TLabel;
-    cbLang: TComboBox;
+    lTranLang: TLabel;
+    cbTranLang: TComboBox;
     lAuthor: TLabel;
     eAuthor: TEdit;
     lAdditionalParams: TLabel;
@@ -89,7 +89,7 @@ const
 
   procedure TdTranProps.AdjustOKCancel(Sender: TObject);
   begin
-    if Visible then bOK.Enabled := (cbLang.ItemIndex>=0);
+    if Visible then bOK.Enabled := (cbSrcLang.ItemIndex>=0) and (cbTranLang.ItemIndex>=0);
   end;
 
   procedure TdTranProps.bOKClick(Sender: TObject);
@@ -97,7 +97,7 @@ const
   begin
      // Get LangIDs
     FSrcLangID  := GetCBObject(cbSrcLang);
-    FTranLangID := GetCBObject(cbLang);
+    FTranLangID := GetCBObject(cbTranLang);
     if FSrcLangID=FTranLangID then TranEdError(SErrMsg_SrcAndTranLangsAreSame);
      // Update translation params
     FTranslations.Params.Clear;
@@ -151,8 +151,8 @@ const
     LoadLanguages;
     cbTargetApp.Items.Assign(MRUTargetApp.Items);
     with FTranslations.Params do begin
-      SetCBObject(cbLang,    StrToIntDef(Values[SDKLang_TranParam_LangID],       -1));
-      SetCBObject(cbSrcLang, StrToIntDef(Values[SDKLang_TranParam_SourceLangID], $409 {US English}));
+      SetCBObject(cbSrcLang,  FSrcLangID);
+      SetCBObject(cbTranLang, FTranLangID);
       cbTargetApp.Text := Values[SDKLang_TranParam_TargetApplication];
       eAuthor.Text     := Values[SDKLang_TranParam_Author];
     end;
@@ -169,9 +169,10 @@ const
   begin
     for i := 0 to Languages.Count-1 do begin
       L := Languages.LocaleID[i];
-      if L and $ffff0000=0 then cbLang.AddItem(Format('%.5d - 0x%0:.4x - %s', [L, Languages.Name[i]]), Pointer(L));
+      if L and $ffff0000=0 then cbSrcLang.AddItem(Format('%.5d - 0x%0:.4x - %s', [L, Languages.Name[i]]), Pointer(L));
     end;
-    cbSrcLang.Items.Assign(cbLang.Items);
+     // Copy the language list into cbTranLang
+    cbTranLang.Items.Assign(cbSrcLang.Items);
   end;
 
 end.

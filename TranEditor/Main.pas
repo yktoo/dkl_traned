@@ -210,6 +210,8 @@ type
     procedure AddNodeTranslationToRepository(Node: PVirtualNode);
      // Translates the Node by using translation repository, if possible
     procedure TranslateNodeFromRepository(Node: PVirtualNode);
+     // Translates all nodes (bSelectedOnly=False) or just selected ones (bSelectedOnly=True)
+    procedure TranslateAllNodes(bSelectedOnly: Boolean);
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -256,16 +258,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   end;
 
   procedure TfMain.aaAutoTranslate(Sender: TObject);
-  var n: PVirtualNode;
   begin
-    n := tvMain.GetFirstSelected;
-    while n<>nil do begin
-      TranslateNodeFromRepository(n);
-      n := tvMain.GetNextSelected(n);
-    end;
-     // Update display
-    tvMain.Invalidate;
-    UpdateStatusBar;
+    TranslateAllNodes(True);
   end;
 
   procedure TfMain.aaClose(Sender: TObject);
@@ -397,7 +391,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       sDisplFile := '';
       sTranFile  := '';
       for i := 1 to 3 do UseFile(ParamStr(i));
-      if sSrcFile<>'' then DoLoad(sSrcFile, sDisplFile, sTranFile) else OpenFiles(sSrcFile, sDisplFile, sTranFile);
+      OpenFiles(sSrcFile, sDisplFile, sTranFile);
     end;
   end;
 
@@ -440,7 +434,10 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   end;
 
   procedure TfMain.DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
-  var sDiff: String;
+  var
+    sDiff: String;
+    iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts: Integer;
+    bAutoTranslate: Boolean;
   begin
      // Destroy former langsource storage and translations
     CloseProject(True);
@@ -463,9 +460,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
         FLangIDTran   := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_LangID],       0);
       end;
        // Now compare the source and the translation and update the latter
-      sDiff := FLangSource.CompareStructureWith(FTranslations);
-       // Show the differences unless this is a new translation
-      if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff);
+      sDiff := FLangSource.CompareStructureWith(FTranslations, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts);
        // Update the properties
       FModified        := False;
       FSourceFileName  := sLangSrcFileName;
@@ -475,24 +470,28 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       MRUDisplay.Add(FDisplayFileName);
       if FTranFileName<>'' then MRUTran.Add(FTranFileName);
       UpdateCaption;
+       // Show the differences unless this is a new translation
+      bAutoTranslate := False; 
+      if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, bAutoTranslate);
        // Reload the tree
       UpdateTree;
-       // If no languages specified or source and target languages are the same, show translation properties dialog
-      if (FLangIDSource=0) or (FLangIDTran=0) or (FLangIDSource=FLangIDTran) then
-        EditTranslationProps(FTranslations, FLangIDSource, FLangIDTran);
     except
        // Destroy the objects in a case of failure
       CloseProject(True);
       raise;
     end;
+     // If no languages specified or source and target languages are the same, show translation properties dialog
+    if (FLangIDSource=0) or (FLangIDTran=0) or (FLangIDSource=FLangIDTran) then aTranProps.Execute;
+     // Autotranslate entries if needed
+    if bAutoTranslate then TranslateAllNodes(False); 
   end;
 
   procedure TfMain.DoSave(const sFileName: String);
   begin
      // Update translation parameter values
     with FTranslations.Params do begin
-      Values[SDKLang_TranParam_LangID]       := IntToStr(FLangIDSource);
-      Values[SDKLang_TranParam_SourceLangID] := IntToStr(FLangIDTran);
+      Values[SDKLang_TranParam_SourceLangID] := IntToStr(FLangIDSource);
+      Values[SDKLang_TranParam_LangID]       := IntToStr(FLangIDTran);
       Values[SDKLang_TranParam_Generator]    := Format('%s %s', [SAppCaption, SAppVersion]);
       Values[SDKLang_TranParam_LastModified] := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
     end;
@@ -567,7 +566,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     bSetting_ReposRemovePrefix := rif.ReadBool  (SRegSection_Preferences, 'ReposRemovePrefix', True);
     bSetting_ReposAutoAdd      := rif.ReadBool  (SRegSection_Preferences, 'ReposAutoAdd',      True);
      // Load the repository
-    FRepository.FileLoad(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
+    FRepository.LoadFromFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
      // Apply loaded settings
     ApplySettings;
     UpdateStatusBar;
@@ -590,7 +589,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     rif.WriteBool  (SRegSection_Preferences, 'ReposRemovePrefix', bSetting_ReposRemovePrefix);
     rif.WriteBool  (SRegSection_Preferences, 'ReposAutoAdd',      bSetting_ReposAutoAdd);
      // Save the repository
-    FRepository.FileSave;
+    FRepository.SaveToFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
   end;
 
   function TfMain.GetDisplayTranFileName: String;
@@ -683,6 +682,19 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       FTranFileName := Value;
       UpdateCaption;
     end;
+  end;
+
+  procedure TfMain.TranslateAllNodes(bSelectedOnly: Boolean);
+  var n: PVirtualNode;
+  begin
+    if bSelectedOnly then n := tvMain.GetFirstSelected else n := tvMain.GetFirst;
+    while n<>nil do begin
+      TranslateNodeFromRepository(n);
+      if bSelectedOnly then n := tvMain.GetNextSelected(n) else n := tvMain.GetNext(n);
+    end;
+     // Update display
+    tvMain.Invalidate;
+    UpdateStatusBar;
   end;
 
   procedure TfMain.TranslateNodeFromRepository(Node: PVirtualNode);

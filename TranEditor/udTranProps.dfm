@@ -1,7 +1,7 @@
 object dTranProps: TdTranProps
   Left = 473
   Top = 238
-  ActiveControl = cbLang
+  ActiveControl = cbSrcLang
   BorderStyle = bsDialog
   Caption = 'Translation properties'
   ClientHeight = 377
@@ -31,13 +31,21 @@ object dTranProps: TdTranProps
     DesignSize = (
       444
       332)
-    object lLang: TLabel
+    object lSrcLang: TLabel
       Left = 12
       Top = 12
-      Width = 51
+      Width = 249
       Height = 13
-      Caption = '&Language:'
-      FocusControl = cbLang
+      Caption = '&Source Language (used for Translation Repository):'
+      FocusControl = cbSrcLang
+    end
+    object lTranLang: TLabel
+      Left = 12
+      Top = 52
+      Width = 104
+      Height = 13
+      Caption = '&Translation language:'
+      FocusControl = cbTranLang
     end
     object lAuthor: TLabel
       Left = 12
@@ -63,15 +71,7 @@ object dTranProps: TdTranProps
       Caption = '&Target Application/Version:'
       FocusControl = cbTargetApp
     end
-    object lSrcLang: TLabel
-      Left = 12
-      Top = 52
-      Width = 249
-      Height = 13
-      Caption = '&Source Language (used for Translation Repository):'
-      FocusControl = cbSrcLang
-    end
-    object cbLang: TComboBox
+    object cbSrcLang: TComboBox
       Left = 12
       Top = 28
       Width = 421
@@ -81,6 +81,18 @@ object dTranProps: TdTranProps
       DropDownCount = 20
       ItemHeight = 13
       TabOrder = 0
+      OnChange = AdjustOKCancel
+    end
+    object cbTranLang: TComboBox
+      Left = 12
+      Top = 68
+      Width = 421
+      Height = 21
+      Style = csDropDownList
+      Anchors = [akLeft, akTop, akRight]
+      DropDownCount = 20
+      ItemHeight = 13
+      TabOrder = 1
       OnChange = AdjustOKCancel
     end
     object eAuthor: TEdit
@@ -112,18 +124,6 @@ object dTranProps: TdTranProps
       DropDownCount = 20
       ItemHeight = 13
       TabOrder = 2
-      OnChange = AdjustOKCancel
-    end
-    object cbSrcLang: TComboBox
-      Left = 12
-      Top = 68
-      Width = 421
-      Height = 21
-      Style = csDropDownList
-      Anchors = [akLeft, akTop, akRight]
-      DropDownCount = 20
-      ItemHeight = 13
-      TabOrder = 1
       OnChange = AdjustOKCancel
     end
   end

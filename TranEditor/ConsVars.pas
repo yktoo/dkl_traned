@@ -103,7 +103,7 @@ type
      // Compares the component, property  and constant presence with Translations, updates Translations by removing the
      //   excessive entries and adding missing ones and returns the textual description of what has been changed in
      //   Translations, or an empty string if no differences in structure found
-    function  CompareStructureWith(Translations: TDKLang_CompTranslations): String;
+    function  CompareStructureWith(Translations: TDKLang_CompTranslations; out iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts: Integer): String;
      // Props
      // -- Owned component sources
     property ComponentSources: TComponentSources read FComponentSources;  
@@ -121,7 +121,6 @@ type
   private
      // List of TStringList's, each consisting of possible translations, Objects[] is LANGID
     FTerms: TObjectList;
-    FFileName: String;
      // Finds and returns the string list corresponding to a term, or nil if no such translation was registered
     function  FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
      // Finds and returns the string list corresponding to a term in SL, and its index in idx; if no entry for wLangID2
@@ -140,11 +139,9 @@ type
      // Clears the repository
     procedure Clear;
      // Loading and saving to file
-    procedure FileLoad(const sFileName: String);
-    procedure FileSave;
+    procedure LoadFromFile(const sFileName: String);
+    procedure SaveToFile(const sFileName: String);
      // Props
-     // -- Repository storage file name
-    property FileName: String read FFileName;
      // -- Repository term count
     property TermCount: Integer read GetTermCount; 
      // -- Returns the translation of sValue1 from wLangID1 into wLangID2, or an empty string if no translation found
@@ -217,7 +214,11 @@ const
   SDiffDesc_MissingEntries         = 'The following entries were not found and were added to the translation:';
   SDiffDesc_ExcessiveEntries       = 'The following entries were found excessive and deleted from the translation:';
 
-   // Registry paths                 
+  SDiffTotalsText                  = #9+             'Components'#9+'Properties'#9+'Constants'#13+
+                                     '    Added'#9+  '%d'#9+        '%d'#9+        '%d'#13+
+                                     '    Removed'#9+'%d'#9+        '%d'#9+        '%d';
+
+   // Registry paths
   SRegKey_Root                     = 'Software\DKSoftware\DKTranEd';
   SRegKey_Toolbars                 = SRegKey_Root+'\Toolbars';
   SRegSection_MainWindow           = 'MainWindow';
@@ -660,7 +661,7 @@ uses TypInfo, Forms, Dialogs;
    // TLangSource
    //===================================================================================================================
 
-  function TLangSource.CompareStructureWith(Translations: TDKLang_CompTranslations): String;
+  function TLangSource.CompareStructureWith(Translations: TDKLang_CompTranslations; out iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts: Integer): String;
   var sText: String;
 
     procedure AddLine(const s: String; const aParams: Array of const);
@@ -689,6 +690,7 @@ uses TypInfo, Forms, Dialogs;
           Translations.Add(TranComp);
            // Log the difference
           AddLine(SDiffDesc_AddComponent, [SrcComp.CompName]);
+          Inc(iCntAddedComps);
           bCompCreated := True;
         end else
           bCompCreated := False;
@@ -703,6 +705,7 @@ uses TypInfo, Forms, Dialogs;
             TranComp.Add(pSrcProp.iID, pSrcProp.sValue, [dklptsUntranslated]);
              // Log the difference
             AddLine('    '+SDiffDesc_AddProperty, [pSrcProp.sPropName, pSrcProp.iID]);
+            Inc(iCntAddedProps);
           end;
         end;
       end;
@@ -724,6 +727,7 @@ uses TypInfo, Forms, Dialogs;
           Translations.Constants.Add(pSrcConst.sName, pSrcConst.sDefValue, [dklcsUntranslated]);
            // Log the difference
           AddLine(SDiffDesc_AddConstant, [pSrcConst.sName]);
+          Inc(iCntAddedConsts);
         end;
       end;
     end;
@@ -745,6 +749,8 @@ uses TypInfo, Forms, Dialogs;
         if SrcComp=nil then begin
            // Log the difference
           AddLine(SDiffDesc_RemoveComponent, [TranComp.ComponentName]);
+          Inc(iCntRemovedComps);
+          Inc(iCntRemovedProps, TranComp.Count);
            // Remove the component from Translations
           Translations.Remove(TranComp);
         end else begin
@@ -756,6 +762,7 @@ uses TypInfo, Forms, Dialogs;
             if SrcComp.PropertySources.IndexOfID(pTranProp.iID)<0 then begin
                // Log the difference
               AddLine(SDiffDesc_RemoveProperty, [TranComp.ComponentName, pTranProp.iID]);
+              Inc(iCntRemovedProps);
                // Remove the property from Translations
               TranComp.Remove(pTranProp);
             end else
@@ -779,6 +786,7 @@ uses TypInfo, Forms, Dialogs;
         if FConstants.IndexOfName(pTranConst.sName)<0 then begin
            // Log the difference
           AddLine(SDiffDesc_RemoveConstant, [pTranConst.sName]);
+          Inc(iCntRemovedConsts);
            // Remove the constant from Translations
           Translations.Constants.Remove(pTranConst);
         end else
@@ -788,6 +796,12 @@ uses TypInfo, Forms, Dialogs;
 
   begin
     Result := '';
+    iCntAddedComps    := 0;
+    iCntAddedProps    := 0;
+    iCntAddedConsts   := 0;
+    iCntRemovedComps  := 0;
+    iCntRemovedProps  := 0;
+    iCntRemovedConsts := 0;
      // Check missing entries
     sText := '';
     CheckMissingComps;
@@ -978,7 +992,38 @@ uses TypInfo, Forms, Dialogs;
     inherited Destroy;
   end;
 
-  procedure TTranRepository.FileLoad(const sFileName: String);
+  procedure TTranRepository.FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out SL: TStringList; out idx: Integer);
+  begin
+    SL := FindTranslationSL(wLangID1, sValue1);
+    if SL=nil then idx := -1 else idx := SL.IndexOfObject(Pointer(wLangID2));
+  end;
+
+  function TTranRepository.FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
+  var i, idxLang: Integer;
+  begin
+    for i := 0 to FTerms.Count-1 do begin
+      Result := TStringList(FTerms[i]);
+      idxLang := Result.IndexOfObject(Pointer(wLangID));
+      if (idxLang>=0) and (Result[idxLang]=sValue) then Exit;
+    end;
+    Result := nil;
+  end;
+
+  function TTranRepository.GetTermCount: Integer;
+  begin
+    Result := FTerms.Count;
+  end;
+
+  function TTranRepository.GetTranslations(wLangID1, wLangID2: LANGID; const sValue1: String): String;
+  var
+    SL: TStringList;
+    idx: Integer;
+  begin
+    FindTranslation(wLangID1, wLangID2, sValue1, SL, idx);
+    if (SL=nil) or (idx<0) then Result := '' else Result := LineToMultiline(SL[idx]);
+  end;
+
+  procedure TTranRepository.LoadFromFile(const sFileName: String);
   var
     SLLines, SLTerm: TStringList;
     i: Integer;
@@ -1013,13 +1058,12 @@ uses TypInfo, Forms, Dialogs;
     end;
 
   begin
-    FFileName := sFileName;
     Clear;
-    if not FileExists(FFileName) then Exit;
+    if not FileExists(sFileName) then Exit;
     SLLines := TStringList.Create;
     try
        // Load the stream into TStringList
-      SLLines.LoadFromFile(FFileName);
+      SLLines.LoadFromFile(sFileName);
        // Parse the strings
       SLTerm := TStringList.Create;
       try
@@ -1032,7 +1076,7 @@ uses TypInfo, Forms, Dialogs;
     end;
   end;
 
-  procedure TTranRepository.FileSave;
+  procedure TTranRepository.SaveToFile(const sFileName: String);
   var
     fs: TFileStream;
     iTerm, iTran: Integer;
@@ -1045,7 +1089,7 @@ uses TypInfo, Forms, Dialogs;
     end;
 
   begin
-    fs := TFileStream.Create(FFileName, fmCreate);
+    fs := TFileStream.Create(sFileName, fmCreate);
     try
        // Write the header comment
       WriteLine('; '+SRepositoryFileHeader);
@@ -1056,7 +1100,7 @@ uses TypInfo, Forms, Dialogs;
       try
         for iTerm := 0 to FTerms.Count-1 do begin
            // Fill the SLTerm with pairs LangID-Value
-          SLTerm.Clear; 
+          SLTerm.Clear;
           SL := TStringList(FTerms[iTerm]); 
           for iTran := 0 to SL.Count-1 do begin
             SLTerm.Add(IntToStr(Integer(SL.Objects[iTran])));
@@ -1071,37 +1115,6 @@ uses TypInfo, Forms, Dialogs;
     finally
       fs.Free;
     end;
-  end;
-
-  procedure TTranRepository.FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out SL: TStringList; out idx: Integer);
-  begin
-    SL := FindTranslationSL(wLangID1, sValue1);
-    if SL=nil then idx := -1 else idx := SL.IndexOfObject(Pointer(wLangID2));
-  end;
-
-  function TTranRepository.FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
-  var i, idxLang: Integer;
-  begin
-    for i := 0 to FTerms.Count-1 do begin
-      Result := TStringList(FTerms[i]);
-      idxLang := Result.IndexOfObject(Pointer(wLangID));
-      if (idxLang>=0) and (Result[idxLang]=sValue) then Exit;
-    end;
-    Result := nil;
-  end;
-
-  function TTranRepository.GetTermCount: Integer;
-  begin
-    Result := FTerms.Count;
-  end;
-
-  function TTranRepository.GetTranslations(wLangID1, wLangID2: LANGID; const sValue1: String): String;
-  var
-    SL: TStringList;
-    idx: Integer;
-  begin
-    FindTranslation(wLangID1, wLangID2, sValue1, SL, idx);
-    if (SL=nil) or (idx<0) then Result := '' else Result := LineToMultiline(SL[idx]);
   end;
 
   procedure TTranRepository.SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, Value: String);

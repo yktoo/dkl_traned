@@ -1,6 +1,6 @@
 object dDiffLog: TdDiffLog
-  Left = 440
-  Top = 239
+  Left = 348
+  Top = 175
   ActiveControl = mMain
   BorderStyle = bsDialog
   Caption = 'Differences found'
@@ -29,18 +29,52 @@ object dDiffLog: TdDiffLog
     Caption = 'Close'
     Default = True
     ModalResult = 2
-    TabOrder = 0
+    TabOrder = 3
   end
   object mMain: TMemo
     Left = 8
     Top = 8
     Width = 575
-    Height = 385
+    Height = 317
     Anchors = [akLeft, akTop, akRight, akBottom]
     ReadOnly = True
     ScrollBars = ssBoth
-    TabOrder = 1
+    TabOrder = 0
     WordWrap = False
     OnKeyPress = mMainKeyPress
+  end
+  object gbTotals: TGroupBox
+    Left = 8
+    Top = 328
+    Width = 575
+    Height = 65
+    Anchors = [akLeft, akRight, akBottom]
+    Caption = 'Totals'
+    TabOrder = 1
+    object lbTotals: TListBox
+      Left = 2
+      Top = 15
+      Width = 571
+      Height = 48
+      Align = alClient
+      BorderStyle = bsNone
+      ItemHeight = 13
+      ParentColor = True
+      TabOrder = 0
+      TabWidth = 70
+    end
+  end
+  object cbAutoTranslate: TCheckBox
+    Left = 8
+    Top = 404
+    Width = 501
+    Height = 17
+    Anchors = [akLeft, akTop, akRight]
+    Caption = 
+      '&Automatically translate all untranslated entries using Translat' +
+      'ion Repository'
+    Checked = True
+    State = cbChecked
+    TabOrder = 2
   end
 end

@@ -486,11 +486,8 @@ object fMain: TfMain
       TabOrder = 0
       object smFile: TTBXSubmenuItem
         Caption = '&File'
-        object iNew: TTBXItem
-          Action = aNew
-        end
-        object iOpen: TTBXItem
-          Action = aOpen
+        object iNewOrOpen: TTBXItem
+          Action = aNewOrOpen
         end
         object iSave: TTBXItem
           Action = aSave
@@ -582,11 +579,8 @@ object fMain: TfMain
       DockPos = 127
       Images = ilMain
       TabOrder = 1
-      object bNew: TTBXItem
-        Action = aNew
-      end
-      object bOpen: TTBXItem
-        Action = aOpen
+      object bNewOrOpen: TTBXItem
+        Action = aNewOrOpen
       end
       object bSave: TTBXItem
         Action = aSave
@@ -797,21 +791,15 @@ object fMain: TfMain
     Images = ilMain
     Left = 16
     Top = 56
-    object aNew: TAction
+    object aNewOrOpen: TAction
       Category = 'File'
-      Caption = '&New...'
-      Hint = 'New...|Create new translation'
+      Caption = '&New or Open...'
+      Hint = 'New or Open...|Create new translation or open an existing one'
       ImageIndex = 2
       ShortCut = 16462
-      OnExecute = aaNew
-    end
-    object aOpen: TAction
-      Category = 'File'
-      Caption = '&Open...'
-      Hint = 'Open...|Open an existing translation'
-      ImageIndex = 3
-      ShortCut = 16463
-      OnExecute = aaOpen
+      SecondaryShortCuts.Strings = (
+        'Ctrl+O')
+      OnExecute = aaNewOrOpen
     end
     object aSave: TAction
       Category = 'File'

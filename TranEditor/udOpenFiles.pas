@@ -14,31 +14,33 @@ type
     lSource: TLabel;
     cbSourceFile: TComboBox;
     bSourceFileBrowse: TButton;
-    lTran: TLabel;
     cbTranFile: TComboBox;
     bTranFileBrowse: TButton;
     cbDisplayFile: TComboBox;
     bDisplayFileBrowse: TButton;
     cbUseDisplayFile: TCheckBox;
+    rbNewTran: TRadioButton;
+    rbOpenTran: TRadioButton;
     procedure bSourceFileBrowseClick(Sender: TObject);
     procedure bTranFileBrowseClick(Sender: TObject);
     procedure bOKClick(Sender: TObject);
     procedure AdjustOKCancel(Sender: TObject);
     procedure bDisplayFileBrowseClick(Sender: TObject);
     procedure cbUseDisplayFileClick(Sender: TObject);
+    procedure RBTranClick(Sender: TObject);
   private
      // Source, display and translation file names
     FSourceFile: String;
     FDisplayFile: String;
     FTranFile: String;
-     // True means that the dialog is for creating a new translation; otherwise this is for opening an existing one
-    FNewMode: Boolean;
      // Source, display and translation MRU lists
     FSourceMRUStrings: TStrings;
     FDisplayMRUStrings: TStrings;
     FTranMRUStrings: TStrings;
      // Updates the display-file controls depending on state of cbUseDisplayFile
     procedure UpdateDisplayFileCtls;
+     // Updates the translation-file controls depending on state of radiobuttons
+    procedure UpdateTranFileCtls;
   protected
     procedure InitializeDialog;
     function  Execute: Boolean;
@@ -46,13 +48,13 @@ type
 
    // Shows new/open translation dialog. If bNewMode=True, the dialog is for creating a new translation; otherwise this
    //   is for opening an existing one
-  function SelectLangFiles(var sSourceFile, sDisplayFile, sTranFile: String; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings; bNewMode: Boolean): Boolean;
+  function SelectLangFiles(var sSourceFile, sDisplayFile, sTranFile: String; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings): Boolean;
 
 implementation
 {$R *.dfm}
 uses ConsVars;
 
-  function SelectLangFiles(var sSourceFile, sDisplayFile, sTranFile: String; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings; bNewMode: Boolean): Boolean;
+  function SelectLangFiles(var sSourceFile, sDisplayFile, sTranFile: String; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings): Boolean;
   begin
     with TdOpenFiles.Create(Application) do
       try
@@ -62,7 +64,6 @@ uses ConsVars;
         FSourceMRUStrings  := SourceMRUStrings;
         FDisplayMRUStrings := DisplayMRUStrings;
         FTranMRUStrings    := TranMRUStrings;
-        FNewMode           := bNewMode;
         Result := Execute;
         if Result then begin
           sSourceFile  := FSourceFile;
@@ -83,7 +84,7 @@ uses ConsVars;
     bOK.Enabled :=
       (cbSourceFile.Text<>'') and
       (not cbUseDisplayFile.Checked or (cbDisplayFile.Text<>'')) and
-      (FNewMode or (cbTranFile.Text<>''));
+      (not rbOpenTran.Checked or (cbTranFile.Text<>''));
   end;
 
   procedure TdOpenFiles.bDisplayFileBrowseClick(Sender: TObject);
@@ -115,11 +116,12 @@ uses ConsVars;
       CheckFileExists(FDisplayFile);
     end else
       FDisplayFile := '';
-     // If not 'New' mode, assign the translation file as well
-    if not FNewMode then begin
+     // Translation file
+    if rbOpenTran.Checked then begin
       FTranFile := cbTranFile.Text;
       CheckFileExists(FTranFile);
-    end;
+    end else
+      FTranFile := '';
     ModalResult := mrOK;
   end;
 
@@ -181,23 +183,32 @@ uses ConsVars;
     cbDisplayFile.Items.Assign(FDisplayMRUStrings);
     cbDisplayFile.Text := FDisplayFile;
     cbUseDisplayFile.Checked := FDisplayFile<>'';
-     // Translation file
-    if FNewMode then begin
-      lTran.Hide;
-      cbTranFile.Hide;
-      bTranFileBrowse.Hide;
-    end else begin
-      cbTranFile.Items.Assign(FTranMRUStrings);
-      cbTranFile.Text := FTranFile;
-    end;
     UpdateDisplayFileCtls;
-    AdjustOKCancel(nil);  
+     // Translation file
+    cbTranFile.Items.Assign(FTranMRUStrings);
+    cbTranFile.Text := FTranFile;
+    rbOpenTran.Checked := FTranFile<>'';
+    UpdateTranFileCtls;
+    AdjustOKCancel(nil);
+  end;
+
+  procedure TdOpenFiles.RBTranClick(Sender: TObject);
+  begin
+    UpdateTranFileCtls;
+    if Visible and rbOpenTran.Checked then cbTranFile.SetFocus;
+    AdjustOKCancel(nil);
   end;
 
   procedure TdOpenFiles.UpdateDisplayFileCtls;
   begin
     EnableWndCtl(cbDisplayFile, cbUseDisplayFile.Checked);
     bDisplayFileBrowse.Enabled := cbUseDisplayFile.Checked;
+  end;
+
+  procedure TdOpenFiles.UpdateTranFileCtls;
+  begin
+    EnableWndCtl(cbTranFile, rbOpenTran.Checked);
+    bTranFileBrowse.Enabled := rbOpenTran.Checked;
   end;
 
 end.

@@ -1,10 +1,10 @@
 object dOpenFiles: TdOpenFiles
-  Left = 565
-  Top = 258
+  Left = 357
+  Top = 263
   ActiveControl = cbSourceFile
   BorderStyle = bsDialog
   Caption = 'Open language files'
-  ClientHeight = 190
+  ClientHeight = 226
   ClientWidth = 592
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,21 +16,21 @@ object dOpenFiles: TdOpenFiles
   Position = poScreenCenter
   DesignSize = (
     592
-    190)
+    226)
   PixelsPerInch = 96
   TextHeight = 13
   object pMain: TPanel
     Left = 8
     Top = 8
     Width = 577
-    Height = 145
+    Height = 181
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
     DesignSize = (
       577
-      145)
+      181)
     object lSource: TLabel
       Left = 12
       Top = 12
@@ -38,14 +38,6 @@ object dOpenFiles: TdOpenFiles
       Height = 13
       Caption = '&Language source file:'
       FocusControl = cbSourceFile
-    end
-    object lTran: TLabel
-      Left = 12
-      Top = 96
-      Width = 115
-      Height = 13
-      Caption = '&Translation (target) file:'
-      FocusControl = cbTranFile
     end
     object cbSourceFile: TComboBox
       Left = 12
@@ -76,9 +68,9 @@ object dOpenFiles: TdOpenFiles
       OnClick = bSourceFileBrowseClick
     end
     object cbTranFile: TComboBox
-      Left = 12
-      Top = 112
-      Width = 473
+      Left = 28
+      Top = 144
+      Width = 457
       Height = 21
       Anchors = [akLeft, akTop, akRight]
       DropDownCount = 20
@@ -95,7 +87,7 @@ object dOpenFiles: TdOpenFiles
     end
     object bTranFileBrowse: TButton
       Left = 488
-      Top = 112
+      Top = 144
       Width = 75
       Height = 23
       Anchors = [akTop, akRight]
@@ -142,10 +134,32 @@ object dOpenFiles: TdOpenFiles
       TabOrder = 2
       OnClick = cbUseDisplayFileClick
     end
+    object rbNewTran: TRadioButton
+      Left = 12
+      Top = 104
+      Width = 557
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Caption = '&Create new translation'
+      Checked = True
+      TabOrder = 7
+      TabStop = True
+      OnClick = RBTranClick
+    end
+    object rbOpenTran: TRadioButton
+      Left = 12
+      Top = 124
+      Width = 557
+      Height = 17
+      Anchors = [akLeft, akTop, akRight]
+      Caption = '&Open an existing translation file:'
+      TabOrder = 8
+      OnClick = RBTranClick
+    end
   end
   object bOK: TButton
     Left = 431
-    Top = 160
+    Top = 196
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]
@@ -156,7 +170,7 @@ object dOpenFiles: TdOpenFiles
   end
   object bCancel: TButton
     Left = 511
-    Top = 160
+    Top = 196
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]

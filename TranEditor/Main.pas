@@ -43,8 +43,7 @@ type
     aJumpNextUntranslated: TAction;
     aJumpPrevUntranslated: TAction;
     alMain: TActionList;
-    aNew: TAction;
-    aOpen: TAction;
+    aNewOrOpen: TAction;
     aSave: TAction;
     aSaveAs: TAction;
     aSettings: TAction;
@@ -53,8 +52,7 @@ type
     bExit: TTBXItem;
     bJumpNextUntranslated: TTBXItem;
     bJumpPrevUntranslated: TTBXItem;
-    bNew: TTBXItem;
-    bOpen: TTBXItem;
+    bNewOrOpen: TTBXItem;
     bSave: TTBXItem;
     bSaveAs: TTBXItem;
     dkBottom: TTBXDock;
@@ -69,8 +67,7 @@ type
     iJumpNextUntranslated: TTBXItem;
     iJumpPrevUntranslated: TTBXItem;
     ilMain: TTBImageList;
-    iNew: TTBXItem;
-    iOpen: TTBXItem;
+    iNewOrOpen: TTBXItem;
     iSave: TTBXItem;
     iSaveAs: TTBXItem;
     iSepJumpPrevUntranslated: TTBXSeparatorItem;
@@ -123,8 +120,7 @@ type
     procedure aaAbout(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
-    procedure aaNew(Sender: TObject);
-    procedure aaOpen(Sender: TObject);
+    procedure aaNewOrOpen(Sender: TObject);
     procedure aaSave(Sender: TObject);
     procedure aaSaveAs(Sender: TObject);
     procedure aaSettings(Sender: TObject);
@@ -183,7 +179,7 @@ type
     function  CheckSave: Boolean;
      // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
      //   clicked OK
-    function  OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
+    function  OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
      // File loading/saving
     procedure DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
     procedure DoSave(const sFileName: String);
@@ -302,14 +298,9 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     MarkTranslated(False);
   end;
 
-  procedure TfMain.aaNew(Sender: TObject);
+  procedure TfMain.aaNewOrOpen(Sender: TObject);
   begin
-    OpenFiles(FSourceFileName, FDisplayFileName, '', True);
-  end;
-
-  procedure TfMain.aaOpen(Sender: TObject);
-  begin
-    OpenFiles(FSourceFileName, FDisplayFileName, FTranFileName, False);
+    OpenFiles(FSourceFileName, FDisplayFileName, FTranFileName);
   end;
 
   procedure TfMain.aaSave(Sender: TObject);
@@ -406,7 +397,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       sDisplFile := '';
       sTranFile  := '';
       for i := 1 to 3 do UseFile(ParamStr(i));
-      if sSrcFile<>'' then DoLoad(sSrcFile, sDisplFile, sTranFile) else OpenFiles(sSrcFile, sDisplFile, sTranFile, False);
+      if sSrcFile<>'' then DoLoad(sSrcFile, sDisplFile, sTranFile) else OpenFiles(sSrcFile, sDisplFile, sTranFile);
     end;
   end;
 
@@ -668,13 +659,13 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := MultilineToLine(mCurTranEntry.Text);
   end;
 
-  function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
+  function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
   var sSourceFile, sDisplayFile, sTranFile: String;
   begin
     sSourceFile  := sLangSrcFileName;
     sTranFile    := sTranFileName;
     sDisplayFile := sDisplayFileName;
-    Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items, bNewMode);
+    Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
     if Result then DoLoad(sSourceFile, sDisplayFile, sTranFile);
   end;
 

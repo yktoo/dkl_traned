@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.2 2004-09-12 15:53:55 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.3 2004-09-15 18:51:33 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -72,6 +72,10 @@ sbarMain.Panels[1].Hint=00000018,Total number of component entries
 sbarMain.Panels[2].Hint=00000020,Number of component property entries total/untranslated
 sbarMain.Panels[3].Hint=00000022,Number of constant entries total/untranslated
 sbarMain.Panels[4].Hint=00000024,Number of Repository entries
+tvMain.Header.Columns[0].Text=00000105,Component/Property/Constant
+tvMain.Header.Columns[1].Text=00000106,ID
+tvMain.Header.Columns[2].Text=00000107,Default value
+tvMain.Header.Columns[3].Text=00000108,Translated value
 aNewOrOpen.Caption=00000026,&New or Open...
 aNewOrOpen.Category=00000025,File
 aNewOrOpen.Hint=00000027,New or Open...|Create new translation or open an existing one

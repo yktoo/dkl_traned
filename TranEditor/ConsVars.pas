@@ -1,7 +1,7 @@
 unit ConsVars;
 
 interface
-uses Windows, Messages, SysUtils, Classes, Contnrs, Graphics, DKLang;
+uses Windows, Messages, SysUtils, Classes, Contnrs, Graphics, VirtualTrees, DKLang;
 
 type
    // Exception
@@ -118,9 +118,10 @@ const
   S_CRLF                           = #13#10;
 
   SAppCaption                      = 'DKLang Translation Editor';
-  SAppVersion                      = '2.1';
+  SAppVersion                      = 'v2.1';
 
   SLangSourceFileExt               = 'dklang';
+  SLangSourceFileDotExt            = '.'+SLangSourceFileExt;
   SLangSourceFileFilter            = 'DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*';
   STranFileExt                     = 'lng';
   STranFileFilter                  = 'DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*';
@@ -177,6 +178,7 @@ const
   SRegSection_MainWindow           = 'MainWindow';
   SRegSection_MRUSource            = 'MRUSource';
   SRegSection_MRUTranslation       = 'MRUTranslation';
+  SRegSection_MRUTargetApp         = 'MRUTargetApp'; 
   SRegSection_Preferences          = 'Preferences';
 
    // Main tree column indexes
@@ -202,8 +204,8 @@ const
   iiSaveAs                         =  5;
   iiExit                           =  6;
   iiAbout                          =  7;
-  iiLanguage                       =  8;
-  iiAddLang                        =  9;
+  iiJumpUp                         =  8;
+  iiJumpDown                       =  9;
   iiDelLang                        = 10;
   iiReplaceLang                    = 11;
   iiNode_Comp                      = 12;
@@ -236,6 +238,9 @@ var
 
    // Проверяет существование файла. Если он не существует, вызывает Exception
   procedure CheckFileExists(const sFileName: String);
+
+   // Activates specified VT node if possible
+  procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView: Boolean);
 
 implementation
 uses Forms;
@@ -298,6 +303,14 @@ uses Forms;
   procedure CheckFileExists(const sFileName: String);
   begin
     if not FileExists(sFileName) then raise Exception.CreateFmt(SErrMsg_FileDoesntExist, [sFileName]);
+  end;
+
+  procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView: Boolean);
+  begin
+    Tree.ClearSelection;
+    Tree.FocusedNode := Node;
+    Tree.Selected[Node] := True;
+    if bScrollIntoView and (Node<>nil) then Tree.ScrollIntoView(Node, False, False);
   end;
 
    //===================================================================================================================

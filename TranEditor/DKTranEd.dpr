@@ -4,7 +4,6 @@ uses
   Forms,
   Main in 'Main.pas' {fMain},
   ConsVars in 'ConsVars.pas',
-  udSelLang in 'udSelLang.pas' {dSelLang},
   udSettings in 'udSettings.pas' {dSettings},
   udAbout in 'udAbout.pas' {dAbout},
   udOpenFiles in 'udOpenFiles.pas' {dOpenFiles},

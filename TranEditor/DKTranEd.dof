@@ -100,11 +100,15 @@ Conditionals=
 DebugSourceDirs=
 UsePackages=0
 [Parameters]
-RunParams="C:\Delphi\Home Projects\PhoA\dSettings.dtls"
+RunParams="c:\Delphi\CVS projects\dale\phoa\Language\Russian.lng"
 HostApplication=
 Launcher=
 UseLauncher=0
 DebugCWD=
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
 [Version Info]
 IncludeVerInfo=1
 AutoIncBuild=0

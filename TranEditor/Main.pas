@@ -35,30 +35,15 @@ type
   TfMain = class(TForm)
     aAbout: TAction;
     aClose: TAction;
-    aConstAdd: TAction;
-    aConstDelete: TAction;
-    aConstRename: TAction;
     aExit: TAction;
-    aLangAdd: TAction;
-    aLangRemove: TAction;
-    aLangReplace: TAction;
     alMain: TActionList;
     aNew: TAction;
     aOpen: TAction;
-    aReposAddAllProps: TAction;
-    aReposAddCurProp: TAction;
-    aReposAutoTranslate: TAction;
     aSave: TAction;
     aSaveAs: TAction;
     aSettings: TAction;
     bAbout: TTBXItem;
-    bConstAdd: TTBXItem;
-    bConstDelete: TTBXItem;
-    bConstRename: TTBXItem;
     bExit: TTBXItem;
-    bLangAdd: TTBXItem;
-    bLangRemove: TTBXItem;
-    bLangReplace: TTBXItem;
     bNew: TTBXItem;
     bOpen: TTBXItem;
     bSave: TTBXItem;
@@ -91,13 +76,20 @@ type
     tbMain: TTBXToolbar;
     tbMenu: TTBXToolbar;
     tbSep1: TTBXSeparatorItem;
-    tbSep2: TTBXSeparatorItem;
-    tbSep3: TTBXSeparatorItem;
     tvMain: TVirtualStringTree;
     MRUSource: TTBMRUList;
     MRUTran: TTBMRUList;
     aTranProps: TAction;
     iTranProps: TTBXItem;
+    MRUTargetApp: TTBMRUList;
+    aJumpNextUntranslated: TAction;
+    aJumpPrevUntranslated: TAction;
+    iSepJumpPrevUntranslated: TTBXSeparatorItem;
+    iJumpNextUntranslated: TTBXItem;
+    iJumpPrevUntranslated: TTBXItem;
+    tbSep2: TTBXSeparatorItem;
+    bJumpNextUntranslated: TTBXItem;
+    bJumpPrevUntranslated: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
@@ -123,11 +115,15 @@ type
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
     procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
     procedure aaTranProps(Sender: TObject);
+    procedure aaJumpPrevUntranslated(Sender: TObject);
+    procedure aaJumpNextUntranslated(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
      // Loaded or new translations
     FTranslations: TDKLang_CompTranslations;
+     // Flag that command line parameters have been checked
+    FCmdLineChecked: Boolean;
      // Prop storage
     FModified: Boolean;
     FTranFileName: String;
@@ -136,6 +132,9 @@ type
     procedure UpdateTree;
      // Checks whether translation file is modified and asks to save it
     function  CheckSave: Boolean;
+     // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
+     //   clicked OK
+    function  OpenFiles(const sLangSrcFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
      // File loading/saving
     procedure DoLoad(const sLangSrcFileName, sTranFileName: String);
     procedure DoSave(const sFileName: String);
@@ -151,6 +150,7 @@ type
     function  IsNodeUntranslated(Node: PVirtualNode): Boolean;
      // App events
     procedure AppHint(Sender: TObject);
+    procedure AppIdle(Sender: TObject; var Done: Boolean);
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -172,8 +172,7 @@ var
 
 implementation
 {$R *.dfm}
-uses StdCtrls, Registry, udSelLang, udSettings, udAbout, udOpenFiles, udDiffLog,
-  udTranProps;
+uses StdCtrls, Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
 
    //===================================================================================================================
    // TStrEditLinkEx
@@ -366,20 +365,41 @@ type
     Close;
   end;
 
-  procedure TfMain.aaNew(Sender: TObject);
-  var sSourceFile, sTranFile: String;
+  procedure TfMain.aaJumpNextUntranslated(Sender: TObject);
+  var Node: PVirtualNode;
   begin
-    sSourceFile := FSourceFileName;
-    sTranFile   := '';
-    if SelectLangFiles(sSourceFile, sTranFile, MRUSource.Items, nil, True) then DoLoad(sSourceFile, '');
+    Node := tvMain.FocusedNode;
+    if Node=nil then Node := tvMain.GetFirst else Node := tvMain.GetNext(Node);
+    while Node<>nil do begin
+      if IsNodeUntranslated(Node) then begin
+        ActivateVTNode(tvMain, Node, True);
+        Break;
+      end;
+      Node := tvMain.GetNext(Node);
+    end;
+  end;
+
+  procedure TfMain.aaJumpPrevUntranslated(Sender: TObject);
+  var Node: PVirtualNode;
+  begin
+    Node := tvMain.GetPrevious(tvMain.FocusedNode);
+    while Node<>nil do begin
+      if IsNodeUntranslated(Node) then begin
+        ActivateVTNode(tvMain, Node, True);
+        Break;
+      end;
+      Node := tvMain.GetPrevious(Node);
+    end;
+  end;
+
+  procedure TfMain.aaNew(Sender: TObject);
+  begin
+    OpenFiles(FSourceFileName, '', True);
   end;
 
   procedure TfMain.aaOpen(Sender: TObject);
-  var sSourceFile, sTranFile: String;
   begin
-    sSourceFile := FSourceFileName;
-    sTranFile   := FTranFileName;
-    if SelectLangFiles(sSourceFile, sTranFile, MRUSource.Items, MRUTran.Items, False) then DoLoad(sSourceFile, sTranFile);
+    OpenFiles(FSourceFileName, FTranFileName, False);
   end;
 
   procedure TfMain.aaSave(Sender: TObject);
@@ -409,12 +429,42 @@ type
 
   procedure TfMain.aaTranProps(Sender: TObject);
   begin
-    EditTranslationProps(FTranslations);
+    if EditTranslationProps(FTranslations, MRUTargetApp.Items) then Modified := True;
   end;
 
   procedure TfMain.AppHint(Sender: TObject);
   begin
     sbarMain.Panels[0].Caption := Application.Hint;
+  end;
+
+  procedure TfMain.AppIdle(Sender: TObject; var Done: Boolean);
+  var
+    i: Integer;
+    sSrcFile, sTranFile: String;
+
+    procedure UseFile(const sFileName: String);
+    var sExt: String;
+    begin
+      if sFileName<>'' then begin
+        sExt := ExtractFileExt(sFileName);
+         // If the file has language source file extension
+        if AnsiSameText(sExt, SLangSourceFileDotExt) then begin
+          if sSrcFile='' then sSrcFile := sFileName;
+         // Else assume it a translation file
+        end else if sTranFile='' then
+          sTranFile := sFileName;
+      end;
+    end;
+
+  begin
+    if not FCmdLineChecked then begin
+      FCmdLineChecked := True;
+       // Check command line parameters
+      sSrcFile  := '';
+      sTranFile := '';
+      for i := 1 to 2 do UseFile(ParamStr(i));
+      if sSrcFile<>'' then DoLoad(sSrcFile, sTranFile) else OpenFiles(sSrcFile, sTranFile, False);
+    end;
   end;
 
   function TfMain.CheckSave: Boolean;
@@ -476,38 +526,29 @@ type
 
   procedure TfMain.DoSave(const sFileName: String);
   begin
+     // Update translation parameter values
+    with FTranslations.Params do begin
+      Values[SDKLang_TranParam_Generator]    := Format('%s %s', [SAppCaption, SAppVersion]);
+      Values[SDKLang_TranParam_LastModified] := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
+    end;
+     // Save the translations
     FTranslations.SaveToFile(sFileName, True);
+     // Update properties
     FModified := False;
     FTranFileName := sFileName;
     UpdateCaption;
+     // Register translation in the MRU list
     MRUTran.Add(FTranFileName);
   end;
 
   procedure TfMain.EnableActions;
-  var bProject: Boolean;
-//  var bComps, bNodeSel, bLangSel, bConstSel, bSomeLangs: Boolean;
+  var bOpenFiles: Boolean;
   begin
-    bProject := FLangSource<>nil;
-//    bComps     := FRootComp.Name<>'';
-//    bNodeSel   := tvMain.FocusedNode<>nil;
-//    bLangSel   := CurLang<>$ffff;
-//    bConstSel  := bNodeSel and (GetNodeKind(tvMain.FocusedNode)=nkConst);
-//    bSomeLangs := FLangs.Count>1;
-    aSave.Enabled               := bProject;
-    aSaveAs.Enabled             := bProject;
-    aClose.Enabled              := bProject;
-
-    aTranProps.Enabled          := bProject;
-
-//    aLangAdd.Enabled            := bComps;
-//    aLangRemove.Enabled         := bLangSel;
-//    aLangReplace.Enabled        := bLangSel;
-//    aConstAdd.Enabled           := bComps;
-//    aConstDelete.Enabled        := bConstSel;
-//    aConstRename.Enabled        := bConstSel;
-//    aReposAddCurProp.Enabled    := bSomeLangs;
-//    aReposAddAllProps.Enabled   := bSomeLangs;
-//    aReposAutoTranslate.Enabled := bSomeLangs and bLangSel;
+    bOpenFiles := FLangSource<>nil;
+    aSave.Enabled      := bOpenFiles;
+    aSaveAs.Enabled    := bOpenFiles;
+    aClose.Enabled     := bOpenFiles;
+    aTranProps.Enabled := bOpenFiles;
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -522,6 +563,7 @@ type
     fpMain.IniSection  := SRegSection_MainWindow;
      // Adjust Application
     Application.OnHint := AppHint;
+    Application.OnIdle := AppIdle;
      // Adjust tvMain
     tvMain.NodeDataSize := SizeOf(TNodeData);
      // Update the tree
@@ -536,33 +578,17 @@ type
   procedure TfMain.fpMainRestorePlacement(Sender: TObject);
   begin
     TBRegLoadPositions(Self, HKEY_CURRENT_USER, SRegKey_Root);
-    MRUSource.LoadFromRegIni(fpMain.RegIniFile, SRegSection_MRUSource);
-    MRUTran.LoadFromRegIni  (fpMain.RegIniFile, SRegSection_MRUTranslation);
-//    with fpMain.RegIniFile do begin
-//      dtlsMain.Language    := ReadInteger(SRegSection_Preferences, 'Language',            1033 {US English});
-//      sTranRepositoryPath  := ReadString (SRegSection_Preferences, 'TranRepositoryPath',  ExtractFilePath(ParamStr(0)));
-//      bReposRemovePrefix   := ReadBool   (SRegSection_Preferences, 'ReposRemovePrefix',   True);
-//      bReposAutoAddStrings := ReadBool   (SRegSection_Preferences, 'ReposAutoAddStrings', True);
-//    end;
-//    if FileExists(sTranRepositoryPath+STranRepositoryFileName) then FTranRepository.LoadFromFile(sTranRepositoryPath+STranRepositoryFileName);
-//    if ParamCount=0 then
-//      aNew.Execute
-//    else
-//      DoLoad(ParamStr(1));
+    MRUSource.LoadFromRegIni   (fpMain.RegIniFile, SRegSection_MRUSource);
+    MRUTran.LoadFromRegIni     (fpMain.RegIniFile, SRegSection_MRUTranslation);
+    MRUTargetApp.LoadFromRegIni(fpMain.RegIniFile, SRegSection_MRUTargetApp);
   end;
 
   procedure TfMain.fpMainSavePlacement(Sender: TObject);
   begin
     TBRegSavePositions(Self, HKEY_CURRENT_USER, SRegKey_Toolbars);
-    MRUSource.SaveToRegIni(fpMain.RegIniFile, SRegSection_MRUSource);
-    MRUTran.SaveToRegIni  (fpMain.RegIniFile, SRegSection_MRUTranslation);
-//    with fpMain.RegIniFile do begin
-//      WriteInteger(SRegSection_Preferences, 'Language',            dtlsMain.Language);
-//      WriteString (SRegSection_Preferences, 'TranRepositoryPath',  sTranRepositoryPath);
-//      WriteBool   (SRegSection_Preferences, 'ReposRemovePrefix',   bReposRemovePrefix);
-//      WriteBool   (SRegSection_Preferences, 'ReposAutoAddStrings', bReposAutoAddStrings);
-//    end;
-//    FTranRepository.SaveToFile(sTranRepositoryPath+STranRepositoryFileName);
+    MRUSource.SaveToRegIni   (fpMain.RegIniFile, SRegSection_MRUSource);
+    MRUTran.SaveToRegIni     (fpMain.RegIniFile, SRegSection_MRUTranslation);
+    MRUTargetApp.SaveToRegIni(fpMain.RegIniFile, SRegSection_MRUTargetApp);
   end;
 
   function TfMain.GetDisplayTranFileName: String;
@@ -584,6 +610,15 @@ type
       nkProp:  Result := dklptsUntranslated in p.pTranProp.States;
       nkConst: Result := dklcsUntranslated  in p.pTranConst.States;
     end;
+  end;
+
+  function TfMain.OpenFiles(const sLangSrcFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
+  var sSourceFile, sTranFile: String;
+  begin
+    sSourceFile := sLangSrcFileName;
+    sTranFile   := sTranFileName;
+    Result := SelectLangFiles(sSourceFile, sTranFile, MRUSource.Items, MRUTran.Items, bNewMode);
+    if Result then DoLoad(sSourceFile, sTranFile);
   end;
 
   procedure TfMain.SetModified(Value: Boolean);
@@ -720,38 +755,38 @@ type
 
   procedure TfMain.tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
   begin
-//    if (Shift*[ssShift, ssAlt]=[]) and (CharCode=VK_RETURN) and not Sender.IsEditing then begin
-//      DoDefault := False;
-//      with Sender do
-//        if FocusedNode<>nil then EditNode(FocusedNode, FocusedColumn);
-//    end;
+     // On Enter or Ctrl+Enter start editing
+    if (Shift*[ssShift, ssAlt]=[]) and (CharCode=VK_RETURN) and not Sender.IsEditing then begin
+      DoDefault := False;
+      with Sender do
+        if FocusedNode<>nil then EditNode(FocusedNode, FocusedColumn);
+    end;
   end;
 
   procedure TfMain.tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
-//  var
-//    pte: TPropTranslationEntry;
-//    wLang, wOrigLang: LANGID;
-//    s: String;
+  var
+    p: PNodeData;
+    s: String;
   begin
-//    s := NewText;
-//    pte := PPropTranslationEntry(Sender.GetNodeData(Node))^;
-//     // Если редактировали имя константы
-//    if Column=0 then
-//      pte.Name := s
-//     // Иначе редактировали один из переводов
-//    else begin
-//       // Tag столбца - это ID его языка
-//      wLang := ColToLang(Column);
-//       // Запоминаем перевод
-//      pte.Translations[wLang] := LineToMultiline(s);
-//       // Добавляем перевод в репозиторий
-//      if bReposAutoAddStrings and (FLangs.Count>1) then begin
-//         // Если первый столбец, тогда оригиналом считаем второй столбец, иначе - первый
-//        wOrigLang := ColToLang(iif(Column=1, 2, 1));
-//        AddTranslation(pte.Translations[wOrigLang], s, wOrigLang, wLang);
-//      end;
-//    end;
-//    Modified := True;
+    s := NewText;
+    p := Sender.GetNodeData(Node);
+    case p.Kind of
+      nkProp: begin
+        with p.pTranProp^ do begin
+          sValue := NewText;
+          States := States-[dklptsUntranslated];
+        end;
+        Modified := True;
+      end;
+      nkConst: begin
+        with p.pTranConst^ do begin
+          sValue    := NewText;
+          sDefValue := sValue;
+          States    := States-[dklcsUntranslated];
+        end;
+        Modified := True;
+      end;
+    end;
   end;
 
   procedure TfMain.tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
@@ -790,6 +825,7 @@ type
         tvMain.EndUpdate;
       end;
       tvMain.Show;
+      tvMain.SetFocus;
     end;
     EnableActions;
   end;

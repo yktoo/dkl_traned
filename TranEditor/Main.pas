@@ -978,10 +978,10 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
      // Update status bar
     with sbarMain.Panels do begin
-      Items[ISBPanelIdx_CompCount].Caption      := Format(SStatusBar_CompCount,      [iCntComp]);
-      Items[ISBPanelIdx_PropCount].Caption      := Format(SStatusBar_PropCount,      [iCntProp, iCntPropUntr]);
-      Items[ISBPanelIdx_ConstCount].Caption     := Format(SStatusBar_ConstCount,     [iCntConst, iCntConstUntr]);
-      Items[ISBPanelIdx_ReposTermCount].Caption := Format(SStatusBar_ReposTermCount, [FRepository.TermCount]);
+      Items[ISBPanelIdx_CompCount].Caption       := Format(SStatusBar_CompCount,       [iCntComp]);
+      Items[ISBPanelIdx_PropCount].Caption       := Format(SStatusBar_PropCount,       [iCntProp, iCntPropUntr]);
+      Items[ISBPanelIdx_ConstCount].Caption      := Format(SStatusBar_ConstCount,      [iCntConst, iCntConstUntr]);
+      Items[ISBPanelIdx_ReposEntryCount].Caption := Format(SStatusBar_ReposEntryCount, [FRepository.EntryCount]);
     end;
   end;
 

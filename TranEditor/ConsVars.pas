@@ -114,36 +114,59 @@ type
   end;
 
    //===================================================================================================================
+   // Translation entry list
+   //===================================================================================================================
+
+   // A translation repository entry
+  PTranRepositoryEntry = ^TTranRepositoryEntry;
+  TTranRepositoryEntry = record
+    wLangID1: LANGID; // Source language ID
+    sValue1:  String; // Source value
+    wLangID2: LANGID; // Translated language ID
+    sValue2:  String; // Translated value
+  end;
+
+   // Translation repository entry list, sorted by wLangID1, sValue1, wLangID2
+  TTranRepositoryEntries = class(TList)
+  private
+     // Tries to find the entry; returns True, if succeeded, and its index in iIndex; otherwise returns False
+     //   and its adviced insertion-point index in iIndex
+    function  FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out iIndex: Integer): Boolean;
+     // Returns entry comparison result
+    function  CompareEntries(p1, p2: PTranRepositoryEntry): Integer;
+     // Prop handlers
+    function  GetItems(Index: Integer): PTranRepositoryEntry;
+  protected
+    procedure Notify(Ptr: Pointer; Action: TListNotification); override;
+  public
+     // Adds or replaces the entry. Returns its index
+    function  Add(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String): Integer;
+     // Props
+     // -- Items by index
+    property Items[Index: Integer]: PTranRepositoryEntry read GetItems; default;
+  end;
+
+   //===================================================================================================================
    // A translation repository
    //===================================================================================================================
 
   TTranRepository = class(TObject)
   private
-     // List of TStringList's, each consisting of possible translations, Objects[] is LANGID
-    FTerms: TObjectList;
-     // Finds and returns the string list corresponding to a term, or nil if no such translation was registered
-    function  FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
-     // Finds and returns the string list corresponding to a term in SL, and its index in idx; if no entry for wLangID2
-     //   present in SL, returns idx=-1; if no such translation was registered returns SL=nil
-    procedure FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out SL: TStringList; out idx: Integer);
+     // Entry list
+    FEntries: TTranRepositoryEntries;
      // Prop handlers
     function  GetTranslations(wLangID1, wLangID2: LANGID; const sValue1: String): String;
-    procedure SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, Value: String);
-    function  GetTermCount: Integer;
+    procedure SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String);
+    function GetEntryCount: Integer;
   public
     constructor Create;
     destructor Destroy; override;
-     // Adds the translation. Returns True if at least one translation was a new one, or False if this was just a
-     //   replacement
-    function  AddTranslation(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String): Boolean;
-     // Clears the repository
-    procedure Clear;
      // Loading and saving to file
     procedure LoadFromFile(const sFileName: String);
     procedure SaveToFile(const sFileName: String);
      // Props
-     // -- Repository term count
-    property TermCount: Integer read GetTermCount; 
+     // -- Repository entry count
+    property EntryCount: Integer read GetEntryCount;
      // -- Returns the translation of sValue1 from wLangID1 into wLangID2, or an empty string if no translation found
     property Translations[wLangID1, wLangID2: LANGID; const sValue1: String]: String read GetTranslations write SetTranslations;
   end;
@@ -181,7 +204,7 @@ const
   SStatusBar_CompCount             = 'Comp: %d';
   SStatusBar_PropCount             = 'Prop: %d/%d';
   SStatusBar_ConstCount            = 'Const: %d/%d';
-  SStatusBar_ReposTermCount        = 'Repository: %d terms';
+  SStatusBar_ReposEntryCount       = 'Repository: %d entries';
 
    // Error messages
   SErrMsg_FileDoesntExist          = 'File "%s" doesn''t exist';
@@ -239,7 +262,7 @@ const
   ISBPanelIdx_CompCount            = 1;
   ISBPanelIdx_PropCount            = 2;
   ISBPanelIdx_ConstCount           = 3;
-  ISBPanelIdx_ReposTermCount       = 4;
+  ISBPanelIdx_ReposEntryCount      = 4;
 
    // Colors
   CBack_CompEntry                  = $ffe5ec;  // Background color of component entry
@@ -934,142 +957,129 @@ uses TypInfo, Forms, Dialogs;
   end;
 
    //===================================================================================================================
-   // TTranRepository
+   // TTranRepositoryEntries
    //===================================================================================================================
 
-  function TTranRepository.AddTranslation(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String): Boolean;
-  var
-    s1, s2: String;
-    SL: TStringList;
-    idx: Integer;
+  function TTranRepositoryEntries.Add(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String): Integer;
+  var p: PTranRepositoryEntry;
   begin
-    if (sValue1='') or (sValue2='') then
-      Result := False
+     // Try to find an existing entry
+    if FindTranslation(wLangID1, wLangID2, sValue1, Result) then
+      p := GetItems(Result)
+     // If not found - add new one 
     else begin
-      s1 := MultilineToLine(sValue1);
-      s2 := MultilineToLine(sValue2);
-       // Try seek for the first value
-      FindTranslation(wLangID1, wLangID2, s1, SL, idx);
-       // If found, put second value as translation
-      if SL<>nil then begin
-        Result := idx<0;
-        if Result then SL.AddObject(s2, Pointer(wLangID2))
-        else if SL[idx]<>s2 then SL[idx] := s2;
-        Exit;
-      end;
-       // Try seek for the second value
-      FindTranslation(wLangID2, wLangID1, s2, SL, idx);
-       // If found, put first value as translation
-      if SL<>nil then begin
-        Result := idx<0;
-        if Result then SL.AddObject(s1, Pointer(wLangID1))
-        else if SL[idx]<>s1 then SL[idx] := s1;
-        Exit;
-      end;
-       // Else add both the translations
-      SL := TStringList.Create;
-      FTerms.Add(SL);
-      SL.AddObject(s1, Pointer(wLangID1));
-      SL.AddObject(s2, Pointer(wLangID2));
-      Result := True;
+      New(p);
+      Insert(Result, p);
+      p.wLangID1 := wLangID1;
+      p.sValue1  := sValue1;
+      p.wLangID2 := wLangID2;
     end;
+     // Set the translated value
+    p.sValue2 := sValue2;
   end;
 
-  procedure TTranRepository.Clear;
+  function TTranRepositoryEntries.CompareEntries(p1, p2: PTranRepositoryEntry): Integer;
   begin
-    FTerms.Clear;
+     // Compare wLangID1
+    Result := Integer(p1.wLangID1)-Integer(p2.wLangID1);
+     // Compare sValue1
+    if Result=0 then Result := AnsiCompareStr(p1.sValue1, p2.sValue1);
+     // Compare wLangID2
+    if Result=0 then Result := Integer(p1.wLangID2)-Integer(p2.wLangID2);
   end;
+
+  function TTranRepositoryEntries.FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out iIndex: Integer): Boolean;
+  var
+    iL, iR, i: Integer;
+    TRE: TTranRepositoryEntry;
+  begin
+    TRE.wLangID1 := wLangID1;
+    TRE.sValue1  := sValue1;
+    TRE.wLangID2 := wLangID2;
+     // Since the list is sorted, implement binary search here
+    Result := False;
+    iL := 0;
+    iR := Count-1;
+    while iL<=iR do begin
+      i := (iL+iR) shr 1;
+      case CompareEntries(GetItems(i), @TRE) of
+        Low(Integer)..-1: iL := i+1;
+        0: begin
+          Result := True;
+          iL := i;
+          Break;
+        end;
+        else iR := i-1;
+      end;
+    end;
+    iIndex := iL;
+  end;
+
+  function TTranRepositoryEntries.GetItems(Index: Integer): PTranRepositoryEntry;
+  begin
+    Result := Get(Index);
+  end;
+
+  procedure TTranRepositoryEntries.Notify(Ptr: Pointer; Action: TListNotification);
+  begin
+    if Action=lnDeleted then Dispose(PTranRepositoryEntry(Ptr));
+  end;
+
+   //===================================================================================================================
+   // TTranRepository
+   //===================================================================================================================
 
   constructor TTranRepository.Create;
   begin
     inherited Create;
-    FTerms := TObjectList.Create;
+    FEntries := TTranRepositoryEntries.Create;
   end;
 
   destructor TTranRepository.Destroy;
   begin
-    FTerms.Free;
+    FEntries.Free;
     inherited Destroy;
   end;
 
-  procedure TTranRepository.FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out SL: TStringList; out idx: Integer);
+  function TTranRepository.GetEntryCount: Integer;
   begin
-    SL := FindTranslationSL(wLangID1, sValue1);
-    if SL=nil then idx := -1 else idx := SL.IndexOfObject(Pointer(wLangID2));
-  end;
-
-  function TTranRepository.FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
-  var i, idxLang: Integer;
-  begin
-    for i := 0 to FTerms.Count-1 do begin
-      Result := TStringList(FTerms[i]);
-      idxLang := Result.IndexOfObject(Pointer(wLangID));
-      if (idxLang>=0) and (Result[idxLang]=sValue) then Exit;
-    end;
-    Result := nil;
-  end;
-
-  function TTranRepository.GetTermCount: Integer;
-  begin
-    Result := FTerms.Count;
+    Result := FEntries.Count;
   end;
 
   function TTranRepository.GetTranslations(wLangID1, wLangID2: LANGID; const sValue1: String): String;
-  var
-    SL: TStringList;
-    idx: Integer;
+  var idx: Integer;
   begin
-    FindTranslation(wLangID1, wLangID2, sValue1, SL, idx);
-    if (SL=nil) or (idx<0) then Result := '' else Result := LineToMultiline(SL[idx]);
+    if FEntries.FindTranslation(wLangID1, wLangID2, sValue1, idx) then Result := FEntries[idx].sValue2 else Result := '';
   end;
 
   procedure TTranRepository.LoadFromFile(const sFileName: String);
   var
-    SLLines, SLTerm: TStringList;
+    SLLines, SL: TStringList;
     i: Integer;
 
     procedure ParseLine(const sLine: String);
-    var
-      sTerm: String;
-      wLangID: LANGID;
-      SL: TStringList;
-      i: Integer;
     begin
        // Skip empty lines or comments
       if (sLine='') or (sLine[1]=';') then Exit;
-      SL := nil;
-       // Tell SLTerm to parse comma-delimited line
-      SLTerm.CommaText := sLine;
+       // Parse comma-delimited line
+      SL.CommaText := sLine;
        // Check each entry pair in SLTerm
-      for i := 0 to (SLTerm.Count div 2)-1 do begin
-        wLangID := StrToIntDef(SLTerm[i*2], 0);
-        sTerm   := Trim(SLTerm[i*2+1]);
-         // If the term is valid
-        if (wLangID>0) and (sTerm<>'') then begin
-           // Create a string list if it isn't created yet and add it to FTerms list
-          if SL=nil then begin
-            SL := TStringList.Create;
-            FTerms.Add(SL);
-          end;
-           // Add the term
-          SL.AddObject(sTerm, Pointer(wLangID));
-        end;
-      end;
+      if SL.Count>=4 then Translations[StrToIntDef(SL[0], 0), StrToIntDef(SL[2], 0), LineToMultiline(Trim(SL[1]))] := LineToMultiline(Trim(SL[3]));
     end;
 
   begin
-    Clear;
+    FEntries.Clear;
     if not FileExists(sFileName) then Exit;
     SLLines := TStringList.Create;
     try
        // Load the stream into TStringList
       SLLines.LoadFromFile(sFileName);
        // Parse the strings
-      SLTerm := TStringList.Create;
+      SL := TStringList.Create;
       try
         for i := 0 to SLLines.Count-1 do ParseLine(SLLines[i]);
       finally
-        SLTerm.Free;
+        SL.Free;
       end;
     finally
       SLLines.Free;
@@ -1079,8 +1089,9 @@ uses TypInfo, Forms, Dialogs;
   procedure TTranRepository.SaveToFile(const sFileName: String);
   var
     fs: TFileStream;
-    iTerm, iTran: Integer;
-    SLTerm, SL: TStringList;
+    i: Integer;
+    SL: TStringList;
+    p: PTranRepositoryEntry;
 
     procedure WriteLine(const sLine: String);
     begin
@@ -1095,31 +1106,31 @@ uses TypInfo, Forms, Dialogs;
       WriteLine('; '+SRepositoryFileHeader);
       WriteLine('; '+SAppWebsite);
       WriteLine('');
-       // Create temporary term string list (which represents one line in the repository file)
-      SLTerm := TStringList.Create;
+       // Create temporary entry string list (which represents one line in the repository file)
+      SL := TStringList.Create;
       try
-        for iTerm := 0 to FTerms.Count-1 do begin
-           // Fill the SLTerm with pairs LangID-Value
-          SLTerm.Clear;
-          SL := TStringList(FTerms[iTerm]); 
-          for iTran := 0 to SL.Count-1 do begin
-            SLTerm.Add(IntToStr(Integer(SL.Objects[iTran])));
-            SLTerm.Add(SL[iTran]);
-          end;
-           // Write the term line
-          WriteLine(SLTerm.CommaText);
+        for i := 0 to FEntries.Count-1 do begin
+          p := FEntries[i];
+           // Fill SL with pairs LangID-Value
+          SL.Clear;
+          SL.Add(IntToStr(p.wLangID1));
+          SL.Add(MultilineToLine(p.sValue1));
+          SL.Add(IntToStr(p.wLangID2));
+          SL.Add(MultilineToLine(p.sValue2));
+           // Write the entry line
+          WriteLine(SL.CommaText);
         end;
       finally
-        SLTerm.Free;
+        SL.Free;
       end;
     finally
       fs.Free;
     end;
   end;
 
-  procedure TTranRepository.SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, Value: String);
+  procedure TTranRepository.SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String);
   begin
-    AddTranslation(wLangID1, wLangID2, sValue1, Value);
+    if (wLangID1<>0) and (wLangID2<>0) and (sValue1<>'') and (sValue2<>'') then FEntries.Add(wLangID1, wLangID2, sValue1, sValue2);
   end;
 
 end.

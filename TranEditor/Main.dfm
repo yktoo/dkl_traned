@@ -699,7 +699,7 @@ object fMain: TfMain
       end
       item
         Alignment = taCenter
-        Caption = 'Repository: 0000 terms'
+        Caption = 'Repository: 0000 entries'
         Hint = 'Number of repository terms'
         Size = 150
         Tag = 0

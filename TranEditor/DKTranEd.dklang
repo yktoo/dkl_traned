@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.3 2004-09-15 18:51:33 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.4 2004-09-25 07:29:40 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -153,7 +153,7 @@ SDiffDesc_MissingEntries=The following entries were not found and were added to 
 SDiffDesc_RemoveComponent=- Component: [%s]
 SDiffDesc_RemoveConstant=- Constant "%s"
 SDiffDesc_RemoveProperty=- Component "%s", property with ID=%d
-SDiffTotalsText=;Components;Properties;Constants\nAdded;%d;%d;%d\nRemoved;%d;%d;%d\nTotal;%d;%d;%d
+SDiffTotalsText=\tComponents\tProperties\tConstants\nAdded\t%d\t%d\t%d\nRemoved\t%d\t%d\t%d\nTotal\t%d\t%d\t%d
 SDlgTitle_Confirm=Confirm
 SDlgTitle_Error=Error
 SDlgTitle_Info=Info

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udDiffLog.pas,v 1.4 2004-09-11 17:58:01 dale Exp $
+//  $Id: udDiffLog.pas,v 1.5 2004-09-25 07:29:40 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -36,7 +36,7 @@ uses ConsVars;
       try
         mMain.Text := sLog;
         lbTotals.Items.Text := Format(
-          StringReplace(ConstVal('SDiffTotalsText'), ';', #9, [rfReplaceAll]),
+          ConstVal('SDiffTotalsText'),
           [iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts]);
         cbAutoTranslate.Enabled := iCntAddedProps+iCntAddedConsts>0;
         ShowModal;

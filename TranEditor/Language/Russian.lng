@@ -3,7 +3,7 @@ Author=Dmitry Kann, http://www.dk-soft.org
 SourceLANGID=1033
 LANGID=1049
 Generator=DKLang Translation Editor v2.1
-LastModified=2004-09-15 21:07:23
+LastModified=2004-09-25 13:14:19
 
 [dAbout]
 00000001=О программе
@@ -153,7 +153,7 @@ SDiffDesc_MissingEntries=Следующие записи не были обнаружены в переводе и поэтом
 SDiffDesc_RemoveComponent=- Компонент: [%s]
 SDiffDesc_RemoveConstant=- Константа "%s"
 SDiffDesc_RemoveProperty=- Компонент "%s", свойство с ID=%d
-SDiffTotalsText=;Компонентов;Свойств;Констант\nДобавлено;%d;%d;%d\nУдалено;%d;%d;%d\nВсего;%d;%d;%d
+SDiffTotalsText=\tКомпонентов\tСвойств\tКонстант\nДобавлено\t%d\t%d\t%d\nУдалено\t%d\t%d\t%d\nВсего\t%d\t%d\t%d
 SDlgTitle_Confirm=Подтверждение
 SDlgTitle_Error=Ошибка
 SDlgTitle_Info=Информация

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.11 2004-09-12 15:53:55 dale Exp $
+//  $Id: ConsVars.pas,v 1.12 2004-09-25 07:29:40 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -879,7 +879,7 @@ uses TypInfo, Forms, Dialogs;
       sConstName := Trim(Copy(sLine, 1, iEq-1));
       if sConstName='' then TranEdError(ConstVal('SErrMsg_ConstNameMissing'));
        // Extract constant value and add the constant to the list
-      FConstants.Add(sConstName, LineToMultiline(Trim(Copy(sLine, iEq+1, MaxInt))), []);
+      FConstants.Add(sConstName, DecodeControlChars(Trim(Copy(sLine, iEq+1, MaxInt))), []);
     end;
 
     procedure ParseProperty;
@@ -904,7 +904,7 @@ uses TypInfo, Forms, Dialogs;
       iID := StrToIntDef(Copy(sIDVal, 1, iComma-1), 0);
       if iID<=0 then TranEdError(ConstVal('SErrMsg_PropIDInvalid'));
        // Extract value and add the property
-      Comp.PropertySources.Add(iID, sPropName, LineToMultiline(Trim(Copy(sIDVal, iComma+1, MaxInt))));
+      Comp.PropertySources.Add(iID, sPropName, DecodeControlChars(Trim(Copy(sIDVal, iComma+1, MaxInt))));
     end;
 
   begin
@@ -1035,7 +1035,7 @@ uses TypInfo, Forms, Dialogs;
        // Parse comma-delimited line
       SL.CommaText := sLine;
        // Check each entry pair in SLTerm
-      if SL.Count>=4 then Translations[StrToIntDef(SL[0], 0), StrToIntDef(SL[2], 0), LineToMultiline(Trim(SL[1]))] := LineToMultiline(Trim(SL[3]));
+      if SL.Count>=4 then Translations[StrToIntDef(SL[0], 0), StrToIntDef(SL[2], 0), DecodeControlChars(Trim(SL[1]))] := DecodeControlChars(Trim(SL[3]));
     end;
 
   begin
@@ -1085,9 +1085,9 @@ uses TypInfo, Forms, Dialogs;
            // Fill SL with pairs LangID-Value
           SL.Clear;
           SL.Add(IntToStr(p.wLangID1));
-          SL.Add(MultilineToLine(p.sValue1));
+          SL.Add(EncodeControlChars(p.sValue1));
           SL.Add(IntToStr(p.wLangID2));
-          SL.Add(MultilineToLine(p.sValue2));
+          SL.Add(EncodeControlChars(p.sValue2));
            // Write the entry line
           WriteLine(SL.CommaText);
         end;

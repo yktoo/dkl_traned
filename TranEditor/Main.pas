@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.12 2004-09-12 15:53:55 dale Exp $
+//  $Id: Main.pas,v 1.13 2004-09-25 07:29:40 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -789,7 +789,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.mCurTranEntryChange(Sender: TObject);
   begin
     if FUpdatingCurEntryEditor then Exit;
-    tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := MultilineToLine(mCurTranEntry.Text);
+    tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := EncodeControlChars(mCurTranEntry.Text);
   end;
 
   function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
@@ -933,23 +933,23 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
           nkComp: if Column=IColIdx_Name then s := p.CompSource.CompName;
           nkProp:
             case Column of
-              IColIdx_Name:       s := p.pSrcProp.sPropName;
-              IColIdx_ID:         s := IntToStr(p.pSrcProp.iID);
+              IColIdx_Name: s := p.pSrcProp.sPropName;
+              IColIdx_ID:   s := IntToStr(p.pSrcProp.iID);
               IColIdx_Original: begin
                 if p.pDisplProp=nil then s := p.pSrcProp.sValue else s := p.pDisplProp.sValue;
-                s := MultilineToLine(s);
+                s := EncodeControlChars(s);
               end;
-              IColIdx_Translated: s := MultilineToLine(p.pTranProp.sValue);
+              IColIdx_Translated: s := EncodeControlChars(p.pTranProp.sValue);
             end;
           nkConsts: if Column=IColIdx_Name then s := ConstVal('SNode_Constants');
           nkConst:
             case Column of
-              IColIdx_Name:       s := p.pSrcConst.sName;
+              IColIdx_Name: s := p.pSrcConst.sName;
               IColIdx_Original: begin
                 if p.pDisplConst=nil then s := p.pSrcConst.sDefValue else s := p.pDisplConst.sDefValue;
-                s := MultilineToLine(s);
+                s := EncodeControlChars(s);
               end;
-              IColIdx_Translated: s := MultilineToLine(p.pTranConst.sDefValue);
+              IColIdx_Translated: s := EncodeControlChars(p.pTranConst.sDefValue);
             end;
         end;
        // Static text
@@ -975,7 +975,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     if ParentNode=nil then                          p.Kind := GetRootNodeKind(Node)
     else if GetRootNodeKind(ParentNode)=nkComp then p.Kind := nkProp
     else                                            p.Kind := nkConst;
-     // Initialize node data (bind the node with corresponding objects) and chil count
+     // Initialize node data (bind the node with corresponding objects) and child count
     case p.Kind of
       nkComp: begin
         p.CompSource  := FLangSource.ComponentSources[Node.Index];
@@ -1022,12 +1022,12 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     case p.Kind of
       nkProp:
         with p.pTranProp^ do begin
-          sValue := s;
+          sValue := DecodeControlChars(s);
           TranStates := TranStates-[dktsUntranslated, dktsAutotranslated];
         end;
       nkConst:
         with p.pTranConst^ do begin
-          sValue     := s;
+          sValue     := DecodeControlChars(s);
           sDefValue  := sValue;
           TranStates := TranStates-[dktsUntranslated, dktsAutotranslated];
         end;
@@ -1081,8 +1081,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
      // Update curent entry editors
     FUpdatingCurEntryEditor := True;
     try
-      mCurSrcEntry.Text  := LineToMultiline(sSrc);
-      mCurTranEntry.Text := LineToMultiline(sTran);
+      mCurSrcEntry.Text  := sSrc;
+      mCurTranEntry.Text := sTran;
       EnableWndCtl(mCurSrcEntry,  bEnable);
       EnableWndCtl(mCurTranEntry, bEnable);
     finally

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udFind.pas,v 1.2 2004-11-12 19:17:36 dale Exp $
+//  $Id: udFind.pas,v 1.3 2004-11-14 14:11:30 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -15,7 +15,7 @@ uses
 type
   TdFind = class(TForm)
     bAll: TButton;
-    bCancel: TButton;
+    bClose: TButton;
     bOK: TButton;
     cbCaseSensitive: TCheckBox;
     cbPattern: TComboBox;
@@ -34,40 +34,40 @@ type
     rgDirection: TRadioGroup;
     rgOrigin: TRadioGroup;
     procedure bAllClick(Sender: TObject);
-    procedure bCancelClick(Sender: TObject);
     procedure bOKClick(Sender: TObject);
-    procedure DlgDataChange(Sender: TObject);
-    procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure cbReplaceClick(Sender: TObject);
+    procedure DlgDataChange(Sender: TObject);
   private
      // Procedure invoked when user starts search/replace
     FFindCallback: TFindCallback;
+     // MRU lists
+    FSearchMRUStrings: TStrings;
+    FReplaceMRUStrings: TStrings;
      // Called whenever dialog or its controls state changed
     procedure StateChanged;
      // Starts searching/replacement
-    function  DoFind(bAll: Boolean): Boolean;
+    procedure DoFind(bAll: Boolean);
   protected
     procedure InitializeDialog;
-  public
-    destructor Destroy; override;
+    function  Execute: Boolean;
   end;
 
-  procedure ShowFindDialog(AFindCallback: TFindCallback);
+  function ShowFindDialog(AFindCallback: TFindCallback; ASearchMRUStrings, AReplaceMRUStrings: TStrings): Boolean;
 
 implementation
 {$R *.dfm}
 
-var
-  dFind: TdFind = nil;
-
-  procedure ShowFindDialog(AFindCallback: TFindCallback);
+  function ShowFindDialog(AFindCallback: TFindCallback; ASearchMRUStrings, AReplaceMRUStrings: TStrings): Boolean;
   begin
-    if dFind=nil then begin
-      dFind := TdFind.Create(Application);
-      dFind.FFindCallback := AFindCallback;
-      dFind.InitializeDialog;
-    end;
-    dFind.Show;
+    with TdFind.Create(Application) do
+      try
+        FFindCallback      := AFindCallback;
+        FSearchMRUStrings  := ASearchMRUStrings;
+        FReplaceMRUStrings := AReplaceMRUStrings;
+        Result := Execute;
+      finally
+        Free;
+      end;
   end;
 
    //===================================================================================================================
@@ -76,29 +76,20 @@ var
 
   procedure TdFind.bAllClick(Sender: TObject);
   begin
-    if DoFind(True) then Close;
-  end;
-
-  procedure TdFind.bCancelClick(Sender: TObject);
-  begin
-    Close;
+    DoFind(True);
   end;
 
   procedure TdFind.bOKClick(Sender: TObject);
   begin
-    if DoFind(False) then Close;
+    DoFind(False);
   end;
 
   procedure TdFind.cbReplaceClick(Sender: TObject);
   begin
-    StateChanged;
-    if cbReplacePattern.CanFocus then cbReplacePattern.SetFocus;
-  end;
-
-  destructor TdFind.Destroy;
-  begin
-    dFind := nil;
-    inherited Destroy;
+    if Visible then begin
+      StateChanged;
+      if cbReplacePattern.CanFocus then cbReplacePattern.SetFocus;
+    end;
   end;
 
   procedure TdFind.DlgDataChange(Sender: TObject);
@@ -106,8 +97,10 @@ var
     if Visible then StateChanged;
   end;
 
-  function TdFind.DoFind(bAll: Boolean): Boolean;
+  procedure TdFind.DoFind(bAll: Boolean);
   begin
+     // Clear the search-from-the-next flag on invoke
+    Exclude(SearchParams.Flags, sfFromNext);
      // Save search parameters
     SearchParams.sSearchPattern  := cbPattern.Text;
     SearchParams.sReplacePattern := cbReplacePattern.Text;
@@ -122,18 +115,27 @@ var
     if cbSearchTranslated.Checked then Include(SearchParams.Flags, sfSearchTranslated);
     if rgOrigin.ItemIndex=1       then Include(SearchParams.Flags, sfEntireScope);
     if rgDirection.ItemIndex=1    then Include(SearchParams.Flags, sfBackward);
+    if bAll                       then Include(SearchParams.Flags, sfReplaceAll);
      // Invoke the search function
-    Result := FFindCallback(SearchParams);
+    Hide;
+    try
+      if FFindCallback(SearchParams) then ModalResult := mrOK;
+    finally
+      if ModalResult<>mrOK then Show;
+    end;
   end;
 
-  procedure TdFind.FormClose(Sender: TObject; var Action: TCloseAction);
+  function TdFind.Execute: Boolean;
   begin
-    Action := caFree;
+    InitializeDialog;
+    Result := ShowModal=mrOK;
   end;
 
   procedure TdFind.InitializeDialog;
   begin
      // Initialize the controls
+    cbPattern.Items.Assign(FSearchMRUStrings);
+    cbReplacePattern.Items.Assign(FReplaceMRUStrings);
     cbPattern.Text             := SearchParams.sSearchPattern;
     cbReplace.Checked          := sfReplace in SearchParams.Flags;
     cbReplacePattern.Text      := SearchParams.sReplacePattern;
@@ -150,20 +152,19 @@ var
   end;
 
   procedure TdFind.StateChanged;
-  var bReplaceMode, bPatterns, bSearchTran, bScope: Boolean;
+  var bReplaceMode, bPattern, bScope: Boolean;
   begin
     bReplaceMode := cbReplace.Checked;
-    bPatterns    := (cbPattern.Text<>'') and (not bReplaceMode or (cbReplacePattern.Text<>''));
-    bSearchTran  := cbSearchTranslated.Checked;
-    bScope       := (bReplaceMode and bSearchTran) or
-                    (not bReplaceMode and (bSearchTran or cbSearchNames.Checked or cbSearchOriginal.Checked));
+    bPattern     := cbPattern.Text<>'';
+    bScope       := cbSearchTranslated.Checked or
+                    (not bReplaceMode and (cbSearchNames.Checked or cbSearchOriginal.Checked));
     EnableWndCtl(cbReplacePattern, bReplaceMode);
     cbPrompt.Enabled         := bReplaceMode;
     cbSearchNames.Enabled    := not bReplaceMode;
     cbSearchOriginal.Enabled := not bReplaceMode;
-    bOK.Enabled              := bPatterns and bScope;
+    bOK.Enabled              := bPattern and bScope;
     bOK.Caption              := ConstVal(iif(bReplaceMode, 'SBtn_Replace', 'SBtn_Find'));
-    bAll.Enabled             := bReplaceMode and bPatterns and bScope;
+    bAll.Enabled             := bReplaceMode and bPattern and bScope;
   end;
 
 end.

@@ -13,7 +13,7 @@ object dTranProps: TdTranProps
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poMainFormCenter
   DesignSize = (
     459
     377)

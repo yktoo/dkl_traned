@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.15 2004-11-12 19:17:36 dale Exp $
+//  $Id: ConsVars.pas,v 1.16 2004-11-14 14:11:30 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -183,6 +183,7 @@ type
 
   TSearchFlag = (
     sfSearchMade,       // Is set once a search had been made
+    sfFromNext,         // If set, the search is to be done from the next (or previous) entry
     sfReplace,          // Perform a replace rather than search
     sfCaseSensitive,    // Use case-sensitive search
     sfWholeWordsOnly,   // Find whole words only
@@ -210,8 +211,8 @@ const
 
   SAppProductSID                   = 'dktraned';
   SAppCaption                      = 'DKLang Translation Editor';
-  SAppVersion                      = 'v2.2';
-  SAppVersionSID                   = '2.2';
+  SAppVersion                      = 'v2.3';
+  SAppVersionSID                   = '2.3';
   SAppEmail                        = 'devtools@narod.ru';
 
   SRepositoryFileHeader            = SAppCaption+' '+SAppVersion+' Translation Repository File';
@@ -229,7 +230,11 @@ const
   SRegSection_MRUSource            = 'MRUSource';
   SRegSection_MRUDisplay           = 'MRUDisplay';
   SRegSection_MRUTranslation       = 'MRUTranslation';
-  SRegSection_MRUTargetApp         = 'MRUTargetApp'; 
+
+  SRegSection_Search               = 'Search';
+  SRegSection_MRUSearch            = SRegSection_Search+'\MRUSearch';
+  SRegSection_MRUReplace           = SRegSection_Search+'\MRUReplace';
+  SRegSection_MRUTargetApp         = 'MRUTargetApp';
   SRegSection_Preferences          = 'Preferences';
 
    // Language file relative path
@@ -254,6 +259,8 @@ const
   CBack_ConstsNode                 = $eaeaff;  // Background color of 'Constants' node
   CBack_ConstEntry                 = clWindow; // Background color of constant entry
   CBack_UntranslatedValue          = $f0f0f0;  // Background color of untranslated item values
+  CLine_SearchMatch                = clRed;    // Border line color of search match node 
+  CBack_SearchMatch                = $c0c0ff;  // Background color of search match node
 
    // ImageIndices                 
   iiSettings                       =  0;
@@ -278,6 +285,7 @@ const
   iiJumpNext                       = 19;
   iiFind                           = 20;
   iiFindNext                       = 21;
+  iiReplace                        = 22;
 
 var
    // Main tree code page
@@ -289,10 +297,7 @@ var
   bSetting_ReposRemovePrefix: Boolean;
   bSetting_ReposAutoAdd:      Boolean;
    // Search parameters
-  SearchParams:               TSearchParams = (
-    sSearchPattern:  '';
-    sReplacePattern: '';
-    Flags:           [sfPromptOnReplace, sfSearchTranslated]);
+  SearchParams:               TSearchParams;
     
    // A global IDKWeb instance
   DKWeb: IDKWeb;

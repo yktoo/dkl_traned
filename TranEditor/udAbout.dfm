@@ -12,7 +12,7 @@ object dAbout: TdAbout
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poMainFormCenter
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
   PixelsPerInch = 96

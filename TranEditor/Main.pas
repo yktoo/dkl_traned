@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.15 2004-11-12 19:17:36 dale Exp $
+//  $Id: Main.pas,v 1.16 2004-11-14 14:11:30 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -49,6 +49,7 @@ type
     aClose: TAction;
     aExit: TAction;
     aFind: TAction;
+    aFindNext: TAction;
     aHelpCheckUpdates: TAction;
     aHelpProductWebsite: TAction;
     aHelpSupport: TAction;
@@ -66,6 +67,8 @@ type
     aTranProps: TAction;
     bAbout: TTBXItem;
     bExit: TTBXItem;
+    bFind: TTBXItem;
+    bFindNext: TTBXItem;
     bJumpNextUntranslated: TTBXItem;
     bJumpPrevUntranslated: TTBXItem;
     bNewOrOpen: TTBXItem;
@@ -90,6 +93,8 @@ type
     iClose: TTBXItem;
     iExit: TTBXItem;
     iFileSep: TTBXSeparatorItem;
+    iFind: TTBXItem;
+    iFindNext: TTBXItem;
     iHelpCheckUpdates: TTBXItem;
     iHelpProductWebsite: TTBXItem;
     iHelpSupport: TTBXItem;
@@ -145,17 +150,18 @@ type
     tbSep1: TTBXSeparatorItem;
     tbSep2: TTBXSeparatorItem;
     tvMain: TVirtualStringTree;
-    iFind: TTBXItem;
-    bFind: TTBXItem;
-    aFindNext: TAction;
-    iFindNext: TTBXItem;
-    bFindNext: TTBXItem;
+    MRUSearch: TTBMRUList;
+    MRUReplace: TTBMRUList;
+    aReplace: TAction;
+    iReplace: TTBXItem;
+    bReplace: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
     procedure aaFind(Sender: TObject);
+    procedure aaFindNext(Sender: TObject);
     procedure aaHelpCheckUpdates(Sender: TObject);
     procedure aaHelpProductWebsite(Sender: TObject);
     procedure aaHelpSupport(Sender: TObject);
@@ -179,6 +185,7 @@ type
     procedure fpMainRestorePlacement(Sender: TObject);
     procedure fpMainSavePlacement(Sender: TObject);
     procedure mCurTranEntryChange(Sender: TObject);
+    procedure tvMainAfterItemPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect);
     procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
     procedure tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
     procedure tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
@@ -191,7 +198,7 @@ type
     procedure tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
-    procedure aaFindNext(Sender: TObject);
+    procedure aaReplace(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -208,6 +215,8 @@ type
     FUpdatingCurEntryEditor: Boolean;
      // Update entry properties flag
     FUpdatingEntryProps: Boolean;
+     // A search match node
+    FSearchMatchNode: PVirtualNode;
      // Translation repository
     FRepository: TTranRepository;
      // Prop storage
@@ -266,6 +275,8 @@ type
     procedure TranslateAllNodes(bSelectedOnly: Boolean);
      // Searching function (also a callback for ShowFindDialog())
     function  Find(var Params: TSearchParams): Boolean;
+     // Resets the search match node
+    procedure ResetSearchMatch;
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -290,7 +301,7 @@ var
 implementation
 {$R *.dfm}
 uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps,
-  udFind, StrUtils;
+  udFind, StrUtils, udPromptReplace;
 
    //===================================================================================================================
    //  TfMain
@@ -329,7 +340,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
 
   procedure TfMain.aaFind(Sender: TObject);
   begin
-    ShowFindDialog(Find);
+    Exclude(SearchParams.Flags, sfReplace);
+    ShowFindDialog(Find, MRUSearch.Items, MRUReplace.Items);
   end;
 
   procedure TfMain.aaFindNext(Sender: TObject);
@@ -387,6 +399,12 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     n := tvMain.GetPrevious(tvMain.FocusedNode);
     if n<>nil then ActivateVTNode(tvMain, n, True, True);
+  end;
+
+  procedure TfMain.aaReplace(Sender: TObject);
+  begin
+    Include(SearchParams.Flags, sfReplace);
+    ShowFindDialog(Find, MRUSearch.Items, MRUReplace.Items);
   end;
 
   procedure TfMain.aaSave(Sender: TObject);
@@ -568,6 +586,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.dklcMainLanguageChanged(Sender: TObject);
   begin
     UpdateLangItems;
+    UpdateStatusBar;
   end;
 
   procedure TfMain.DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
@@ -612,7 +631,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       if FTranFileName<>'' then MRUTran.Add(FTranFileName);
       UpdateCaption;
        // Show the differences unless this is a new translation
-      bAutoTranslate := False; 
+      bAutoTranslate := False;
       if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts, bAutoTranslate);
        // Reload the tree
       UpdateTree;
@@ -676,10 +695,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   function TfMain.Find(var Params: TSearchParams): Boolean;
   var
     n: PVirtualNode;
-    sSearch: String;
-    iPatLen, iMatchCount, iReplacedCount: Integer;
+    sSearch, sEntry: String;
+    iPatLen, iReplacePatLen, iMatchCount, iMatchPos, iSearchTranStartPos, iReplacedCount: Integer;
     pData: PNodeData;
-    bMatches: Boolean;
+    bMatches, bReplaceAllMode, bDoReplace, bSearchCancelled: Boolean;
+    rItem: TRect;
 
     function GetLastSelected: PVirtualNode;
     begin
@@ -697,22 +717,41 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       until False;
     end;
 
-    function Matches(const s: String): Boolean;
+     // Returns True if s contains sSearch, search from iStartPos char, also returns the match position in iMatchPos 
+    function Matches(const s: String; iStartPos: Integer; out iMatchPos: Integer): Boolean;
     const NoWordChars = [#0..'/', ':'..'@', '['..'`', '{'..#137, '«', '»'];
-    var iPos: Integer;
+    var sWhere: String;
     begin
-      if sfCaseSensitive in Params.Flags then iPos := AnsiPos(sSearch, s) else iPos := AnsiPos(sSearch, AnsiUpperCase(s));
-      Result := iPos>0;
+      sWhere := Copy(s, iStartPos, MaxInt); 
+      if not (sfCaseSensitive in Params.Flags) then sWhere := AnsiUpperCase(sWhere);
+      iMatchPos := AnsiPos(sSearch, sWhere);
+      Result := iMatchPos>0;
+      Inc(iMatchPos, iStartPos-1);
        // If whole words are accepted only
       if Result and (sfWholeWordsOnly in Params.Flags) then
-        Result := ((iPos=1) or (s[iPos-1] in NoWordChars)) and ((iPos>Length(s)-iPatLen) or (s[iPos+iPatLen] in NoWordChars));
+        Result :=
+          ((iMatchPos=1) or (s[iMatchPos-1] in NoWordChars)) and
+          ((iMatchPos>Length(s)-iPatLen) or (s[iMatchPos+iPatLen] in NoWordChars));
+    end;
+
+     // Advances to the next node in the search sequence
+    procedure NextNode;
+    begin
+      if sfSelectedOnly in Params.Flags then
+        if sfBackward in Params.Flags then n := GetPreviousSelected(n) else n := tvMain.GetNextSelected(n)
+      else
+        if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
     end;
 
   begin
+    MRUSearch.Add(Params.sSearchPattern);
+    if (sfReplace in Params.Flags) and (Params.sReplacePattern<>'') then MRUReplace.Add(Params.sReplacePattern);
+    bReplaceAllMode := Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll];
      // Prepare the pattern
     sSearch := Params.sSearchPattern;
     if not (sfCaseSensitive in Params.Flags) then sSearch := AnsiUpperCase(sSearch);
     iPatLen := Length(sSearch);
+    iReplacePatLen := Length(Params.sReplacePattern);
      // Determine the start of the search
     n := tvMain.FocusedNode;
      // -- Restart search
@@ -726,64 +765,115 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       else
         if sfBackward in Params.Flags then n := tvMain.GetLast else n := tvMain.GetFirst
      // -- Continue search
-    else
-      if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
+    else if sfFromNext in Params.Flags then
+      NextNode;
      // Search through the nodes
-    iMatchCount    := 0;
-    iReplacedCount := 0;
+    iMatchCount      := 0;
+    iReplacedCount   := 0;
+    bSearchCancelled := False;
     while n<>nil do begin
       pData := tvMain.GetNodeData(n);
-      bMatches := False;
-       // We do not search anything but translated value in Replace mode
-      if not (sfReplace in Params.Flags) then begin
-         // Test Name
-        if not bMatches and (sfSearchNames in Params.Flags) then
-          case pData.Kind of
-            nkComp:  bMatches := Matches(pData.CompSource.CompName);
-            nkProp:  bMatches := Matches(pData.pSrcProp.sPropName);
-            nkConst: bMatches := Matches(pData.pSrcConst.sName);
+       // Loop continuously through the value if ReplaceAll mode is on (only used for searching in translated values)
+      iSearchTranStartPos := 1; 
+      repeat
+        bMatches := False;
+         // We do not search anything but translated value in Replace mode
+        if not (sfReplace in Params.Flags) then begin
+           // Test Name
+          if not bMatches and (sfSearchNames in Params.Flags) then begin
+            case pData.Kind of
+              nkComp:  sEntry := pData.CompSource.CompName;
+              nkProp:  sEntry := pData.pSrcProp.sPropName;
+              nkConst: sEntry := pData.pSrcConst.sName;
+              else     sEntry := '';
+            end;
+            if sEntry<>'' then bMatches := Matches(sEntry, 1, iMatchPos);
           end;
-         // Test Original Value
-        if not bMatches and (sfSearchOriginal in Params.Flags) then
-          case pData.Kind of
-            nkProp:  if pData.pDisplProp=nil  then bMatches := Matches(pData.pSrcProp.sValue)     else bMatches := Matches(pData.pDisplProp.sValue);
-            nkConst: if pData.pDisplConst=nil then bMatches := Matches(pData.pSrcConst.sDefValue) else bMatches := Matches(pData.pDisplConst.sDefValue);
+           // Test Original Value
+          if not bMatches and (sfSearchOriginal in Params.Flags) then begin
+            case pData.Kind of
+              nkProp:  if pData.pDisplProp=nil  then sEntry := pData.pSrcProp.sValue     else sEntry := pData.pDisplProp.sValue;
+              nkConst: if pData.pDisplConst=nil then sEntry := pData.pSrcConst.sDefValue else sEntry := pData.pDisplConst.sDefValue;
+              else     sEntry := '';
+            end;
+            if sEntry<>'' then bMatches := Matches(sEntry, 1, iMatchPos);
           end;
-      end;
-       // Finally, test Translated Value
-      if not bMatches and (sfSearchTranslated in Params.Flags) then
-        case pData.Kind of
-          nkProp:  bMatches := Matches(pData.pTranProp.sValue);
-          nkConst: bMatches := Matches(pData.pTranConst.sDefValue);
         end;
-       // Found the match?
-      if bMatches then begin
-        Inc(iMatchCount);
-        ActivateVTNode(tvMain, n, True, False);
-         // If Replace mode
-        if sfReplace in Params.Flags then begin
-          //!!! write replace code
-
-          Inc(iReplacedCount);
+         // Finally, test Translated Value
+        if not bMatches and (sfSearchTranslated in Params.Flags) then begin
+          case pData.Kind of
+            nkProp:  sEntry := pData.pTranProp.sValue;
+            nkConst: sEntry := pData.pTranConst.sDefValue;
+            else     sEntry := '';
+          end;
+          if sEntry<>'' then bMatches := Matches(sEntry, iSearchTranStartPos, iMatchPos);
         end;
-         // If this isn't 'Replace all' call, then exit after a match has been successfully located
-        if Params.Flags*[sfReplace, sfReplaceAll]<>[sfReplace, sfReplaceAll] then Break;
-      end;
+         // Found the match?
+        if bMatches then begin
+          Inc(iMatchCount);
+          ResetSearchMatch;
+           // Focus, scroll the node into view and repaint as a search match
+          tvMain.FocusedNode := n;
+          tvMain.ScrollIntoView(n, True, False);
+          FSearchMatchNode := n;
+          tvMain.InvalidateNode(FSearchMatchNode);
+           // If Replace mode
+          if sfReplace in Params.Flags then begin
+             // Prompt for replace if needed
+            bDoReplace := True;
+            if sfPromptOnReplace in Params.Flags then begin
+               // On user interaction it'd be good to update the display
+              tvMain.Update;
+              UpdateCurEntry;
+               // Display replace prompt dialog
+              with tvMain.GetDisplayRect(n, -1, False, False) do
+                rItem := Rect(tvMain.ClientToScreen(TopLeft), tvMain.ClientToScreen(BottomRight));
+              case PromptForReplace(sEntry, Params.sSearchPattern, iMatchPos, rItem) of
+                mrYes: {accept};
+                mrYesToAll: Exclude(Params.Flags, sfPromptOnReplace);
+                mrNo: bDoReplace := False;
+                else begin
+                  bDoReplace := False;
+                  bSearchCancelled := True;
+                end;
+              end;
+            end;
+             // If replace required
+            if bDoReplace then begin
+              sEntry := Copy(sEntry, 1, iMatchPos-1)+Params.sReplacePattern+Copy(sEntry, iMatchPos+iPatLen, MaxInt);
+              case pData.Kind of
+                nkProp:  pData.pTranProp.sValue     := sEntry;
+                nkConst: pData.pTranConst.sDefValue := sEntry;
+              end;
+              tvMain.InvalidateNode(n);
+              Inc(iReplacedCount);
+              Modified := True;
+            end;
+          end;
+          iSearchTranStartPos := iMatchPos+iReplacePatLen;
+        end;
+      until bSearchCancelled or not bMatches or not bReplaceAllMode;
+       // If search aborted, or this isn't 'Replace all' call, then exit after a match has been successfully located
+      if bSearchCancelled or (bMatches and not bReplaceAllMode) then Break;
        // Advance to the next/previous node
-      if sfSelectedOnly in Params.Flags then
-        if sfBackward in Params.Flags then n := GetPreviousSelected(n) else n := tvMain.GetNextSelected(n)
-      else
-        if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
+      NextNode;
     end;
-     // Update actions
-    Include(Params.Flags, sfSearchMade);
+     // Update flags and actions
+    Params.Flags := Params.Flags+[sfSearchMade, sfFromNext];
+    if iReplacedCount>0 then UpdateCurEntry;
     EnableActions;
+     // Reset the search match after replace
+    if sfReplace in Params.Flags then ResetSearchMatch;
      // Inform the user about results
-    Result := iMatchCount>0;
-    if not Result then
-      Info(ConstVal('SMsg_NoSearchResults', [Params.sSearchPattern]))
-    else if Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll] then
-      Info(ConstVal('SMsg_ReplacedInfo', [iReplacedCount, Params.sSearchPattern]));
+    if bSearchCancelled then
+      Result := True
+    else begin
+      Result := iMatchCount>0;
+      if not Result then
+        Info(ConstVal('SMsg_NoSearchResults', [Params.sSearchPattern]))
+      else if Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll] then
+        Info(ConstVal('SMsg_ReplacedInfo', [iReplacedCount, Params.sSearchPattern]));
+    end;
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -825,14 +915,29 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     MRUSource.LoadFromRegIni (rif, SRegSection_MRUSource);
     MRUDisplay.LoadFromRegIni(rif, SRegSection_MRUDisplay);
     MRUTran.LoadFromRegIni   (rif, SRegSection_MRUTranslation);
+    MRUSearch.LoadFromRegIni (rif, SRegSection_MRUSearch);
+    MRUReplace.LoadFromRegIni(rif, SRegSection_MRUReplace);
      // Load settings
-    LangManager.LanguageID     := rif.ReadInteger(SRegSection_Preferences, 'Language',          ILangID_USEnglish);
-    sbarMain.Visible           := rif.ReadBool   (SRegSection_Preferences, 'StatusBarVisible',  True);
-    sSetting_InterfaceFont     := rif.ReadString (SRegSection_Preferences, 'InterfaceFont',     FontToStr(Font));
-    sSetting_TableFont         := rif.ReadString (SRegSection_Preferences, 'TableFont',         sSetting_InterfaceFont);
-    sSetting_RepositoryDir     := rif.ReadString (SRegSection_Preferences, 'RepositoryPath',    ExtractFileDir(ParamStr(0)));
-    bSetting_ReposRemovePrefix := rif.ReadBool   (SRegSection_Preferences, 'ReposRemovePrefix', True);
-    bSetting_ReposAutoAdd      := rif.ReadBool   (SRegSection_Preferences, 'ReposAutoAdd',      True);
+    LangManager.LanguageID       := rif.ReadInteger(SRegSection_Preferences, 'Language',          ILangID_USEnglish);
+    sbarMain.Visible             := rif.ReadBool   (SRegSection_Preferences, 'StatusBarVisible',  True);
+    sSetting_InterfaceFont       := rif.ReadString (SRegSection_Preferences, 'InterfaceFont',     FontToStr(Font));
+    sSetting_TableFont           := rif.ReadString (SRegSection_Preferences, 'TableFont',         sSetting_InterfaceFont);
+    sSetting_RepositoryDir       := rif.ReadString (SRegSection_Preferences, 'RepositoryPath',    ExtractFileDir(ParamStr(0)));
+    bSetting_ReposRemovePrefix   := rif.ReadBool   (SRegSection_Preferences, 'ReposRemovePrefix', True);
+    bSetting_ReposAutoAdd        := rif.ReadBool   (SRegSection_Preferences, 'ReposAutoAdd',      True);
+     // Load search params
+    SearchParams.sSearchPattern  := rif.ReadString (SRegSection_Search, 'SearchPattern',    '');
+    SearchParams.sReplacePattern := rif.ReadString (SRegSection_Search, 'ReplacePattern',   '');
+    SearchParams.Flags := [];
+    if rif.ReadBool(SRegSection_Search, 'CaseSensitive',    False) then Include(SearchParams.Flags, sfCaseSensitive);
+    if rif.ReadBool(SRegSection_Search, 'WholeWordsOnly',   False) then Include(SearchParams.Flags, sfWholeWordsOnly);
+    if rif.ReadBool(SRegSection_Search, 'SelectedOnly',     False) then Include(SearchParams.Flags, sfSelectedOnly);
+    if rif.ReadBool(SRegSection_Search, 'PromptOnReplace',  True)  then Include(SearchParams.Flags, sfPromptOnReplace);
+    if rif.ReadBool(SRegSection_Search, 'EntireScope',      False) then Include(SearchParams.Flags, sfEntireScope);
+    if rif.ReadBool(SRegSection_Search, 'SearchNames',      False) then Include(SearchParams.Flags, sfSearchNames);
+    if rif.ReadBool(SRegSection_Search, 'SearchOriginal',   False) then Include(SearchParams.Flags, sfSearchOriginal);
+    if rif.ReadBool(SRegSection_Search, 'SearchTranslated', True)  then Include(SearchParams.Flags, sfSearchTranslated);
+    if rif.ReadBool(SRegSection_Search, 'Backward',         False) then Include(SearchParams.Flags, sfBackward);
      // Load the repository
     FRepository.LoadFromFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
      // Apply loaded settings
@@ -851,6 +956,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     MRUSource.SaveToRegIni (rif, SRegSection_MRUSource);
     MRUDisplay.SaveToRegIni(rif, SRegSection_MRUDisplay);
     MRUTran.SaveToRegIni   (rif, SRegSection_MRUTranslation);
+    MRUSearch.SaveToRegIni (rif, SRegSection_MRUSearch);
+    MRUReplace.SaveToRegIni(rif, SRegSection_MRUReplace);
      // Save settings
     rif.WriteInteger(SRegSection_Preferences, 'Language',          LangManager.LanguageID);
     rif.WriteBool   (SRegSection_Preferences, 'StatusBarVisible',  sbarMain.Visible);
@@ -859,6 +966,18 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     rif.WriteString (SRegSection_Preferences, 'RepositoryPath',    sSetting_RepositoryDir);
     rif.WriteBool   (SRegSection_Preferences, 'ReposRemovePrefix', bSetting_ReposRemovePrefix);
     rif.WriteBool   (SRegSection_Preferences, 'ReposAutoAdd',      bSetting_ReposAutoAdd);
+     // Save search params
+    rif.WriteString (SRegSection_Search, 'SearchPattern',    SearchParams.sSearchPattern);
+    rif.WriteString (SRegSection_Search, 'ReplacePattern',   SearchParams.sReplacePattern);
+    rif.WriteBool   (SRegSection_Search, 'CaseSensitive',    sfCaseSensitive    in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'WholeWordsOnly',   sfWholeWordsOnly   in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'SelectedOnly',     sfSelectedOnly     in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'PromptOnReplace',  sfPromptOnReplace  in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'EntireScope',      sfEntireScope      in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'SearchNames',      sfSearchNames      in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'SearchOriginal',   sfSearchOriginal   in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'SearchTranslated', sfSearchTranslated in SearchParams.Flags);
+    rif.WriteBool   (SRegSection_Search, 'Backward',         sfBackward         in SearchParams.Flags);
      // Save the repository
     FRepository.SaveToFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
   end;
@@ -928,17 +1047,29 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.mCurTranEntryChange(Sender: TObject);
   begin
     if FUpdatingCurEntryEditor then Exit;
+    ResetSearchMatch;
     tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := EncodeControlChars(mCurTranEntry.Text);
   end;
 
   function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
   var sSourceFile, sDisplayFile, sTranFile: String;
   begin
-    sSourceFile  := sLangSrcFileName;
-    sTranFile    := sTranFileName;
-    sDisplayFile := sDisplayFileName;
-    Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
-    if Result then DoLoad(sSourceFile, sDisplayFile, sTranFile);
+    Result := CheckSave;
+    if Result then begin
+      sSourceFile  := sLangSrcFileName;
+      sTranFile    := sTranFileName;
+      sDisplayFile := sDisplayFileName;
+      Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
+      if Result then DoLoad(sSourceFile, sDisplayFile, sTranFile);
+    end;
+  end;
+
+  procedure TfMain.ResetSearchMatch;
+  begin
+    if FSearchMatchNode<>nil then begin
+      tvMain.InvalidateNode(FSearchMatchNode);
+      FSearchMatchNode := nil;
+    end;
   end;
 
   procedure TfMain.SetModified(Value: Boolean);
@@ -1004,6 +1135,17 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       end;
   end;
 
+  procedure TfMain.tvMainAfterItemPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect);
+  begin
+     // If this is a search match
+    if Node=FSearchMatchNode then
+      with TargetCanvas do begin
+        Brush.Style := bsClear;
+        Pen.Color   := CLine_SearchMatch;
+        Rectangle(ItemRect);
+      end;
+  end;
+
   procedure TfMain.tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
   begin
      // Paint untranslated values shaded
@@ -1017,13 +1159,18 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   procedure TfMain.tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
   const aColors: Array[TNodeKind] of TColor = (0, CBack_CompEntry, CBack_PropEntry, CBack_ConstsNode, CBack_ConstEntry);
   begin
-     // Paint the background depending on node kind
-    ItemColor   := aColors[GetNodeKind(Node)];
+     // If this is a search match node
+    if Node=FSearchMatchNode then
+      ItemColor := CBack_SearchMatch
+     // Else paint the background according to node kind
+    else
+      ItemColor   := aColors[GetNodeKind(Node)];
     EraseAction := eaColor;
   end;
 
   procedure TfMain.tvMainChange(Sender: TBaseVirtualTree; Node: PVirtualNode);
   begin
+    ResetSearchMatch;
     UpdateEntryProps;
   end;
 
@@ -1034,8 +1181,9 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
 
   procedure TfMain.tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
   begin
-     // It is allowed to edit translated values only 
+     // It is allowed to edit translated values only
     Allowed := (GetNodeKind(Node) in [nkProp, nkConst]) and (Column=IColIdx_Translated);
+    if Allowed then ResetSearchMatch;
   end;
 
   procedure TfMain.tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);

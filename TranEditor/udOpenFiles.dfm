@@ -13,7 +13,7 @@ object dOpenFiles: TdOpenFiles
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poScreenCenter
+  Position = poMainFormCenter
   DesignSize = (
     592
     226)

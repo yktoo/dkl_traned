@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.6 2004-11-12 19:17:36 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.7 2004-11-14 14:11:30 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -99,10 +99,10 @@ aAbout.Category=00000043,Help
 aAbout.Hint=00000045,About...|Version and copyright info
 aJumpPrevUntranslated.Caption=00000047,Jump to pre&vious untranslated entry
 aJumpPrevUntranslated.Category=00000046,View
-aJumpPrevUntranslated.Hint=00000048,Jump to previous untranslated entry
+aJumpPrevUntranslated.Hint=00000048,Jump to previous untranslated or autotranslated entry
 aJumpNextUntranslated.Caption=00000050,Jump to ne&xt untranslated entry
 aJumpNextUntranslated.Category=00000049,View
-aJumpNextUntranslated.Hint=00000051,Jump to next untranslated entry
+aJumpNextUntranslated.Hint=00000051,Jump to next untranslated or autotranslated entry
 aTranProps.Caption=00000059,&Translation properties...
 aTranProps.Category=00000058,Edit
 aTranProps.Hint=00000060,Translation properties...|View or modify the translation properties
@@ -142,12 +142,15 @@ lEntryStates.Caption=00000101,Entry states
 cbEntryStateAutotranslated.Caption=00000102,&Autotranslated
 iToggleEntryProps.Caption=00000103,&Entry properties
 iToggleCurTranEntry.Caption=00000104,Current t&ranslated entry
-aFind.Caption=00000110,&Find or replace...
+aFind.Caption=00000110,&Find...
 aFind.Category=00000109,Edit
-aFind.Hint=00000111,Find or replace...|Search entries using a given pattern, and optionally replace it with another
+aFind.Hint=00000111,Find...|Search entries using a given pattern
 aFindNext.Caption=00000113,Find ne&xt
 aFindNext.Category=00000112,Edit
 aFindNext.Hint=00000114,Find next|Find the next occurence of string searched before
+aReplace.Caption=00000116,&Replace...
+aReplace.Category=00000115,Edit
+aReplace.Hint=00000117,Replace...|Replace one string with another one
 
 [$CONSTANTS]
 SBtn_Find=Find
@@ -187,6 +190,7 @@ SErrMsg_SrcAndTranLangsAreSame=Source and translation languages should be differ
 SErrMsg_WrongSectionName=Wrong section name format: "%s"
 SLangSourceFileFilter=DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*
 SMsg_NoSearchResults=String "%s" wasn't found.
+SMsg_PromptReplace=Replace this occurence of "%s"?
 SMsg_ReplacedInfo=Replaced %d occurences of "%s".
 SNode_Constants=Constants
 SStatusBar_CompCount=Comp: %d
@@ -197,7 +201,7 @@ STranFileFilter=DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*
 
 [dFind]
 Caption=00000001,Find or replace
-bCancel.Caption=00000003,Close
+bClose.Caption=00000003,Close
 lPattern.Caption=00000004,&Search for:
 gbOptions.Caption=00000006,Options
 cbCaseSensitive.Caption=00000007,&Case sensitive
@@ -214,4 +218,11 @@ gbScope.Caption=00000018,Scope
 cbSearchNames.Caption=00000019,Search entry &names
 cbSearchOriginal.Caption=00000020,Search &original values
 cbSearchTranslated.Caption=00000021,Search &translated values
+
+[dPromptReplace]
+Caption=00000001,Confirm replace
+bYes.Caption=00000009,&Yes
+bCancel.Caption=00000010,Cancel
+bReplaceAll.Caption=00000012,Replace &all
+bNo.Caption=00000013,&No
 

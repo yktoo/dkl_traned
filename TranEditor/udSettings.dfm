@@ -12,7 +12,7 @@ object dSettings: TdSettings
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
-  Position = poDesktopCenter
+  Position = poMainFormCenter
   DesignSize = (
     447
     190)

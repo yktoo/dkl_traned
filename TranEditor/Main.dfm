@@ -690,6 +690,7 @@ object fMain: TfMain
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages]
       TreeOptions.SelectionOptions = [toExtendedFocus, toRightClickSelect]
       TreeOptions.StringOptions = [toSaveCaptions, toShowStaticText, toAutoAcceptEditChange]
+      OnBeforeCellPaint = tvMainBeforeCellPaint
       OnBeforeItemErase = tvMainBeforeItemErase
       OnCreateEditor = tvMainCreateEditor
       OnEditing = tvMainEditing

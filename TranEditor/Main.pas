@@ -3,9 +3,9 @@ unit Main;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, DTLangTools, Dialogs, XPMan, ConsVars,
-  Placemnt, ImgList, TB2Item, TB2MRU, TBXExtItems, ActnList, VirtualTrees,
-  TBXStatusBars, TBX, TB2Dock, TB2Toolbar, ExtCtrls;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, XPMan, DKLang, ConsVars,
+  Placemnt, ImgList, TB2Item, ActnList, VirtualTrees, ExtCtrls,
+  TBXStatusBars, TBX, TB2Dock, TB2Toolbar;
 
 type
    // Tree node kind
@@ -33,101 +33,102 @@ type
   end;
 
   TfMain = class(TForm)
-    dkTop: TTBXDock;
-    dkBottom: TTBXDock;
-    dkRight: TTBXDock;
-    dkLeft: TTBXDock;
-    tbMenu: TTBXToolbar;
-    alMain: TActionList;
-    aNew: TAction;
-    aOpen: TAction;
-    aSave: TAction;
-    aSaveAs: TAction;
-    aExit: TAction;
-    smFile: TTBXSubmenuItem;
-    smEdit: TTBXSubmenuItem;
-    smView: TTBXSubmenuItem;
-    smHelp: TTBXSubmenuItem;
-    iExit: TTBXItem;
-    iSaveAs: TTBXItem;
-    iSave: TTBXItem;
-    iOpen: TTBXItem;
-    iNew: TTBXItem;
-    iFileSep: TTBXSeparatorItem;
-    iToggleStatusBar: TTBXVisibilityToggleItem;
-    iToggleToolbar: TTBXVisibilityToggleItem;
-    tbMain: TTBXToolbar;
-    sbarMain: TTBXStatusBar;
-    ilMain: TTBImageList;
-    bSaveAs: TTBXItem;
-    bSave: TTBXItem;
-    bNew: TTBXItem;
-    tbSep1: TTBXSeparatorItem;
-    bExit: TTBXItem;
-    iViewSep1: TTBXSeparatorItem;
-    tbSep2: TTBXSeparatorItem;
     aAbout: TAction;
-    iAbout: TTBXItem;
-    bAbout: TTBXItem;
-    aLangAdd: TAction;
-    aLangRemove: TAction;
-    iLangRemove: TTBXItem;
-    iLangAdd: TTBXItem;
-    bLangRemove: TTBXItem;
-    bLangAdd: TTBXItem;
-    aLangReplace: TAction;
-    aSettings: TAction;
-    aReposAddCurProp: TAction;
-    aReposAddAllProps: TAction;
-    iSettings: TTBXItem;
-    iEditSep1: TTBXSeparatorItem;
-    iReposAddAllProps: TTBXItem;
-    iReposAddCurProp: TTBXItem;
-    aReposAutoTranslate: TAction;
-    iReposAutoTranslate: TTBXItem;
-    bLangReplace: TTBXItem;
-    iLangReplace: TTBXItem;
+    aClose: TAction;
     aConstAdd: TAction;
     aConstDelete: TAction;
     aConstRename: TAction;
-    iEditSep2: TTBXSeparatorItem;
-    iConstRename: TTBXItem;
-    iConstDelete: TTBXItem;
-    iConstAdd: TTBXItem;
-    smLanguage: TTBXSubmenuItem;
-    tbSep3: TTBXSeparatorItem;
-    bConstRename: TTBXItem;
-    bConstDelete: TTBXItem;
+    aExit: TAction;
+    aLangAdd: TAction;
+    aLangRemove: TAction;
+    aLangReplace: TAction;
+    alMain: TActionList;
+    aNew: TAction;
+    aOpen: TAction;
+    aReposAddAllProps: TAction;
+    aReposAddCurProp: TAction;
+    aReposAutoTranslate: TAction;
+    aSave: TAction;
+    aSaveAs: TAction;
+    aSettings: TAction;
+    bAbout: TTBXItem;
     bConstAdd: TTBXItem;
-    fpMain: TFormPlacement;
+    bConstDelete: TTBXItem;
+    bConstRename: TTBXItem;
+    bExit: TTBXItem;
+    bLangAdd: TTBXItem;
+    bLangRemove: TTBXItem;
+    bLangReplace: TTBXItem;
+    bNew: TTBXItem;
     bOpen: TTBXItem;
-    pMain: TPanel;
-    tvMain: TVirtualStringTree;
-    aClose: TAction;
+    bSave: TTBXItem;
+    bSaveAs: TTBXItem;
+    dkBottom: TTBXDock;
+    dkLeft: TTBXDock;
+    dkRight: TTBXDock;
+    dkTop: TTBXDock;
+    fpMain: TFormPlacement;
+    iAbout: TTBXItem;
     iClose: TTBXItem;
+    iConstAdd: TTBXItem;
+    iConstDelete: TTBXItem;
+    iConstRename: TTBXItem;
+    iEditSep1: TTBXSeparatorItem;
+    iEditSep2: TTBXSeparatorItem;
+    iExit: TTBXItem;
+    iFileSep: TTBXSeparatorItem;
+    iLangAdd: TTBXItem;
+    iLangRemove: TTBXItem;
+    iLangReplace: TTBXItem;
+    ilMain: TTBImageList;
+    iNew: TTBXItem;
+    iOpen: TTBXItem;
+    iReposAddAllProps: TTBXItem;
+    iReposAddCurProp: TTBXItem;
+    iReposAutoTranslate: TTBXItem;
+    iSave: TTBXItem;
+    iSaveAs: TTBXItem;
+    iSettings: TTBXItem;
+    iToggleStatusBar: TTBXVisibilityToggleItem;
+    iToggleToolbar: TTBXVisibilityToggleItem;
+    iViewSep1: TTBXSeparatorItem;
+    pMain: TPanel;
+    sbarMain: TTBXStatusBar;
+    smEdit: TTBXSubmenuItem;
+    smFile: TTBXSubmenuItem;
+    smHelp: TTBXSubmenuItem;
+    smLanguage: TTBXSubmenuItem;
+    smView: TTBXSubmenuItem;
+    tbMain: TTBXToolbar;
+    tbMenu: TTBXToolbar;
+    tbSep1: TTBXSeparatorItem;
+    tbSep2: TTBXSeparatorItem;
+    tbSep3: TTBXSeparatorItem;
+    tvMain: TVirtualStringTree;
+    procedure aaAbout(Sender: TObject);
+    procedure aaClose(Sender: TObject);
+    procedure aaExit(Sender: TObject);
+    procedure aaNew(Sender: TObject);
     procedure aaOpen(Sender: TObject);
     procedure aaSave(Sender: TObject);
     procedure aaSaveAs(Sender: TObject);
-    procedure aaExit(Sender: TObject);
+    procedure aaSettings(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure fpMainRestorePlacement(Sender: TObject);
     procedure fpMainSavePlacement(Sender: TObject);
-    procedure aaAbout(Sender: TObject);
-    procedure aaSettings(Sender: TObject);
-    procedure tvMainInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
-    procedure tvMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
-    procedure tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
     procedure tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
-    procedure tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure tvMainCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+    procedure tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
+    procedure tvMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
+    procedure tvMainInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
-    procedure tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-    procedure aaNew(Sender: TObject);
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
-    procedure aaClose(Sender: TObject);
+    procedure tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -149,9 +150,10 @@ type
     procedure EnableActions;
      // Closes all project data. If bUpdateDisplay=True, also updates the displayed items
     procedure CloseProject(bUpdateDisplay: Boolean);
-
-     // Создаёт список пунктов меню переключения языка интерфейса
-//    procedure LoadInterfaceLanguages;
+     // Return the kind of Node
+    function  GetNodeKind(Node: PVirtualNode): TNodeKind;
+     // Returns True if node is a value still untranslated
+    function  IsNodeUntranslated(Node: PVirtualNode): Boolean;
      // App events
     procedure AppHint(Sender: TObject);
      // Prop handlers
@@ -342,7 +344,7 @@ type
   procedure TStrEditLinkEx.SetBounds(R: TRect);
   begin
     FTree.Header.Columns.GetColumnBounds(FColumn, R.Left, R.Right);
-     // Если TMemo, увеличиваем высоту
+     // If a TMemo, increase height
     if FMultiline then R.Bottom := R.Top+200;
     FEdit.BoundsRect := R;
   end;
@@ -447,12 +449,11 @@ type
       FLangSource := TLangSource.Create(sLangSrcFileName);
        // Create (and load, if needed) translations
       FTranslations := TDKLang_CompTranslations.Create;
-      if sTranFileName<>'' then begin
-        FTranslations.LoadFromFile(sTranFileName);
-         // Now compare the source and the translation
-        sDiff := FLangSource.CompareStructureWith(FTranslations);
-        if sDiff<>'' then ShowDiffLog(sDiff);
-      end;
+      if sTranFileName<>'' then FTranslations.LoadFromFile(sTranFileName);
+       // Now compare the source and the translation and update the latter
+      sDiff := FLangSource.CompareStructureWith(FTranslations);
+       // Show the differences unless this is a new translation 
+      if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff);
        // Update properties
       FModified := False;
       FFileName := sTranFileName;
@@ -557,30 +558,21 @@ type
     Result := iif(FFileName='', STranFileDefaultName, FFileName);
   end;
 
-//  procedure TfMain.LoadInterfaceLanguages;
-//  var
-//    Langs: TLanguages;
-//    tbi: TTBItem;
-//    i: Integer;
-//  begin
-//    Langs := TLanguages.Create;
-//    try
-//      dtlsMain.RootComp.BuildLangList(Langs, True, False);
-//      for i := 0 to Langs.Count-1 do begin
-//        tbi := TTBItem.Create(Self);
-//        with tbi do begin
-//          Caption    := Langs.Names[i];
-//          Tag        := Langs[i];
-//          Checked    := dtlsMain.Language=Tag;
-//          GroupIndex := 1;
-//          OnClick    := LanguageItemClick;
-//        end;
-//        smLanguage.Add(tbi);
-//      end;
-//    finally
-//      Langs.Free;
-//    end;
-//  end;
+  function TfMain.GetNodeKind(Node: PVirtualNode): TNodeKind;
+  begin
+    if Node=nil then Result := nkNone else Result := PNodeData(tvMain.GetNodeData(Node)).Kind;
+  end;
+
+  function TfMain.IsNodeUntranslated(Node: PVirtualNode): Boolean;
+  var p: PNodeData;
+  begin
+    Result := False;
+    p := tvMain.GetNodeData(Node);
+    case p.Kind of
+      nkProp:  Result := dklptsUntranslated in p.pTranProp.States;
+      nkConst: Result := dklcsUntranslated  in p.pTranConst.States;
+    end;
+  end;
 
   procedure TfMain.SetFileName(const Value: String);
   begin
@@ -598,26 +590,33 @@ type
     end;
   end;
 
+  procedure TfMain.tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
+  begin
+     // Paint untranslated values shaded
+    if (Column=IColIdx_Translated) and IsNodeUntranslated(Node) then
+      with TargetCanvas do begin
+        Brush.Color := CBack_UntranslatedValue;
+        FillRect(CellRect);
+      end;
+  end;
+
   procedure TfMain.tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
-  const aColors: Array[TNodeKind] of TColor = (0, $ffe5ec, clWindow, $eaeaff, $eaffea);
+  const aColors: Array[TNodeKind] of TColor = (0, CBack_CompEntry, CBack_PropEntry, CBack_ConstsNode, CBack_ConstEntry);
   begin
      // Paint the background depending on node kind
-    ItemColor   := aColors[PNodeData(Sender.GetNodeData(Node)).Kind];
+    ItemColor   := aColors[GetNodeKind(Node)];
     EraseAction := eaColor;
   end;
 
   procedure TfMain.tvMainCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
   begin
-//     // Имя константы редактируем стандартным редактором
-//    if Column=0 then EditLink := TStringEditLink.Create else EditLink := TStrEditLinkEx.Create;
+    EditLink := TStrEditLinkEx.Create;
   end;
 
   procedure TfMain.tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-//  var nk: TNodeKind;
   begin
-//    nk := GetNodeKind(Node);
-//     // Можно редактировать только значение свойства и имя или значение константы
-//    Allowed := ((nk=nkProp) and (Column>0)) or (nk=nkConst);
+     // It is allowed to edit translated values only 
+    Allowed := (GetNodeKind(Node) in [nkProp, nkConst]) and (Column=IColIdx_Translated);
   end;
 
   procedure TfMain.tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -628,7 +627,7 @@ type
   procedure TfMain.tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
   begin
     if Column=0 then
-      case PNodeData(Sender.GetNodeData(Node)).Kind of
+      case GetNodeKind(Node) of
         nkComp:   ImageIndex := iiNode_Comp;
         nkProp:   ImageIndex := iiNode_Prop;
         nkConsts: ImageIndex := iiNode_Consts;
@@ -652,15 +651,15 @@ type
             case Column of
               IColIdx_Name:       s := p.pSrcProp.sPropName;
               IColIdx_ID:         s := IntToStr(p.pSrcProp.iID);
-              IColIdx_Original:   s := p.pSrcProp.sValue;
-              IColIdx_Translated: if p.pTranProp<>nil then s := p.pTranProp.sValue;
+              IColIdx_Original:   s := MultilineToLine(p.pSrcProp.sValue);
+              IColIdx_Translated: s := MultilineToLine(p.pTranProp.sValue);
             end;
           nkConsts: if Column=IColIdx_Name then s := SNode_Constants;
           nkConst:
             case Column of
               IColIdx_Name:       s := p.pSrcConst.sName;
-              IColIdx_Original:   s := p.pSrcConst.sDefValue;
-              IColIdx_Translated: if p.pTranConst<>nil then s := p.pTranConst.sDefValue;
+              IColIdx_Original:   s := MultilineToLine(p.pSrcConst.sDefValue);
+              IColIdx_Translated: s := MultilineToLine(p.pTranConst.sDefValue);
             end;
         end;
        // Static text
@@ -745,8 +744,9 @@ type
 
   procedure TfMain.tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
   begin
-     // Draw root nodes in bold
-    if (TextType=ttNormal) and (Sender.NodeParent[Node]=nil) then TargetCanvas.Font.Style := [fsBold]; 
+     // Draw root nodes, and untranslated entries, in bold
+    if (TextType=ttNormal) and ((Sender.NodeParent[Node]=nil) or ((Column=IColIdx_Translated) and IsNodeUntranslated(Node))) then
+      TargetCanvas.Font.Style := [fsBold];
   end;
 
   procedure TfMain.UpdateCaption;

@@ -1,7 +1,7 @@
 unit ConsVars;
 
 interface
-uses Windows, Messages, SysUtils, Classes, Contnrs, Graphics, DTLangTools;
+uses Windows, Messages, SysUtils, Classes, Contnrs, Graphics, DKLang;
 
 type
    // Exception
@@ -118,16 +118,13 @@ const
   S_CRLF                           = #13#10;
 
   SAppCaption                      = 'DKLang Translation Editor';
-  SAppVersion                      = '1.01';
+  SAppVersion                      = '2.1';
 
   SLangSourceFileExt               = 'dklang';
   SLangSourceFileFilter            = 'DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*';
   STranFileExt                     = 'lng';
   STranFileFilter                  = 'DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*';
   STranFileDefaultName             = 'untitled.'+STranFileExt;
-
-
-  SDTLSFileFilter                  = 'DaleTech Language Snapshots (*.dtls;*.xdtls)|*.dtls;*.xdtls|All Files (*.*)|*.*';
 
    // Dialog titles
   SDlgTitle_Info                   = 'Info';
@@ -170,33 +167,30 @@ const
 
 
 
-  SOpenDlgTitle                    = 'Select language snapshot file to open';
   SDlgSelReposPath                 = 'Select translation repository path:';
   SDlgAddConstant                  = 'Add a constant';
   SDlgRenameConstant               = 'Rename the constant';
 
-  SDeleteLangMsg                   = 'Are you sure you want to delete current language?';
-  SDlgConstantPropsLabel           = '&Constant name:';
-  SDeleteConstConfirm              = 'Are you sure you want to delete the constant?';
-  SDuplicateConstant               = 'Duplicate constant names are not allowed';
-
-  SReplaceLangLabel                = '&Replace current language with:';
-                                   
-   // Пути реестра                 
+   // Registry paths                 
   SRegKey_Root                     = 'Software\DKSoftware\DKTranEd';
   SRegKey_Toolbars                 = SRegKey_Root+'\Toolbars';
   SRegSection_MainWindow           = 'MainWindow';
 //  SRegSection_OpenMRU              = 'OpenMRU';
   SRegSection_Preferences          = 'Preferences';
 
-   // Имя файла репозитория
-  STranRepositoryFileName          = 'dt_repos.dat';
-
    // Main tree column indexes
   IColIdx_Name                     = 0;
   IColIdx_ID                       = 1;
   IColIdx_Original                 = 2;
   IColIdx_Translated               = 3;
+
+   // Colors
+  CBack_CompEntry                  = $ffe5ec;  // Background color of component entry
+  CBack_PropEntry                  = clWindow; // Background color of property entry
+  CBack_ConstsNode                 = $eaeaff;  // Background color of 'Constants' node
+  CBack_ConstEntry                 = clWindow; // Background color of constant entry
+  CBack_UntranslatedValue          = $f0f0f0;  // Background color of untranslated item values
+
 
    // ImageIndices                 
   iiSettings                       =  0;
@@ -487,7 +481,7 @@ uses Forms;
            // If not found
           if pTranProp=nil then begin
              // Add the property to Translations
-            TranComp.Add(pSrcProp.iID, pSrcProp.sValue);
+            TranComp.Add(pSrcProp.iID, pSrcProp.sValue, [dklptsUntranslated]);
              // Log the difference
             AddLine('    '+SDiffDesc_AddProperty, [pSrcProp.sPropName, pSrcProp.iID]);
           end;
@@ -508,7 +502,7 @@ uses Forms;
          // If not found
         if pTranConst=nil then begin
            // Add the constant to Translations
-          Translations.Constants.Add(pSrcConst.sName, pSrcConst.sDefValue);
+          Translations.Constants.Add(pSrcConst.sName, pSrcConst.sDefValue, [dklcsUntranslated]);
            // Log the difference
           AddLine(SDiffDesc_AddConstant, [pSrcConst.sName]);
         end;
@@ -658,7 +652,7 @@ uses Forms;
       sConstName := Trim(Copy(sLine, 1, iEq-1));
       if sConstName='' then TranEdError(SErrMsg_ConstNameMissing);
        // Extract constant value and add the constant to the list
-      FConstants.Add(sConstName, Trim(Copy(sLine, iEq+1, MaxInt)));
+      FConstants.Add(sConstName, LineToMultiline(Trim(Copy(sLine, iEq+1, MaxInt))), []);
     end;
 
     procedure ParseProperty;
@@ -683,7 +677,7 @@ uses Forms;
       iID := StrToIntDef(Copy(sIDVal, 1, iComma-1), 0);
       if iID<=0 then TranEdError(SErrMsg_PropIDInvalid);
        // Extract value and add the property
-      Comp.PropertySources.Add(iID, sPropName, Trim(Copy(sIDVal, iComma+1, MaxInt)));
+      Comp.PropertySources.Add(iID, sPropName, LineToMultiline(Trim(Copy(sIDVal, iComma+1, MaxInt))));
     end;
 
   begin

@@ -4,7 +4,7 @@ object dTranProps: TdTranProps
   ActiveControl = cbLang
   BorderStyle = bsDialog
   Caption = 'Translation properties'
-  ClientHeight = 327
+  ClientHeight = 377
   ClientWidth = 459
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -16,21 +16,21 @@ object dTranProps: TdTranProps
   Position = poScreenCenter
   DesignSize = (
     459
-    327)
+    377)
   PixelsPerInch = 96
   TextHeight = 13
   object pMain: TPanel
     Left = 8
     Top = 8
     Width = 444
-    Height = 282
+    Height = 332
     Anchors = [akLeft, akTop, akRight, akBottom]
     BevelInner = bvRaised
     BevelOuter = bvLowered
     TabOrder = 0
     DesignSize = (
       444
-      282)
+      332)
     object lLang: TLabel
       Left = 12
       Top = 12
@@ -41,7 +41,7 @@ object dTranProps: TdTranProps
     end
     object lAuthor: TLabel
       Left = 12
-      Top = 92
+      Top = 132
       Width = 37
       Height = 13
       Caption = '&Author:'
@@ -49,7 +49,7 @@ object dTranProps: TdTranProps
     end
     object lAdditionalParams: TLabel
       Left = 12
-      Top = 132
+      Top = 172
       Width = 250
       Height = 13
       Caption = 'A&dditional parameters (in the format '#39'Name=Value'#39'):'
@@ -57,11 +57,19 @@ object dTranProps: TdTranProps
     end
     object lTargetApp: TLabel
       Left = 12
-      Top = 52
+      Top = 92
       Width = 130
       Height = 13
       Caption = '&Target Application/Version:'
       FocusControl = cbTargetApp
+    end
+    object lSrcLang: TLabel
+      Left = 12
+      Top = 52
+      Width = 249
+      Height = 13
+      Caption = '&Source Language (used for Translation Repository):'
+      FocusControl = cbSrcLang
     end
     object cbLang: TComboBox
       Left = 12
@@ -77,29 +85,41 @@ object dTranProps: TdTranProps
     end
     object eAuthor: TEdit
       Left = 12
-      Top = 108
+      Top = 148
       Width = 421
       Height = 21
       Anchors = [akLeft, akTop, akRight]
-      TabOrder = 2
+      TabOrder = 3
       OnChange = AdjustOKCancel
     end
     object mAdditionalParams: TMemo
       Left = 12
-      Top = 148
+      Top = 188
       Width = 421
-      Height = 121
+      Height = 131
       Anchors = [akLeft, akTop, akRight, akBottom]
       ScrollBars = ssBoth
-      TabOrder = 3
+      TabOrder = 4
       WordWrap = False
       OnChange = AdjustOKCancel
     end
     object cbTargetApp: TComboBox
       Left = 12
+      Top = 108
+      Width = 421
+      Height = 21
+      Anchors = [akLeft, akTop, akRight]
+      DropDownCount = 20
+      ItemHeight = 13
+      TabOrder = 2
+      OnChange = AdjustOKCancel
+    end
+    object cbSrcLang: TComboBox
+      Left = 12
       Top = 68
       Width = 421
       Height = 21
+      Style = csDropDownList
       Anchors = [akLeft, akTop, akRight]
       DropDownCount = 20
       ItemHeight = 13
@@ -109,7 +129,7 @@ object dTranProps: TdTranProps
   end
   object bOK: TButton
     Left = 298
-    Top = 297
+    Top = 347
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]
@@ -121,7 +141,7 @@ object dTranProps: TdTranProps
   end
   object bCancel: TButton
     Left = 378
-    Top = 297
+    Top = 347
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]
@@ -134,6 +154,6 @@ object dTranProps: TdTranProps
     MaxItems = 30
     Prefix = 'MRU'
     Left = 24
-    Top = 160
+    Top = 212
   end
 end

@@ -549,6 +549,17 @@ object fMain: TfMain
         object smLanguage: TTBXSubmenuItem
           Caption = '&Language'
         end
+      end
+      object smTools: TTBXSubmenuItem
+        Caption = '&Tools'
+        object iAddToRepository: TTBXItem
+          Action = aAddToRepository
+        end
+        object iAutoTranslate: TTBXItem
+          Action = aAutoTranslate
+        end
+        object iToolsSep: TTBXSeparatorItem
+        end
         object iSettings: TTBXItem
           Action = aSettings
         end
@@ -558,10 +569,13 @@ object fMain: TfMain
         object iAbout: TTBXItem
           Action = aAbout
         end
+        object iWebsite: TTBXItem
+          Action = aWebsite
+        end
       end
     end
     object tbMain: TTBXToolbar
-      Left = 127
+      Left = 162
       Top = 0
       Caption = 'Toolbar'
       CloseButtonWhenDocked = True
@@ -670,23 +684,30 @@ object fMain: TfMain
       end
       item
         Alignment = taCenter
-        Caption = '000 components'
+        Caption = 'Comp: 0000'
         Hint = 'Total number of component entries'
-        Size = 120
+        Size = 70
         Tag = 0
       end
       item
         Alignment = taCenter
-        Caption = '000/000 properties'
+        Caption = 'Prop: 0000/0000'
         Hint = 'Number of component property entries total/untranslated'
-        Size = 120
+        Size = 110
         Tag = 0
       end
       item
         Alignment = taCenter
-        Caption = '000/000 constants'
+        Caption = 'Const: 0000/0000'
         Hint = 'Number of constant entries total/untranslated'
-        Size = 120
+        Size = 110
+        Tag = 0
+      end
+      item
+        Alignment = taCenter
+        Caption = 'Repository: 0000 terms'
+        Hint = 'Number of repository terms'
+        Size = 150
         Tag = 0
       end>
     PopupMenu = pmView
@@ -733,6 +754,7 @@ object fMain: TfMain
       TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages]
       TreeOptions.SelectionOptions = [toFullRowSelect, toMultiSelect, toRightClickSelect, toSimpleDrawSelection]
       TreeOptions.StringOptions = [toSaveCaptions, toShowStaticText, toAutoAcceptEditChange]
+      Visible = False
       OnBeforeCellPaint = tvMainBeforeCellPaint
       OnBeforeItemErase = tvMainBeforeItemErase
       OnEdited = tvMainEdited
@@ -823,7 +845,7 @@ object fMain: TfMain
       OnExecute = aaExit
     end
     object aSettings: TAction
-      Category = 'View'
+      Category = 'Tools'
       Caption = 'Program settings...'
       Hint = 'Program settings...|View or change program settings'
       ImageIndex = 0
@@ -837,16 +859,6 @@ object fMain: TfMain
       ImageIndex = 7
       ShortCut = 16496
       OnExecute = aaAbout
-    end
-    object aTranProps: TAction
-      Category = 'Edit'
-      Caption = '&Translation properties...'
-      Hint = 
-        'Translation properties...|View or modify the translation propert' +
-        'ies'
-      ImageIndex = 12
-      ShortCut = 117
-      OnExecute = aaTranProps
     end
     object aJumpPrevUntranslated: TAction
       Category = 'Edit'
@@ -879,6 +891,40 @@ object fMain: TfMain
       ImageIndex = 17
       ShortCut = 16469
       OnExecute = aaMarkUntranslated
+    end
+    object aTranProps: TAction
+      Category = 'Edit'
+      Caption = '&Translation properties...'
+      Hint = 
+        'Translation properties...|View or modify the translation propert' +
+        'ies'
+      ImageIndex = 12
+      ShortCut = 117
+      OnExecute = aaTranProps
+    end
+    object aWebsite: TAction
+      Category = 'Help'
+      Caption = 'Program &website'
+      Hint = 'Program website|Visit the program'#39's website'
+      OnExecute = aaWebsite
+    end
+    object aAutoTranslate: TAction
+      Category = 'Tools'
+      Caption = 'A&utotranslate selected'
+      Hint = 
+        'Autotranslate selected|Autotranslate untranslated entries curren' +
+        'tly selected with using translation repository'
+      ShortCut = 16460
+      OnExecute = aaAutoTranslate
+    end
+    object aAddToRepository: TAction
+      Category = 'Tools'
+      Caption = 'Add selected to &Repository'
+      Hint = 
+        'Add selected to Repository|Add selected entries to Translation R' +
+        'epository'
+      ShortCut = 16466
+      OnExecute = aaAddToRepository
     end
   end
   object ilMain: TTBImageList

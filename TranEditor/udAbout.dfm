@@ -1842,10 +1842,10 @@ object dAbout: TdAbout
   object lWebsite: TLabel
     Left = 134
     Top = 116
-    Width = 138
+    Width = 9
     Height = 13
     Cursor = crHandPoint
-    Caption = 'http://www.dk-soft.org/'
+    Caption = '...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = 11753293
     Font.Height = -11
@@ -1890,10 +1890,10 @@ object dAbout: TdAbout
   object lEmail: TLabel
     Left = 134
     Top = 132
-    Width = 107
+    Width = 9
     Height = 13
     Cursor = crHandPoint
-    Caption = 'devtools@narod.ru'
+    Caption = '...'
     Font.Charset = DEFAULT_CHARSET
     Font.Color = 11753293
     Font.Height = -11

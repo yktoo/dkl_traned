@@ -20,11 +20,16 @@ type
     lTargetApp: TLabel;
     cbTargetApp: TComboBox;
     MRUTargetApp: TTBMRUList;
+    lSrcLang: TLabel;
+    cbSrcLang: TComboBox;
     procedure bOKClick(Sender: TObject);
     procedure AdjustOKCancel(Sender: TObject);
   private
      // The translations which properties are to edit
     FTranslations: TDKLang_CompTranslations;
+     // Source and target LangIDs
+    FSrcLangID: LANGID;
+    FTranLangID: LANGID;
      // Loads the language list into cbLang
     procedure LoadLanguages;
   protected
@@ -33,7 +38,7 @@ type
     function  Execute: Boolean;
   end;
 
-  function EditTranslationProps(ATranslations: TDKLang_CompTranslations): Boolean;
+  function EditTranslationProps(ATranslations: TDKLang_CompTranslations; var wSrcLangID, wTranLangID: LANGID): Boolean;
 
 implementation
 {$R *.dfm}
@@ -41,19 +46,26 @@ uses Registry, ConsVars;
 
 const
    // Params considered to be known (they do not appear in 'Additional parameters' list)
-  asKnownParams: Array[0..4] of String = (
+  asKnownParams: Array[0..5] of String = (
     SDKLang_TranParam_LangID,
+    SDKLang_TranParam_SourceLangID,
     SDKLang_TranParam_Author,
     SDKLang_TranParam_Generator,
     SDKLang_TranParam_LastModified,
     SDKLang_TranParam_TargetApplication);
 
-  function EditTranslationProps(ATranslations: TDKLang_CompTranslations): Boolean;
+  function EditTranslationProps(ATranslations: TDKLang_CompTranslations; var wSrcLangID, wTranLangID: LANGID): Boolean;
   begin
     with TdTranProps.Create(Application) do
       try
         FTranslations := ATranslations;
+        FSrcLangID    := wSrcLangID;
+        FTranLangID   := wTranLangID;
         Result := Execute;
+        if Result then begin
+          wSrcLangID  := FSrcLangID;
+          wTranLangID := FTranLangID;
+        end;
       finally
         Free;
       end;
@@ -83,9 +95,13 @@ const
   procedure TdTranProps.bOKClick(Sender: TObject);
   var i: Integer;
   begin
+     // Get LangIDs
+    FSrcLangID  := GetCBObject(cbSrcLang);
+    FTranLangID := GetCBObject(cbLang);
+    if FSrcLangID=FTranLangID then TranEdError(SErrMsg_SrcAndTranLangsAreSame);
+     // Update translation params
     FTranslations.Params.Clear;
     with FTranslations.Params do begin
-      Values[SDKLang_TranParam_LangID]            := IntToStr(Integer(cbLang.Items.Objects[cbLang.ItemIndex]));
       Values[SDKLang_TranParam_TargetApplication] := cbTargetApp.Text;
       Values[SDKLang_TranParam_Author]            := eAuthor.Text;
     end;
@@ -135,7 +151,8 @@ const
     LoadLanguages;
     cbTargetApp.Items.Assign(MRUTargetApp.Items);
     with FTranslations.Params do begin
-      cbLang.ItemIndex := cbLang.Items.IndexOfObject(Pointer(StrToIntDef(Values[SDKLang_TranParam_LangID], -1)));
+      SetCBObject(cbLang,    StrToIntDef(Values[SDKLang_TranParam_LangID],       -1));
+      SetCBObject(cbSrcLang, StrToIntDef(Values[SDKLang_TranParam_SourceLangID], $409 {US English}));
       cbTargetApp.Text := Values[SDKLang_TranParam_TargetApplication];
       eAuthor.Text     := Values[SDKLang_TranParam_Author];
     end;
@@ -154,6 +171,7 @@ const
       L := Languages.LocaleID[i];
       if L and $ffff0000=0 then cbLang.AddItem(Format('%.5d - 0x%0:.4x - %s', [L, Languages.Name[i]]), Pointer(L));
     end;
+    cbSrcLang.Items.Assign(cbLang.Items);
   end;
 
 end.

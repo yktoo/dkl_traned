@@ -112,6 +112,14 @@ type
     ipmJumpNextUntranslated: TTBXItem;
     ipmTreeSep: TTBXSeparatorItem;
     ipmTranProps: TTBXItem;
+    aWebsite: TAction;
+    iWebsite: TTBXItem;
+    aAddToRepository: TAction;
+    aAutoTranslate: TAction;
+    smTools: TTBXSubmenuItem;
+    iAutoTranslate: TTBXItem;
+    iAddToRepository: TTBXItem;
+    iToolsSep: TTBXSeparatorItem;
     procedure aaAbout(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
@@ -143,6 +151,9 @@ type
     procedure tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure aaMarkUntranslated(Sender: TObject);
     procedure aaMarkTranslated(Sender: TObject);
+    procedure aaWebsite(Sender: TObject);
+    procedure aaAddToRepository(Sender: TObject);
+    procedure aaAutoTranslate(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -150,10 +161,15 @@ type
     FDisplayTranslations: TDKLang_CompTranslations;
      // Loaded or new translations
     FTranslations: TDKLang_CompTranslations;
+     // Source and target translation language
+    FLangIDSource: LANGID;
+    FLangIDTran: LANGID;
      // Flag that command line parameters have been checked
     FCmdLineChecked: Boolean;
      // Update current entry editor flag
     FUpdatingCurEntryEditor: Boolean;
+     // Translation repository
+    FRepository: TTranRepository;
      // Prop storage
     FModified: Boolean;
     FTranFileName: String;
@@ -194,6 +210,10 @@ type
     procedure UpdateStatusBar;
      // Marks selected entries translated (bTranslated=True) or untranslated (bTranslated=False)
     procedure MarkTranslated(bTranslated: Boolean);
+     // Adds translation for Node to translation repository, if possible
+    procedure AddNodeTranslationToRepository(Node: PVirtualNode);
+     // Translates the Node by using translation repository, if possible
+    procedure TranslateNodeFromRepository(Node: PVirtualNode);
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -217,7 +237,7 @@ var
 
 implementation
 {$R *.dfm}
-uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
+uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
 
    //===================================================================================================================
    //  TfMain
@@ -226,6 +246,30 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
   procedure TfMain.aaAbout(Sender: TObject);
   begin
     ShowAbout;
+  end;
+
+  procedure TfMain.aaAddToRepository(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    n := tvMain.GetFirstSelected;
+    while n<>nil do begin
+      AddNodeTranslationToRepository(n);
+      n := tvMain.GetNextSelected(n);
+    end;
+    UpdateStatusBar;
+  end;
+
+  procedure TfMain.aaAutoTranslate(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    n := tvMain.GetFirstSelected;
+    while n<>nil do begin
+      TranslateNodeFromRepository(n);
+      n := tvMain.GetNextSelected(n);
+    end;
+     // Update display
+    tvMain.Invalidate;
+    UpdateStatusBar;
   end;
 
   procedure TfMain.aaClose(Sender: TObject);
@@ -295,7 +339,25 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
 
   procedure TfMain.aaTranProps(Sender: TObject);
   begin
-    if EditTranslationProps(FTranslations) then Modified := True;
+    if EditTranslationProps(FTranslations, FLangIDSource, FLangIDTran) then Modified := True;
+  end;
+
+  procedure TfMain.aaWebsite(Sender: TObject);
+  begin
+    ShellExecute(Handle, nil, PChar(SAppWebsite), nil, nil, SW_SHOWNORMAL);
+  end;
+
+  procedure TfMain.AddNodeTranslationToRepository(Node: PVirtualNode);
+  var p: PNodeData;
+  begin
+    p := tvMain.GetNodeData(Node);
+    if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
+      case p.Kind of
+        nkProp: if not (dklptsUntranslated in p.pTranProp.States) then
+          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.sValue)]     := ReposFixPrefixChar(p.pTranProp.sValue);
+        nkConst: if not (dklcsUntranslated in p.pTranConst.States) then
+          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.sDefValue)] := ReposFixPrefixChar(p.pTranConst.sDefValue);
+      end;
   end;
 
   procedure TfMain.AdjustVTColumnWidth;
@@ -399,12 +461,19 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
         FDisplayTranslations := TDKLang_CompTranslations.Create;
         FDisplayTranslations.LoadFromFile(sDisplayFileName);
       end;
-       // Create (and load, if needed) translations
+       // Create (and load, if needed) translations. Determine the languages
       FTranslations := TDKLang_CompTranslations.Create;
-      if sTranFileName<>'' then FTranslations.LoadFromFile(sTranFileName);
+      if sTranFileName='' then begin
+        FLangIDSource := ILangID_USEnglish;
+        FLangIDTran   := 0;
+      end else begin
+        FTranslations.LoadFromFile(sTranFileName);
+        FLangIDSource := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_SourceLangID], ILangID_USEnglish);
+        FLangIDTran   := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_LangID],       0);
+      end;
        // Now compare the source and the translation and update the latter
       sDiff := FLangSource.CompareStructureWith(FTranslations);
-       // Show the differences unless this is a new translation 
+       // Show the differences unless this is a new translation
       if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff);
        // Update the properties
       FModified        := False;
@@ -417,6 +486,9 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
       UpdateCaption;
        // Reload the tree
       UpdateTree;
+       // If no languages specified or source and target languages are the same, show translation properties dialog
+      if (FLangIDSource=0) or (FLangIDTran=0) or (FLangIDSource=FLangIDTran) then
+        EditTranslationProps(FTranslations, FLangIDSource, FLangIDTran);
     except
        // Destroy the objects in a case of failure
       CloseProject(True);
@@ -428,6 +500,8 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
   begin
      // Update translation parameter values
     with FTranslations.Params do begin
+      Values[SDKLang_TranParam_LangID]       := IntToStr(FLangIDSource);
+      Values[SDKLang_TranParam_SourceLangID] := IntToStr(FLangIDTran);
       Values[SDKLang_TranParam_Generator]    := Format('%s %s', [SAppCaption, SAppVersion]);
       Values[SDKLang_TranParam_LastModified] := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
     end;
@@ -473,6 +547,8 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
     Application.OnIdle := AppIdle;
      // Adjust tvMain
     tvMain.NodeDataSize := SizeOf(TNodeData);
+     // Create the repository
+    FRepository := TTranRepository.Create;
      // Update the tree
     UpdateTree;
   end;
@@ -480,6 +556,7 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
   procedure TfMain.FormDestroy(Sender: TObject);
   begin
     CloseProject(False);
+    FRepository.Free;
   end;
 
   procedure TfMain.fpMainRestorePlacement(Sender: TObject);
@@ -493,10 +570,16 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
     MRUDisplay.LoadFromRegIni(rif, SRegSection_MRUDisplay);
     MRUTran.LoadFromRegIni   (rif, SRegSection_MRUTranslation);
      // Load settings
-    sSetting_InterfaceFont := rif.ReadString(SRegSection_Preferences, 'InterfaceFont', FontToStr(Font));
-    sSetting_TableFont     := rif.ReadString(SRegSection_Preferences, 'TableFont',     sSetting_InterfaceFont);
+    sSetting_InterfaceFont     := rif.ReadString(SRegSection_Preferences, 'InterfaceFont',     FontToStr(Font));
+    sSetting_TableFont         := rif.ReadString(SRegSection_Preferences, 'TableFont',         sSetting_InterfaceFont);
+    sSetting_RepositoryDir     := rif.ReadString(SRegSection_Preferences, 'RepositoryPath',    ExtractFileDir(ParamStr(0)));
+    bSetting_ReposRemovePrefix := rif.ReadBool  (SRegSection_Preferences, 'ReposRemovePrefix', True);
+    bSetting_ReposAutoAdd      := rif.ReadBool  (SRegSection_Preferences, 'ReposAutoAdd',      True);
+     // Load the repository
+    FRepository.FileLoad(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
      // Apply loaded settings
-    ApplySettings; 
+    ApplySettings;
+    UpdateStatusBar;
   end;
 
   procedure TfMain.fpMainSavePlacement(Sender: TObject);
@@ -510,8 +593,13 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
     MRUDisplay.SaveToRegIni(rif, SRegSection_MRUDisplay);
     MRUTran.SaveToRegIni   (rif, SRegSection_MRUTranslation);
      // Save settings
-    rif.WriteString(SRegSection_Preferences, 'InterfaceFont', sSetting_InterfaceFont);
-    rif.WriteString(SRegSection_Preferences, 'TableFont',     sSetting_TableFont);
+    rif.WriteString(SRegSection_Preferences, 'InterfaceFont',     sSetting_InterfaceFont);
+    rif.WriteString(SRegSection_Preferences, 'TableFont',         sSetting_TableFont);
+    rif.WriteString(SRegSection_Preferences, 'RepositoryPath',    sSetting_RepositoryDir);
+    rif.WriteBool  (SRegSection_Preferences, 'ReposRemovePrefix', bSetting_ReposRemovePrefix);
+    rif.WriteBool  (SRegSection_Preferences, 'ReposAutoAdd',      bSetting_ReposAutoAdd);
+     // Save the repository
+    FRepository.FileSave;
   end;
 
   function TfMain.GetDisplayTranFileName: String;
@@ -604,6 +692,36 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
       FTranFileName := Value;
       UpdateCaption;
     end;
+  end;
+
+  procedure TfMain.TranslateNodeFromRepository(Node: PVirtualNode);
+  var
+    p: PNodeData;
+    s: String;
+  begin
+    p := tvMain.GetNodeData(Node);
+    if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
+      case p.Kind of
+        nkProp:
+          if dklptsUntranslated in p.pTranProp.States then begin
+            s := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.sValue)];
+            if s<>'' then begin
+              p.pTranProp.sValue := s;
+              Exclude(p.pTranProp.States, dklptsUntranslated);
+              Modified := True;
+            end;
+          end;
+        nkConst:
+          if dklcsUntranslated in p.pTranConst.States then begin
+            s := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.sDefValue)];
+            if s<>'' then begin
+              p.pTranConst.sDefValue := s;
+              p.pTranConst.sValue    := s;
+              Exclude(p.pTranConst.States, dklcsUntranslated);
+              Modified := True;
+            end;
+          end;
+      end;
   end;
 
   procedure TfMain.tvMainBeforeCellPaint(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; CellRect: TRect);
@@ -756,22 +874,22 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
     s := UnicodeToAnsiCP(NewText, cTreeCodePage);
     p := Sender.GetNodeData(Node);
     case p.Kind of
-      nkProp: begin
+      nkProp:
         with p.pTranProp^ do begin
           sValue := s;
           Exclude(States, dklptsUntranslated);
         end;
-        Modified := True;
-      end;
-      nkConst: begin
+      nkConst:
         with p.pTranConst^ do begin
           sValue    := s;
           sDefValue := sValue;
           Exclude(States, dklcsUntranslated);
         end;
-        Modified := True;
-      end;
+      else Exit;
     end;
+    Modified := True;
+     // If autoadding to repository is on, register the current translation
+    if bSetting_ReposAutoAdd then AddNodeTranslationToRepository(Node); 
     UpdateStatusBar;
   end;
 
@@ -857,9 +975,10 @@ uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
     end;
      // Update status bar
     with sbarMain.Panels do begin
-      Items[ISBPanelIdx_CompCount].Caption  := Format(SStatusBar_CompCount,  [iCntComp]);
-      Items[ISBPanelIdx_PropCount].Caption  := Format(SStatusBar_PropCount,  [iCntProp, iCntPropUntr]);
-      Items[ISBPanelIdx_ConstCount].Caption := Format(SStatusBar_ConstCount, [iCntConst, iCntConstUntr]);
+      Items[ISBPanelIdx_CompCount].Caption      := Format(SStatusBar_CompCount,      [iCntComp]);
+      Items[ISBPanelIdx_PropCount].Caption      := Format(SStatusBar_PropCount,      [iCntProp, iCntPropUntr]);
+      Items[ISBPanelIdx_ConstCount].Caption     := Format(SStatusBar_ConstCount,     [iCntConst, iCntConstUntr]);
+      Items[ISBPanelIdx_ReposTermCount].Caption := Format(SStatusBar_ReposTermCount, [FRepository.TermCount]);
     end;
   end;
 

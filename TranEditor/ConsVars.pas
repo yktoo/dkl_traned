@@ -1,7 +1,7 @@
 unit ConsVars;
 
 interface
-uses Windows, Messages, SysUtils, Classes, Contnrs, Controls, Graphics, VirtualTrees, DKLang;
+uses Windows, Messages, SysUtils, Classes, Contnrs, Controls, Graphics, StdCtrls, VirtualTrees, DKLang;
 
 type
    // Exception
@@ -113,12 +113,51 @@ type
     property FileName: String read FFileName;
   end;
 
+   //===================================================================================================================
+   // A translation repository
+   //===================================================================================================================
+
+  TTranRepository = class(TObject)
+  private
+     // List of TStringList's, each consisting of possible translations, Objects[] is LANGID
+    FTerms: TObjectList;
+    FFileName: String;
+     // Finds and returns the string list corresponding to a term, or nil if no such translation was registered
+    function  FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
+     // Finds and returns the string list corresponding to a term in SL, and its index in idx; if no entry for wLangID2
+     //   present in SL, returns idx=-1; if no such translation was registered returns SL=nil
+    procedure FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out SL: TStringList; out idx: Integer);
+     // Prop handlers
+    function  GetTranslations(wLangID1, wLangID2: LANGID; const sValue1: String): String;
+    procedure SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, Value: String);
+    function  GetTermCount: Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+     // Adds the translation. Returns True if at least one translation was a new one, or False if this was just a
+     //   replacement
+    function  AddTranslation(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String): Boolean;
+     // Clears the repository
+    procedure Clear;
+     // Loading and saving to file
+    procedure FileLoad(const sFileName: String);
+    procedure FileSave;
+     // Props
+     // -- Repository storage file name
+    property FileName: String read FFileName;
+     // -- Repository term count
+    property TermCount: Integer read GetTermCount; 
+     // -- Returns the translation of sValue1 from wLangID1 into wLangID2, or an empty string if no translation found
+    property Translations[wLangID1, wLangID2: LANGID; const sValue1: String]: String read GetTranslations write SetTranslations;
+  end;
 
 const
   S_CRLF                           = #13#10;
 
   SAppCaption                      = 'DKLang Translation Editor';
   SAppVersion                      = 'v2.1';
+  SAppWebsite                      = 'http://www.dk-soft.org/';
+  SAppEmail                        = 'devtools@narod.ru';
 
   SLangSourceFileExt               = 'dklang';
   SLangSourceFileDotExt            = '.'+SLangSourceFileExt;
@@ -126,6 +165,7 @@ const
   STranFileExt                     = 'lng';
   STranFileFilter                  = 'DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*';
   STranFileDefaultName             = 'untitled.'+STranFileExt;
+  SRepositoryFileName              = 'DKTranEd.dat';
 
    // Dialog titles
   SDlgTitle_Info                   = 'Info';
@@ -135,14 +175,16 @@ const
   SDlgTitle_SelectDisplayFile      = 'Select a translation file used for display';
   SDlgTitle_SelectTranFile         = 'Select a translation file';
   SDlgTitle_SaveTranFileAs         = 'Select a translation file to save to';
+  SDlgTitle_SelReposPath           = 'Select translation repository path:';
 
    // Dialog texts
   SConfirm_FileNotSaved            = 'Translation file "%s" is modified but not saved. Do you wish to save it?';
 
    // Status bar texts
-  SStatusBar_CompCount             = '%d components';
-  SStatusBar_PropCount             = '%d/%d properties';
-  SStatusBar_ConstCount            = '%d/%d constants';
+  SStatusBar_CompCount             = 'Comp: %d';
+  SStatusBar_PropCount             = 'Prop: %d/%d';
+  SStatusBar_ConstCount            = 'Const: %d/%d';
+  SStatusBar_ReposTermCount        = 'Repository: %d terms';
 
    // Error messages
   SErrMsg_FileDoesntExist          = 'File "%s" doesn''t exist';
@@ -159,8 +201,11 @@ const
   SErrMsg_PropIDMissing            = 'Property ID missing';
   SErrMsg_PropIDInvalid            = 'Invalid property ID';
   SErrMsg_LoadLangSourceFailed     = 'Error loading language source:'#13'Line %d: %s';
+  SErrMsg_SrcAndTranLangsAreSame   = 'Source and translation languages should be different';
 
   SNode_Constants                  = 'Constants';
+
+  SRepositoryFileHeader            = SAppCaption+' '+SAppVersion+' Translation Repository File';
 
    // Source/translation difference messages
   SDiffDesc_AddComponent           = '+ Component: [%s]';
@@ -171,12 +216,6 @@ const
   SDiffDesc_RemoveConstant         = '- Constant "%s"';
   SDiffDesc_MissingEntries         = 'The following entries were not found and were added to the translation:';
   SDiffDesc_ExcessiveEntries       = 'The following entries were found excessive and deleted from the translation:';
-
-
-
-  SDlgSelReposPath                 = 'Select translation repository path:';
-  SDlgAddConstant                  = 'Add a constant';
-  SDlgRenameConstant               = 'Rename the constant';
 
    // Registry paths                 
   SRegKey_Root                     = 'Software\DKSoftware\DKTranEd';
@@ -199,6 +238,7 @@ const
   ISBPanelIdx_CompCount            = 1;
   ISBPanelIdx_PropCount            = 2;
   ISBPanelIdx_ConstCount           = 3;
+  ISBPanelIdx_ReposTermCount       = 4;
 
    // Colors
   CBack_CompEntry                  = $ffe5ec;  // Background color of component entry
@@ -206,7 +246,6 @@ const
   CBack_ConstsNode                 = $eaeaff;  // Background color of 'Constants' node
   CBack_ConstEntry                 = clWindow; // Background color of constant entry
   CBack_UntranslatedValue          = $f0f0f0;  // Background color of untranslated item values
-
 
    // ImageIndices                 
   iiSettings                       =  0;
@@ -229,14 +268,14 @@ const
   iiUntranslated                   = 17;
 
 var
-  cTreeCodePage: Cardinal;                     
+   // Main tree code page
+  cTreeCodePage: Cardinal;
    // Settings
-  sSetting_InterfaceFont: String;
-  sSetting_TableFont: String;
-
-  sTranRepositoryPath:  String;     // Путь к репозиторию
-  bReposRemovePrefix:   Boolean;    // Удалять '&' из переводов
-  bReposAutoAddStrings: Boolean;    // Автоматически добавлять строки к переводам
+  sSetting_InterfaceFont:     String;
+  sSetting_TableFont:         String;
+  sSetting_RepositoryDir:     String;
+  bSetting_ReposRemovePrefix: Boolean;
+  bSetting_ReposAutoAdd:      Boolean;
 
    // Exception raising
   procedure TranEdError(const sMsg: String); overload;
@@ -258,8 +297,11 @@ var
    // The same as GetFirstWord() but strips off from s the part being returned
   function  ExtractFirstWord(var s: String; const sDelimiters: String): String;
 
-   // Проверяет существование файла. Если он не существует, вызывает Exception
+   // Checks that the specified file exists. If not, raises an Exception
   procedure CheckFileExists(const sFileName: String);
+   // Set or get the Integer(ComboBox.Items.Objects[]) for the currently selected item. -1 means no item selected
+  procedure SetCBObject(ComboBox: TComboBox; iID: Integer);
+  function  GetCBObject(ComboBox: TComboBox): Integer;
    // Activates specified VT node if possible
   procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView, bCenter: Boolean);
    // Enables or disables the given control and changes its color for clBtnFace (for disabled) or clWindow (otherwise)
@@ -274,6 +316,9 @@ var
    // Transformations Ansi<->Unicode
   function  AnsiToUnicodeCP(const s: AnsiString; cCodePage: Cardinal): WideString;
   function  UnicodeToAnsiCP(const s: WideString; cCodePage: Cardinal): AnsiString;
+
+   // Strips off the prefix char if so configured in the repository settings
+  function ReposFixPrefixChar(const s: String): String;
 
 implementation
 uses TypInfo, Forms, Dialogs;
@@ -350,6 +395,18 @@ uses TypInfo, Forms, Dialogs;
   procedure CheckFileExists(const sFileName: String);
   begin
     if not FileExists(sFileName) then raise Exception.CreateFmt(SErrMsg_FileDoesntExist, [sFileName]);
+  end;
+
+  procedure SetCBObject(ComboBox: TComboBox; iID: Integer);
+  begin
+    with ComboBox do
+      if iID<0 then ItemIndex := -1 else ItemIndex := Items.IndexOfObject(Pointer(iID));
+  end;
+
+  function GetCBObject(ComboBox: TComboBox): Integer;
+  begin
+    Result := ComboBox.ItemIndex;
+    if Result>=0 then Result := Integer(ComboBox.Items.Objects[Result]);
   end;
 
   procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView, bCenter: Boolean);
@@ -442,6 +499,23 @@ uses TypInfo, Forms, Dialogs;
     iLen := Length(s);
     SetLength(Result, iLen);
     WideCharToMultiByte(cCodePage, 0, @s[1], iLen, @Result[1], iLen, nil, nil);
+  end;
+
+  function ReposFixPrefixChar(const s: String): String;
+  var
+    i: Integer;
+    bDblAmp: Boolean;
+  begin
+    Result := s;
+    if bSetting_ReposRemovePrefix then begin
+      i := 1;
+      while i<Length(Result) do
+        if Result[i]='&' then begin
+          bDblAmp := (i<Length(Result)) and (Result[i+1]='&');
+          if bDblAmp then Inc(i, 2) else Delete(Result, i, 1);
+        end else
+          Inc(i);
+    end;
   end;
 
    //===================================================================================================================
@@ -843,6 +917,196 @@ uses TypInfo, Forms, Dialogs;
         on e: ETranEdError do TranEdError(SErrMsg_LoadLangSourceFailed, [iLine+1, e.Message]);
       end;
     end;
+  end;
+
+   //===================================================================================================================
+   // TTranRepository
+   //===================================================================================================================
+
+  function TTranRepository.AddTranslation(wLangID1, wLangID2: LANGID; const sValue1, sValue2: String): Boolean;
+  var
+    s1, s2: String;
+    SL: TStringList;
+    idx: Integer;
+  begin
+    if (sValue1='') or (sValue2='') then
+      Result := False
+    else begin
+      s1 := MultilineToLine(sValue1);
+      s2 := MultilineToLine(sValue2);
+       // Try seek for the first value
+      FindTranslation(wLangID1, wLangID2, s1, SL, idx);
+       // If found, put second value as translation
+      if SL<>nil then begin
+        Result := idx<0;
+        if Result then SL.AddObject(s2, Pointer(wLangID2))
+        else if SL[idx]<>s2 then SL[idx] := s2;
+        Exit;
+      end;
+       // Try seek for the second value
+      FindTranslation(wLangID2, wLangID1, s2, SL, idx);
+       // If found, put first value as translation
+      if SL<>nil then begin
+        Result := idx<0;
+        if Result then SL.AddObject(s1, Pointer(wLangID1))
+        else if SL[idx]<>s1 then SL[idx] := s1;
+        Exit;
+      end;
+       // Else add both the translations
+      SL := TStringList.Create;
+      FTerms.Add(SL);
+      SL.AddObject(s1, Pointer(wLangID1));
+      SL.AddObject(s2, Pointer(wLangID2));
+      Result := True;
+    end;
+  end;
+
+  procedure TTranRepository.Clear;
+  begin
+    FTerms.Clear;
+  end;
+
+  constructor TTranRepository.Create;
+  begin
+    inherited Create;
+    FTerms := TObjectList.Create;
+  end;
+
+  destructor TTranRepository.Destroy;
+  begin
+    FTerms.Free;
+    inherited Destroy;
+  end;
+
+  procedure TTranRepository.FileLoad(const sFileName: String);
+  var
+    SLLines, SLTerm: TStringList;
+    i: Integer;
+
+    procedure ParseLine(const sLine: String);
+    var
+      sTerm: String;
+      wLangID: LANGID;
+      SL: TStringList;
+      i: Integer;
+    begin
+       // Skip empty lines or comments
+      if (sLine='') or (sLine[1]=';') then Exit;
+      SL := nil;
+       // Tell SLTerm to parse comma-delimited line
+      SLTerm.CommaText := sLine;
+       // Check each entry pair in SLTerm
+      for i := 0 to (SLTerm.Count div 2)-1 do begin
+        wLangID := StrToIntDef(SLTerm[i*2], 0);
+        sTerm   := Trim(SLTerm[i*2+1]);
+         // If the term is valid
+        if (wLangID>0) and (sTerm<>'') then begin
+           // Create a string list if it isn't created yet and add it to FTerms list
+          if SL=nil then begin
+            SL := TStringList.Create;
+            FTerms.Add(SL);
+          end;
+           // Add the term
+          SL.AddObject(sTerm, Pointer(wLangID));
+        end;
+      end;
+    end;
+
+  begin
+    FFileName := sFileName;
+    Clear;
+    if not FileExists(FFileName) then Exit;
+    SLLines := TStringList.Create;
+    try
+       // Load the stream into TStringList
+      SLLines.LoadFromFile(FFileName);
+       // Parse the strings
+      SLTerm := TStringList.Create;
+      try
+        for i := 0 to SLLines.Count-1 do ParseLine(SLLines[i]);
+      finally
+        SLTerm.Free;
+      end;
+    finally
+      SLLines.Free;
+    end;
+  end;
+
+  procedure TTranRepository.FileSave;
+  var
+    fs: TFileStream;
+    iTerm, iTran: Integer;
+    SLTerm, SL: TStringList;
+
+    procedure WriteLine(const sLine: String);
+    begin
+      fs.WriteBuffer(sLine[1],  Length(sLine));
+      fs.WriteBuffer(S_CRLF[1], Length(S_CRLF));
+    end;
+
+  begin
+    fs := TFileStream.Create(FFileName, fmCreate);
+    try
+       // Write the header comment
+      WriteLine('; '+SRepositoryFileHeader);
+      WriteLine('; '+SAppWebsite);
+      WriteLine('');
+       // Create temporary term string list (which represents one line in the repository file)
+      SLTerm := TStringList.Create;
+      try
+        for iTerm := 0 to FTerms.Count-1 do begin
+           // Fill the SLTerm with pairs LangID-Value
+          SLTerm.Clear; 
+          SL := TStringList(FTerms[iTerm]); 
+          for iTran := 0 to SL.Count-1 do begin
+            SLTerm.Add(IntToStr(Integer(SL.Objects[iTran])));
+            SLTerm.Add(SL[iTran]);
+          end;
+           // Write the term line
+          WriteLine(SLTerm.CommaText);
+        end;
+      finally
+        SLTerm.Free;
+      end;
+    finally
+      fs.Free;
+    end;
+  end;
+
+  procedure TTranRepository.FindTranslation(wLangID1, wLangID2: LANGID; const sValue1: String; out SL: TStringList; out idx: Integer);
+  begin
+    SL := FindTranslationSL(wLangID1, sValue1);
+    if SL=nil then idx := -1 else idx := SL.IndexOfObject(Pointer(wLangID2));
+  end;
+
+  function TTranRepository.FindTranslationSL(wLangID: LANGID; const sValue: String): TStringList;
+  var i, idxLang: Integer;
+  begin
+    for i := 0 to FTerms.Count-1 do begin
+      Result := TStringList(FTerms[i]);
+      idxLang := Result.IndexOfObject(Pointer(wLangID));
+      if (idxLang>=0) and (Result[idxLang]=sValue) then Exit;
+    end;
+    Result := nil;
+  end;
+
+  function TTranRepository.GetTermCount: Integer;
+  begin
+    Result := FTerms.Count;
+  end;
+
+  function TTranRepository.GetTranslations(wLangID1, wLangID2: LANGID; const sValue1: String): String;
+  var
+    SL: TStringList;
+    idx: Integer;
+  begin
+    FindTranslation(wLangID1, wLangID2, sValue1, SL, idx);
+    if (SL=nil) or (idx<0) then Result := '' else Result := LineToMultiline(SL[idx]);
+  end;
+
+  procedure TTranRepository.SetTranslations(wLangID1, wLangID2: LANGID; const sValue1, Value: String);
+  begin
+    AddTranslation(wLangID1, wLangID2, sValue1, Value);
   end;
 
 end.

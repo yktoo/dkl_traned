@@ -46,7 +46,7 @@ object dSettings: TdSettings
     Top = 8
     Width = 432
     Height = 147
-    ActivePage = tsInterface
+    ActivePage = tsRepository
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 0
     object tsRepository: TTabSheet

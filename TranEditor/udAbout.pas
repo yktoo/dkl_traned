@@ -40,6 +40,8 @@ const
   begin
     with TdAbout.Create(Application) do
       try
+        lWebsite.Caption := SAppWebsite;
+        lEmail.Caption   := SAppEmail;
         ShowModal;
       finally
         Free;
@@ -120,7 +122,7 @@ const
 
   procedure TdAbout.lEmailClick(Sender: TObject);
   begin
-    ShellExecute(Handle, 'open', PChar('mailto:'+lEmail.Caption), nil, nil, SW_SHOWNORMAL);
+    ShellExecute(Handle, 'open', PChar('mailto:'+SAppEmail), nil, nil, SW_SHOWNORMAL);
   end;
 
   procedure TdAbout.lOKClick(Sender: TObject);
@@ -130,7 +132,7 @@ const
 
   procedure TdAbout.lWebsiteClick(Sender: TObject);
   begin
-    ShellExecute(Handle, 'open', PChar(lWebsite.Caption), nil, nil, SW_SHOWNORMAL);
+    ShellExecute(Handle, 'open', PChar(SAppWebsite), nil, nil, SW_SHOWNORMAL);
   end;
 
   procedure TdAbout.WMNCHitTest(var Msg: TWMNCHitTest);

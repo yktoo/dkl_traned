@@ -52,9 +52,8 @@ uses ConsVars, FileCtrl;
       try
         Result := Execute;
         if Result then begin
-          sTranRepositoryPath  := IncludeTrailingPathDelimiter(eReposPath.Text);
-          bReposRemovePrefix   := cbRemovePrefix.Checked;
-          bReposAutoAddStrings := cbAutoAddStrings.Checked;
+          bSetting_ReposRemovePrefix := cbRemovePrefix.Checked;
+          bSetting_ReposAutoAdd      := cbAutoAddStrings.Checked;
         end;
       finally
         Free;
@@ -69,8 +68,8 @@ uses ConsVars, FileCtrl;
   procedure TdSettings.bBrowseReposPathClick(Sender: TObject);
   var s: String;
   begin
-    s := ExcludeTrailingPathDelimiter(eReposPath.Text);
-    if SelectDirectory(SDlgSelReposPath, '', s) then eReposPath.Text := IncludeTrailingPathDelimiter(s);
+    s := eReposPath.Text;
+    if SelectDirectory(SDlgTitle_SelReposPath, '', s) then eReposPath.Text := s;
   end;
 
   procedure TdSettings.bInterfaceFontClick(Sender: TObject);
@@ -83,6 +82,9 @@ uses ConsVars, FileCtrl;
 
   procedure TdSettings.bOKClick(Sender: TObject);
   begin
+     // Repository
+    sSetting_RepositoryDir := eReposPath.Text;
+     // Interface
     sSetting_InterfaceFont := FInterfaceFont;
     sSetting_TableFont     := FTableFont;
     ModalResult := mrOK;
@@ -114,9 +116,9 @@ uses ConsVars, FileCtrl;
   procedure TdSettings.InitializeDialog;
   begin
      // Repository
-    eReposPath.Text := sTranRepositoryPath;
-    cbRemovePrefix.Checked   := bReposRemovePrefix;
-    cbAutoAddStrings.Checked := bReposAutoAddStrings;
+    eReposPath.Text          := sSetting_RepositoryDir;
+    cbRemovePrefix.Checked   := bSetting_ReposRemovePrefix;
+    cbAutoAddStrings.Checked := bSetting_ReposAutoAdd;
      // Interface
     FInterfaceFont := sSetting_InterfaceFont;
     FTableFont     := sSetting_TableFont;

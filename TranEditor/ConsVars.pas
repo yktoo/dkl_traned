@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.14 2004-11-11 16:54:41 dale Exp $
+//  $Id: ConsVars.pas,v 1.15 2004-11-12 19:17:36 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -182,6 +182,7 @@ type
    //===================================================================================================================
 
   TSearchFlag = (
+    sfSearchMade,       // Is set once a search had been made
     sfReplace,          // Perform a replace rather than search
     sfCaseSensitive,    // Use case-sensitive search
     sfWholeWordsOnly,   // Find whole words only
@@ -201,8 +202,8 @@ type
     Flags:           TSearchFlags; // Search flags
   end;
 
-   // A callback procedure used to start search/replace from the Find dialog
-  TFindCallback = procedure(var Params: TSearchParams) of object;
+   // A callback procedure used to start search/replace from the Find dialog. Must return True if search succeeded
+  TFindCallback = function(var Params: TSearchParams): Boolean of object;
 
 const
   S_CRLF                           = #13#10;
@@ -275,6 +276,8 @@ const
   iiUntranslated                   = 17;
   iiJumpPrev                       = 18;
   iiJumpNext                       = 19;
+  iiFind                           = 20;
+  iiFindNext                       = 21;
 
 var
    // Main tree code page
@@ -309,7 +312,8 @@ var
   procedure Error(const sMessage: String);
   function  Confirm(const sMessage: String): Boolean;
 
-  function  ConstVal(const sName: String): String;
+  function  ConstVal(const sName: String): String; overload;
+  function  ConstVal(const sName: String; const aParams: Array of const): String; overload;
 
    // Returns the part of s before any delimiter char from sDelimiters
   function  GetFirstWord(const s, sDelimiters: String): String;
@@ -397,9 +401,14 @@ uses TypInfo, Forms, Dialogs;
     Result := Application.MessageBox(PChar(sMessage), PChar(ConstVal('SDlgTitle_Confirm')), MB_OKCANCEL or MB_ICONQUESTION)=IDOK;
   end;
 
-  function ConstVal(const sName: String): String;
+  function ConstVal(const sName: String): String; 
   begin
     Result := LangManager.ConstantValue[sName];
+  end;
+
+  function ConstVal(const sName: String; const aParams: Array of const): String;
+  begin
+    Result := Format(ConstVal(sName), aParams);
   end;
 
   function GetFirstWord(const s, sDelimiters: String): String;

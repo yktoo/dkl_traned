@@ -1,5 +1,5 @@
 ;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.5 2004-11-11 16:54:41 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.6 2004-11-12 19:17:36 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -145,6 +145,9 @@ iToggleCurTranEntry.Caption=00000104,Current t&ranslated entry
 aFind.Caption=00000110,&Find or replace...
 aFind.Category=00000109,Edit
 aFind.Hint=00000111,Find or replace...|Search entries using a given pattern, and optionally replace it with another
+aFindNext.Caption=00000113,Find ne&xt
+aFindNext.Category=00000112,Edit
+aFindNext.Hint=00000114,Find next|Find the next occurence of string searched before
 
 [$CONSTANTS]
 SBtn_Find=Find
@@ -183,6 +186,8 @@ SErrMsg_SectionNameMissing=Section name missing
 SErrMsg_SrcAndTranLangsAreSame=Source and translation languages should be different
 SErrMsg_WrongSectionName=Wrong section name format: "%s"
 SLangSourceFileFilter=DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*
+SMsg_NoSearchResults=String "%s" wasn't found.
+SMsg_ReplacedInfo=Replaced %d occurences of "%s".
 SNode_Constants=Constants
 SStatusBar_CompCount=Comp: %d
 SStatusBar_ConstCount=Const: %d/%d

@@ -3,7 +3,7 @@ Author=Dmitry Kann, http://www.dk-soft.org
 SourceLANGID=1033
 LANGID=1049
 Generator=DKLang Translation Editor v2.2
-LastModified=2004-11-11 21:40:51
+LastModified=2004-11-13 00:04:07
 
 [dAbout]
 00000001=О программе
@@ -145,6 +145,9 @@ LastModified=2004-11-11 21:40:51
 00000109=Правка
 00000110=&Поиск и замена...
 00000111=Поиск и замена...|Поиск элементов по заданному шаблону, а также замена его на другую строку
+00000112=Правка
+00000113=На&йти далее
+00000114=Найти далее|Найти следующее вхождение строки, по которой производился поиск в последний раз
 
 [dFind]
 00000001=Поиск и замена
@@ -203,6 +206,8 @@ SErrMsg_SectionNameMissing=Отсутствует имя секции
 SErrMsg_SrcAndTranLangsAreSame=Исходный язык и язык перевода должны различаться
 SErrMsg_WrongSectionName=Недопустимый формат имени секции: "%s"
 SLangSourceFileFilter=Исходные языковые файлы DKLang (*.dklang)|*.dklang|Все файлы (*.*)|*.*
+SMsg_NoSearchResults=Строка "%s" не найдена.
+SMsg_ReplacedInfo=Заменено %d вхождений строки "%s".
 SNode_Constants=Константы
 SStatusBar_CompCount=Комп.: %d
 SStatusBar_ConstCount=Констант: %d/%d

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.14 2004-11-11 16:54:41 dale Exp $
+//  $Id: Main.pas,v 1.15 2004-11-12 19:17:36 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -147,6 +147,9 @@ type
     tvMain: TVirtualStringTree;
     iFind: TTBXItem;
     bFind: TTBXItem;
+    aFindNext: TAction;
+    iFindNext: TTBXItem;
+    bFindNext: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
@@ -188,6 +191,7 @@ type
     procedure tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
     procedure tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
     procedure tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
+    procedure aaFindNext(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -260,8 +264,8 @@ type
     procedure TranslateNodeFromRepository(Node: PVirtualNode);
      // Translates all nodes (bSelectedOnly=False) or just selected ones (bSelectedOnly=True)
     procedure TranslateAllNodes(bSelectedOnly: Boolean);
-     // Callback searching procedure
-    procedure FindCallback(var Params: TSearchParams);
+     // Searching function (also a callback for ShowFindDialog())
+    function  Find(var Params: TSearchParams): Boolean;
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -325,7 +329,15 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
 
   procedure TfMain.aaFind(Sender: TObject);
   begin
-    ShowFindDialog(FindCallback);
+    ShowFindDialog(Find);
+  end;
+
+  procedure TfMain.aaFindNext(Sender: TObject);
+  var SParams: TSearchParams;
+  begin
+    SParams := SearchParams;
+    SParams.Flags := SParams.Flags-[sfReplace];
+    Find(SParams); 
   end;
 
   procedure TfMain.aaHelpCheckUpdates(Sender: TObject);
@@ -646,6 +658,7 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     aClose.Enabled                     := bOpenFiles;
      // Edit
     aFind.Enabled                      := bOpenFiles;
+    aFindNext.Enabled                  := bOpenFiles and (sfSearchMade in SearchParams.Flags);
     aTranProps.Enabled                 := bOpenFiles;
      // View                           
     aPrevEntry.Enabled                 := bFocusedNode;
@@ -660,11 +673,11 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     cbEntryStateAutotranslated.Enabled := bSelection;
   end;
 
-  procedure TfMain.FindCallback(var Params: TSearchParams);
+  function TfMain.Find(var Params: TSearchParams): Boolean;
   var
     n: PVirtualNode;
     sSearch: String;
-    iPatLen: Integer;
+    iPatLen, iMatchCount, iReplacedCount: Integer;
     pData: PNodeData;
     bMatches: Boolean;
 
@@ -716,6 +729,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     else
       if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
      // Search through the nodes
+    iMatchCount    := 0;
+    iReplacedCount := 0;
     while n<>nil do begin
       pData := tvMain.GetNodeData(n);
       bMatches := False;
@@ -743,13 +758,16 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
         end;
        // Found the match?
       if bMatches then begin
+        Inc(iMatchCount);
         ActivateVTNode(tvMain, n, True, False);
          // If Replace mode
         if sfReplace in Params.Flags then begin
           //!!! write replace code
+
+          Inc(iReplacedCount);
         end;
          // If this isn't 'Replace all' call, then exit after a match has been successfully located
-        if Params.Flags*[sfReplace, sfReplaceAll]<>[sfReplace, sfReplaceAll] then Break; 
+        if Params.Flags*[sfReplace, sfReplaceAll]<>[sfReplace, sfReplaceAll] then Break;
       end;
        // Advance to the next/previous node
       if sfSelectedOnly in Params.Flags then
@@ -757,6 +775,15 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       else
         if sfBackward in Params.Flags then n := tvMain.GetPrevious(n) else n := tvMain.GetNext(n);
     end;
+     // Update actions
+    Include(Params.Flags, sfSearchMade);
+    EnableActions;
+     // Inform the user about results
+    Result := iMatchCount>0;
+    if not Result then
+      Info(ConstVal('SMsg_NoSearchResults', [Params.sSearchPattern]))
+    else if Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll] then
+      Info(ConstVal('SMsg_ReplacedInfo', [iReplacedCount, Params.sSearchPattern]));
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

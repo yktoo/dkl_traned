@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udFind.pas,v 1.1 2004-11-11 16:54:41 dale Exp $
+//  $Id: udFind.pas,v 1.2 2004-11-12 19:17:36 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -45,7 +45,7 @@ type
      // Called whenever dialog or its controls state changed
     procedure StateChanged;
      // Starts searching/replacement
-    procedure DoFind(bAll: Boolean);
+    function  DoFind(bAll: Boolean): Boolean;
   protected
     procedure InitializeDialog;
   public
@@ -76,7 +76,7 @@ var
 
   procedure TdFind.bAllClick(Sender: TObject);
   begin
-    DoFind(True);
+    if DoFind(True) then Close;
   end;
 
   procedure TdFind.bCancelClick(Sender: TObject);
@@ -86,8 +86,7 @@ var
 
   procedure TdFind.bOKClick(Sender: TObject);
   begin
-    DoFind(False);
-    Close;
+    if DoFind(False) then Close;
   end;
 
   procedure TdFind.cbReplaceClick(Sender: TObject);
@@ -107,7 +106,7 @@ var
     if Visible then StateChanged;
   end;
 
-  procedure TdFind.DoFind(bAll: Boolean);
+  function TdFind.DoFind(bAll: Boolean): Boolean;
   begin
      // Save search parameters
     SearchParams.sSearchPattern  := cbPattern.Text;
@@ -124,7 +123,7 @@ var
     if rgOrigin.ItemIndex=1       then Include(SearchParams.Flags, sfEntireScope);
     if rgDirection.ItemIndex=1    then Include(SearchParams.Flags, sfBackward);
      // Invoke the search function
-    if Assigned(FFindCallback) then FFindCallback(SearchParams);
+    Result := FFindCallback(SearchParams);
   end;
 
   procedure TdFind.FormClose(Sender: TObject; var Action: TCloseAction);

@@ -5,7 +5,8 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, XPMan, DKLang, ConsVars,
   Placemnt, ImgList, TB2Item, ActnList, VirtualTrees, ExtCtrls,
-  TBXStatusBars, TBX, TB2Dock, TB2Toolbar, TB2MRU;
+  TBXStatusBars, TBX, TB2Dock, TB2Toolbar, TB2MRU, TBXDkPanels, StdCtrls,
+  Menus;
 
 type
    // Tree node kind
@@ -80,7 +81,6 @@ type
     iViewSep1: TTBXSeparatorItem;
     MRUDisplay: TTBMRUList;
     MRUSource: TTBMRUList;
-    MRUTargetApp: TTBMRUList;
     MRUTran: TTBMRUList;
     pMain: TPanel;
     sbarMain: TTBXStatusBar;
@@ -94,6 +94,24 @@ type
     tbSep1: TTBXSeparatorItem;
     tbSep2: TTBXSeparatorItem;
     tvMain: TVirtualStringTree;
+    dpCurrentEntry: TTBXDockablePanel;
+    mCurSrcEntry: TMemo;
+    mCurTranEntry: TMemo;
+    iToggleCurrentEntry: TTBXVisibilityToggleItem;
+    bTranProps: TTBXItem;
+    bSettings: TTBXItem;
+    aMarkTranslated: TAction;
+    aMarkUntranslated: TAction;
+    iMarkUntranslated: TTBXItem;
+    iMarkTranslated: TTBXItem;
+    pmTree: TTBXPopupMenu;
+    pmView: TTBXPopupMenu;
+    ipmMarkTranslated: TTBXItem;
+    ipmMarkUntranslated: TTBXItem;
+    ipmJumpPrevUntranslated: TTBXItem;
+    ipmJumpNextUntranslated: TTBXItem;
+    ipmTreeSep: TTBXSeparatorItem;
+    ipmTranProps: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaClose(Sender: TObject);
     procedure aaExit(Sender: TObject);
@@ -108,7 +126,6 @@ type
     procedure fpMainRestorePlacement(Sender: TObject);
     procedure fpMainSavePlacement(Sender: TObject);
     procedure tvMainBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
-    procedure tvMainCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
@@ -121,6 +138,11 @@ type
     procedure aaTranProps(Sender: TObject);
     procedure aaJumpPrevUntranslated(Sender: TObject);
     procedure aaJumpNextUntranslated(Sender: TObject);
+    procedure dpCurrentEntryResize(Sender: TObject);
+    procedure mCurTranEntryChange(Sender: TObject);
+    procedure tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure aaMarkUntranslated(Sender: TObject);
+    procedure aaMarkTranslated(Sender: TObject);
   private
      // Language source storage
     FLangSource: TLangSource;
@@ -130,6 +152,8 @@ type
     FTranslations: TDKLang_CompTranslations;
      // Flag that command line parameters have been checked
     FCmdLineChecked: Boolean;
+     // Update current entry editor flag
+    FUpdatingCurEntryEditor: Boolean;
      // Prop storage
     FModified: Boolean;
     FTranFileName: String;
@@ -137,6 +161,8 @@ type
     FDisplayFileName: String;
      // Redisplays the language source tree
     procedure UpdateTree;
+     // Updates current entry panel contents
+    procedure UpdateCurEntry;
      // Checks whether translation file is modified and asks to save it
     function  CheckSave: Boolean;
      // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
@@ -162,6 +188,12 @@ type
      // App events
     procedure AppHint(Sender: TObject);
     procedure AppIdle(Sender: TObject; var Done: Boolean);
+     // Applies current setting
+    procedure ApplySettings;
+     // Updates status bar info
+    procedure UpdateStatusBar;
+     // Marks selected entries translated (bTranslated=True) or untranslated (bTranslated=False)
+    procedure MarkTranslated(bTranslated: Boolean);
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -185,179 +217,7 @@ var
 
 implementation
 {$R *.dfm}
-uses StdCtrls, Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
-
-   //===================================================================================================================
-   // TStrEditLinkEx
-   //===================================================================================================================
-type
-  TStrEditMoveDirection = (smdNone, smdEnter, smdUp, smdDown);
-
-  TStrEditLinkEx = class(TInterfacedObject, IVTEditLink)
-  private
-     // Компонент редактора
-    FEdit: TCustomEdit;
-     // True, если используется TMemo вместо TEdit
-    FMultiline: Boolean;
-     // A back reference to the tree calling
-    FTree: TVirtualStringTree;
-     // The node being edited
-    FNode: PVirtualNode;
-     // The column of the node being edited
-    FColumn: Integer;
-     // Used to capture some important messages regardless of the type of control we use
-    FOldEditWndProc: TWndMethod;
-     // Флаг прерывания процесса редактирования
-    FEndingEditing: Boolean;
-     // Обработчик оконной процедуры контрола
-    procedure EditWindowProc(var Msg: TMessage);
-     // Заканчивает редактирование (успешно) и сдвигает выделение в дереве при Direction<>smdNone, возвращает True, если
-     //   удалось
-    function  MoveSelection(Direction: TStrEditMoveDirection): Boolean;
-     // IVTEditLink
-    function  BeginEdit: Boolean; stdcall;
-    function  CancelEdit: Boolean; stdcall;
-    function  EndEdit: Boolean; stdcall;
-    function  PrepareEdit(Tree: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex): Boolean; stdcall;
-    function  GetBounds: TRect; stdcall;
-    procedure ProcessMessage(var Message: TMessage); stdcall;
-    procedure SetBounds(R: TRect); stdcall;
-  public
-    destructor Destroy; override;
-  end;
-
-  function TStrEditLinkEx.BeginEdit: Boolean;
-  begin
-    Result := True;
-    FEdit.Show;
-    FEdit.SetFocus;
-     // Set a window procedure hook (aka subclassing) to get notified about important messages
-    FOldEditWndProc := FEdit.WindowProc;
-    FEdit.WindowProc := EditWindowProc;
-  end;
-
-  function TStrEditLinkEx.CancelEdit: Boolean;
-  begin
-    Result := True;
-     // Restore the edit's window proc
-    FEdit.WindowProc := FOldEditWndProc;
-    FEdit.Hide;
-  end;
-
-  destructor TStrEditLinkEx.Destroy;
-  begin
-    FEdit.Free;
-    if (FTree<>nil) and not (csDestroying in FTree.ComponentState) then FTree.SetFocus;
-    inherited Destroy;
-  end;
-
-  procedure TStrEditLinkEx.EditWindowProc(var Msg: TMessage);
-  var smd: TStrEditMoveDirection;
-  begin
-    case Msg.Msg of
-      WM_GETDLGCODE: begin
-        FOldEditWndProc(Msg);
-        Msg.Result := Msg.Result or DLGC_WANTALLKEYS;
-        Exit;
-      end;
-      WM_KEYDOWN:
-        if ((GetKeyState(VK_SHIFT) or GetKeyState(VK_CONTROL) or GetKeyState(VK_MENU)) and $80=0) then begin
-          smd := smdNone;
-          case Msg.WParam of
-            VK_UP:     if not FMultiline then smd := smdUp;
-            VK_DOWN:   if not FMultiline then smd := smdDown;
-            VK_RETURN: if not FMultiline then smd := smdEnter;
-            VK_ESCAPE: begin
-              FTree.CancelEditNode;
-              Exit;
-            end;
-          end;
-          if (smd<>smdNone) and MoveSelection(smd) then Exit;
-        end;
-      WM_KILLFOCUS: MoveSelection(smdNone);
-    end;
-    FOldEditWndProc(Msg);
-  end;
-
-  function TStrEditLinkEx.EndEdit: Boolean;
-  var s: String;
-  begin
-    Result := True;
-    if FEdit.Modified then begin
-      if FMultiline then s := FEdit.Text else s := MultilineToLine(FEdit.Text);
-      TVirtualStringTree(FTree).Text[FNode, FColumn] := s;
-    end;
-    FEdit.Hide;
-  end;
-
-  function TStrEditLinkEx.GetBounds: TRect;
-  begin
-    Result := FEdit.BoundsRect;
-  end;
-
-  function TStrEditLinkEx.MoveSelection(Direction: TStrEditMoveDirection): Boolean;
-  var n: PVirtualNode;
-  begin
-    Result := not FEndingEditing;
-     // Сдвигаем выделение
-    if Result then
-      with FTree do begin
-        n := FocusedNode;
-         // Определяем узел (строку) и столбец, куда двигать выделение
-        case Direction of
-          smdUp:   n := GetPrevious(n);
-          smdDown: n := GetNext(n);
-        end;
-         // Двигаем
-        if n<>nil then begin
-          FEndingEditing := True;
-          EndEditNode;
-          FocusedNode := n;
-          Selected[n] := True;
-        end;
-      end;
-  end;
-
-  function TStrEditLinkEx.PrepareEdit(Tree: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex): Boolean;
-  var s: String;
-  begin
-    FTree := Tree as TVirtualStringTree;
-    FNode := Node;
-    FColumn := Column;
-    FreeAndNil(FEdit);
-     // Если нажат Ctrl - создаём многострочный редактор
-    FMultiline := GetKeyState(VK_CONTROL) and $80<>0;
-     // Получаем текст
-    s := TVirtualStringTree(Tree).Text[Node, Column];
-     // Создаём контрол
-    if FMultiline then FEdit := TMemo.Create(nil) else FEdit := TEdit.Create(nil);
-     // Настраиваем контрол
-    with FEdit do begin
-      Visible  := False;
-      Parent   := FTree;
-      if FMultiline then begin
-        TMemo(FEdit).ScrollBars := ssBoth;
-        TMemo(FEdit).WordWrap   := False;
-        Text := LineToMultiline(s);
-      end else
-        Text := s;
-      Modified := False;
-    end;
-    Result := True;
-  end;
-
-  procedure TStrEditLinkEx.ProcessMessage(var Message: TMessage);
-  begin
-    FEdit.WindowProc(Message);
-  end;
-
-  procedure TStrEditLinkEx.SetBounds(R: TRect);
-  begin
-    FTree.Header.Columns.GetColumnBounds(FColumn, R.Left, R.Right);
-     // If a TMemo, increase height
-    if FMultiline then R.Bottom := R.Top+200;
-    FEdit.BoundsRect := R;
-  end;
+uses Registry, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps;
 
    //===================================================================================================================
    //  TfMain
@@ -386,6 +246,16 @@ type
   procedure TfMain.aaJumpPrevUntranslated(Sender: TObject);
   begin
     LocateUntranslatedNode(False);
+  end;
+
+  procedure TfMain.aaMarkTranslated(Sender: TObject);
+  begin
+    MarkTranslated(True);
+  end;
+
+  procedure TfMain.aaMarkUntranslated(Sender: TObject);
+  begin
+    MarkTranslated(False);
   end;
 
   procedure TfMain.aaNew(Sender: TObject);
@@ -420,12 +290,12 @@ type
 
   procedure TfMain.aaSettings(Sender: TObject);
   begin
-    EditSettings;
+    if EditSettings then ApplySettings;
   end;
 
   procedure TfMain.aaTranProps(Sender: TObject);
   begin
-    if EditTranslationProps(FTranslations, MRUTargetApp.Items) then Modified := True;
+    if EditTranslationProps(FTranslations) then Modified := True;
   end;
 
   procedure TfMain.AdjustVTColumnWidth;
@@ -441,7 +311,7 @@ type
 
   procedure TfMain.AppHint(Sender: TObject);
   begin
-    sbarMain.Panels[0].Caption := Application.Hint;
+    sbarMain.Panels[ISBPanelIdx_Main].Caption := Application.Hint;
   end;
 
   procedure TfMain.AppIdle(Sender: TObject; var Done: Boolean);
@@ -476,6 +346,16 @@ type
       for i := 1 to 3 do UseFile(ParamStr(i));
       if sSrcFile<>'' then DoLoad(sSrcFile, sDisplFile, sTranFile) else OpenFiles(sSrcFile, sDisplFile, sTranFile, False);
     end;
+  end;
+
+  procedure TfMain.ApplySettings;
+  begin
+     // Adjust interface font
+    FontFromStr(Font, sSetting_InterfaceFont);
+    ToolbarFont.Assign(Font);
+     // Adjust table font
+    FontFromStr(tvMain.Font, sSetting_TableFont);
+    cTreeCodePage := CharsetToCP(tvMain.Font.Charset);
   end;
 
   function TfMain.CheckSave: Boolean;
@@ -561,14 +441,21 @@ type
     MRUTran.Add(FTranFileName);
   end;
 
+  procedure TfMain.dpCurrentEntryResize(Sender: TObject);
+  begin
+    mCurSrcEntry.Width := dpCurrentEntry.ClientWidth div 2;
+  end;
+
   procedure TfMain.EnableActions;
   var bOpenFiles: Boolean;
   begin
     bOpenFiles := FLangSource<>nil;
-    aSave.Enabled      := bOpenFiles;
-    aSaveAs.Enabled    := bOpenFiles;
-    aClose.Enabled     := bOpenFiles;
-    aTranProps.Enabled := bOpenFiles;
+    aSave.Enabled                 := bOpenFiles;
+    aSaveAs.Enabled               := bOpenFiles;
+    aClose.Enabled                := bOpenFiles;
+    aTranProps.Enabled            := bOpenFiles;
+    aJumpPrevUntranslated.Enabled := bOpenFiles;
+    aJumpNextUntranslated.Enabled := bOpenFiles;
   end;
 
   procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -596,21 +483,35 @@ type
   end;
 
   procedure TfMain.fpMainRestorePlacement(Sender: TObject);
+  var rif: TRegIniFile;
   begin
+    rif := fpMain.RegIniFile;
+     // Load toolbar props
     TBRegLoadPositions(Self, HKEY_CURRENT_USER, SRegKey_Root);
-    MRUSource.LoadFromRegIni   (fpMain.RegIniFile, SRegSection_MRUSource);
-    MRUDisplay.LoadFromRegIni  (fpMain.RegIniFile, SRegSection_MRUDisplay);
-    MRUTran.LoadFromRegIni     (fpMain.RegIniFile, SRegSection_MRUTranslation);
-    MRUTargetApp.LoadFromRegIni(fpMain.RegIniFile, SRegSection_MRUTargetApp);
+     // Restore MRUs
+    MRUSource.LoadFromRegIni (rif, SRegSection_MRUSource);
+    MRUDisplay.LoadFromRegIni(rif, SRegSection_MRUDisplay);
+    MRUTran.LoadFromRegIni   (rif, SRegSection_MRUTranslation);
+     // Load settings
+    sSetting_InterfaceFont := rif.ReadString(SRegSection_Preferences, 'InterfaceFont', FontToStr(Font));
+    sSetting_TableFont     := rif.ReadString(SRegSection_Preferences, 'TableFont',     sSetting_InterfaceFont);
+     // Apply loaded settings
+    ApplySettings; 
   end;
 
   procedure TfMain.fpMainSavePlacement(Sender: TObject);
+  var rif: TRegIniFile;
   begin
+    rif := fpMain.RegIniFile;
+     // Save toolbar props
     TBRegSavePositions(Self, HKEY_CURRENT_USER, SRegKey_Toolbars);
-    MRUSource.SaveToRegIni   (fpMain.RegIniFile, SRegSection_MRUSource);
-    MRUDisplay.SaveToRegIni  (fpMain.RegIniFile, SRegSection_MRUDisplay);
-    MRUTran.SaveToRegIni     (fpMain.RegIniFile, SRegSection_MRUTranslation);
-    MRUTargetApp.SaveToRegIni(fpMain.RegIniFile, SRegSection_MRUTargetApp);
+     // Save MRUs
+    MRUSource.SaveToRegIni (rif, SRegSection_MRUSource);
+    MRUDisplay.SaveToRegIni(rif, SRegSection_MRUDisplay);
+    MRUTran.SaveToRegIni   (rif, SRegSection_MRUTranslation);
+     // Save settings
+    rif.WriteString(SRegSection_Preferences, 'InterfaceFont', sSetting_InterfaceFont);
+    rif.WriteString(SRegSection_Preferences, 'TableFont',     sSetting_TableFont);
   end;
 
   function TfMain.GetDisplayTranFileName: String;
@@ -647,13 +548,36 @@ type
     while Node<>nil do begin
       if IsNodeUntranslated(Node) then begin
         ActivateVTNode(tvMain, Node, True, True);
-        tvMain.FocusedColumn := IColIdx_Translated;
         Exit;
       end;
       if bNext then Node := tvMain.GetNext(Node) else Node := tvMain.GetPrevious(Node);
     end;
      // Beep if not found
     MessageBeep(MB_OK); 
+  end;
+
+  procedure TfMain.MarkTranslated(bTranslated: Boolean);
+  var
+    n: PVirtualNode;
+    p: PNodeData;
+  begin
+    n := tvMain.GetFirstSelected;
+    while n<>nil do begin
+      p := tvMain.GetNodeData(n);
+      case p.Kind of
+        nkProp:  if bTranslated then Exclude(p.pTranProp.States,  dklptsUntranslated) else Include(p.pTranProp.States,  dklptsUntranslated);
+        nkConst: if bTranslated then Exclude(p.pTranConst.States, dklcsUntranslated)  else Include(p.pTranConst.States, dklcsUntranslated);
+      end;
+      n := tvMain.GetNextSelected(n);
+    end;
+    tvMain.Invalidate;
+    UpdateStatusBar;
+  end;
+
+  procedure TfMain.mCurTranEntryChange(Sender: TObject);
+  begin
+    if FUpdatingCurEntryEditor then Exit;
+    tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := MultilineToLine(mCurTranEntry.Text);
   end;
 
   function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String; bNewMode: Boolean): Boolean;
@@ -700,9 +624,9 @@ type
     EraseAction := eaColor;
   end;
 
-  procedure TfMain.tvMainCreateEditor(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+  procedure TfMain.tvMainEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
   begin
-    EditLink := TStrEditLinkEx.Create;
+    UpdateCurEntry;
   end;
 
   procedure TfMain.tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
@@ -713,18 +637,22 @@ type
 
   procedure TfMain.tvMainFocusChanged(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
   begin
+    UpdateCurEntry;
     EnableActions;
   end;
 
   procedure TfMain.tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
   begin
-    if Column=0 then
-      case GetNodeKind(Node) of
-        nkComp:   ImageIndex := iiNode_Comp;
-        nkProp:   ImageIndex := iiNode_Prop;
-        nkConsts: ImageIndex := iiNode_Consts;
-        nkConst:  ImageIndex := iiNode_Const;
-      end;
+    case Column of
+      IColIdx_Name:
+        case GetNodeKind(Node) of
+          nkComp:   ImageIndex := iiNode_Comp;
+          nkProp:   ImageIndex := iiNode_Prop;
+          nkConsts: ImageIndex := iiNode_Consts;
+          nkConst:  ImageIndex := iiNode_Const;
+        end;
+      IColIdx_Translated: if IsNodeUntranslated(Node) then ImageIndex := iiUntranslated;
+    end;
   end;
 
   procedure TfMain.tvMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
@@ -763,7 +691,7 @@ type
        // Static text
       ttStatic: if (Column=IColIdx_Name) and (p.Kind in [nkComp, nkConsts]) then s := Format('(%d)', [Sender.ChildCount[Node]]);
     end;
-    CellText := s;
+    CellText := AnsiToUnicodeCP(s, cTreeCodePage);
   end;
 
   procedure TfMain.tvMainInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
@@ -812,11 +740,11 @@ type
 
   procedure TfMain.tvMainKeyAction(Sender: TBaseVirtualTree; var CharCode: Word; var Shift: TShiftState; var DoDefault: Boolean);
   begin
-     // On Enter or Ctrl+Enter start editing
-    if (Shift*[ssShift, ssAlt]=[]) and (CharCode=VK_RETURN) and not Sender.IsEditing then begin
+     // On Enter start editing
+    if (Shift=[]) and (CharCode=VK_RETURN) and not Sender.IsEditing then begin
       DoDefault := False;
       with Sender do
-        if FocusedNode<>nil then EditNode(FocusedNode, FocusedColumn);
+        if FocusedNode<>nil then EditNode(FocusedNode, IColIdx_Translated);
     end;
   end;
 
@@ -825,25 +753,26 @@ type
     p: PNodeData;
     s: String;
   begin
-    s := NewText;
+    s := UnicodeToAnsiCP(NewText, cTreeCodePage);
     p := Sender.GetNodeData(Node);
     case p.Kind of
       nkProp: begin
         with p.pTranProp^ do begin
-          sValue := NewText;
-          States := States-[dklptsUntranslated];
+          sValue := s;
+          Exclude(States, dklptsUntranslated);
         end;
         Modified := True;
       end;
       nkConst: begin
         with p.pTranConst^ do begin
-          sValue    := NewText;
+          sValue    := s;
           sDefValue := sValue;
-          States    := States-[dklcsUntranslated];
+          Exclude(States, dklcsUntranslated);
         end;
         Modified := True;
       end;
     end;
+    UpdateStatusBar;
   end;
 
   procedure TfMain.tvMainPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
@@ -860,20 +789,92 @@ type
     Application.Title := Caption;
   end;
 
+  procedure TfMain.UpdateCurEntry;
+  var
+    p: PNodeData;
+    sSrc, sTran: String;
+    bEnable: Boolean;
+  begin
+    sSrc  := '';
+    sTran := '';
+    bEnable := False;
+    p := tvMain.GetNodeData(tvMain.FocusedNode);
+    if p<>nil then begin
+      bEnable := p.Kind in [nkProp, nkConst];
+      case p.Kind of
+        nkProp: begin
+          sSrc  := p.pSrcProp.sValue;
+          sTran := p.pTranProp.sValue;
+        end;
+        nkConst: begin
+          sSrc  := p.pSrcConst.sDefValue;
+          sTran := p.pTranConst.sDefValue;
+        end;
+      end;
+    end;
+     // Update curent entry editors
+    FUpdatingCurEntryEditor := True;
+    try
+      mCurSrcEntry.Text  := LineToMultiline(sSrc);
+      mCurTranEntry.Text := LineToMultiline(sTran);
+      EnableWndCtl(mCurSrcEntry,  bEnable);
+      EnableWndCtl(mCurTranEntry, bEnable);
+    finally
+      FUpdatingCurEntryEditor := False;
+    end;
+  end;
+
+  procedure TfMain.UpdateStatusBar;
+  var
+    n: PVirtualNode;
+    iCntComp, iCntProp, iCntPropUntr, iCntConst, iCntConstUntr: Integer;
+    p: PNodeData;
+  begin
+     // Reset counters
+    iCntComp      := 0;
+    iCntProp      := 0;
+    iCntPropUntr  := 0;
+    iCntConst     := 0;
+    iCntConstUntr := 0;
+     // Gather statistical info
+    if FLangSource<>nil then begin
+      n := tvMain.GetFirst;
+      while n<>nil do begin
+        p := tvMain.GetNodeData(n);
+        case p.Kind of
+          nkComp: Inc(iCntComp);
+          nkProp: begin
+            Inc(iCntProp);
+            if dklptsUntranslated in p.pTranProp.States then Inc(iCntPropUntr);
+          end;
+          nkConst: begin
+            Inc(iCntConst);
+            if dklcsUntranslated in p.pTranConst.States then Inc(iCntConstUntr);
+          end;
+        end;
+        n := tvMain.GetNext(n);
+      end;
+    end;
+     // Update status bar
+    with sbarMain.Panels do begin
+      Items[ISBPanelIdx_CompCount].Caption  := Format(SStatusBar_CompCount,  [iCntComp]);
+      Items[ISBPanelIdx_PropCount].Caption  := Format(SStatusBar_PropCount,  [iCntProp, iCntPropUntr]);
+      Items[ISBPanelIdx_ConstCount].Caption := Format(SStatusBar_ConstCount, [iCntConst, iCntConstUntr]);
+    end;
+  end;
+
   procedure TfMain.UpdateTree;
   var
     iRootCount: Integer;
-    bFirstShow: Boolean;
+    bOpen, bFirstShow: Boolean;
   begin
-     // If no project open
-    if FLangSource=nil then begin
-      tvMain.Hide;
+    bOpen := FLangSource<>nil;
+    bFirstShow := bOpen and not tvMain.Visible;
+     // Reload the tree
+    tvMain.BeginUpdate;
+    try
       tvMain.Clear;
-     // Else display the project in the tree
-    end else begin
-      bFirstShow := not tvMain.Visible;
-      tvMain.BeginUpdate;
-      try
+      if bOpen then begin
          // Number of root nodes equals to number of components
         iRootCount := FLangSource.ComponentSources.Count;
          // Plus 1 if constants present
@@ -881,14 +882,20 @@ type
         tvMain.RootNodeCount := iRootCount;
          // Reinit whole tree
         tvMain.ReinitChildren(nil, True);
-      finally
-        tvMain.EndUpdate;
       end;
-       // If the tree is shown the first time, adjust column widths
-      if bFirstShow then AdjustVTColumnWidth;  
-      tvMain.Show;
+    finally
+      tvMain.EndUpdate;
+    end;
+     // If the tree is shown the first time, adjust column widths
+    if bFirstShow then AdjustVTColumnWidth;
+    tvMain.Visible := bOpen;
+    if bOpen then begin
+      ActivateVTNode(tvMain, tvMain.GetFirst, True, False);
       tvMain.SetFocus;
     end;
+     // Update info
+    UpdateCurEntry;
+    UpdateStatusBar;
     EnableActions;
   end;
 

@@ -100,7 +100,7 @@ Conditionals=
 DebugSourceDirs=
 UsePackages=0
 [Parameters]
-RunParams="c:\Delphi\CVS projects\dale\phoa\Language\Russian.lng"
+RunParams="c:\Delphi\CVS projects\dale\phoa\Language\German.lng"
 HostApplication=
 Launcher=
 UseLauncher=0

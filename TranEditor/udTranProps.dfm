@@ -130,4 +130,10 @@ object dTranProps: TdTranProps
     ModalResult = 2
     TabOrder = 2
   end
+  object MRUTargetApp: TTBMRUList
+    MaxItems = 30
+    Prefix = 'MRU'
+    Left = 24
+    Top = 160
+  end
 end

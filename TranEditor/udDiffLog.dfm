@@ -41,5 +41,6 @@ object dDiffLog: TdDiffLog
     ScrollBars = ssBoth
     TabOrder = 1
     WordWrap = False
+    OnKeyPress = mMainKeyPress
   end
 end

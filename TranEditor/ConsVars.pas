@@ -139,6 +139,11 @@ const
    // Dialog texts
   SConfirm_FileNotSaved            = 'Translation file "%s" is modified but not saved. Do you wish to save it?';
 
+   // Status bar texts
+  SStatusBar_CompCount             = '%d components';
+  SStatusBar_PropCount             = '%d/%d properties';
+  SStatusBar_ConstCount            = '%d/%d constants';
+
    // Error messages
   SErrMsg_FileDoesntExist          = 'File "%s" doesn''t exist';
   SErrMsg_DuplicatePropID          = 'Duplicate property ID: %d';
@@ -189,6 +194,12 @@ const
   IColIdx_Original                 = 2;
   IColIdx_Translated               = 3;
 
+   // Status bar panel indexes
+  ISBPanelIdx_Main                 = 0;
+  ISBPanelIdx_CompCount            = 1;
+  ISBPanelIdx_PropCount            = 2;
+  ISBPanelIdx_ConstCount           = 3;
+
    // Colors
   CBack_CompEntry                  = $ffe5ec;  // Background color of component entry
   CBack_PropEntry                  = clWindow; // Background color of property entry
@@ -206,19 +217,23 @@ const
   iiSaveAs                         =  5;
   iiExit                           =  6;
   iiAbout                          =  7;
-  iiJumpUp                         =  8;
-  iiJumpDown                       =  9;
-  iiDelLang                        = 10;
-  iiReplaceLang                    = 11;
+  iiJumpDown                       =  8;
+  iiJumpUp                         =  9;
+  iiHelp                           = 10;
+  iiClose                          = 11;
   iiNode_Comp                      = 12;
   iiNode_Consts                    = 13;
   iiNode_Prop                      = 14;
   iiNode_Const                     = 15;
-  iiAddConst                       = 16;
-  iiDelConst                       = 17;
-  iiReplaceConst                   = 18;
+  iiTranslated                     = 16;
+  iiUntranslated                   = 17;
 
 var
+  cTreeCodePage: Cardinal;                     
+   // Settings
+  sSetting_InterfaceFont: String;
+  sSetting_TableFont: String;
+
   sTranRepositoryPath:  String;     // Путь к репозиторию
   bReposRemovePrefix:   Boolean;    // Удалять '&' из переводов
   bReposAutoAddStrings: Boolean;    // Автоматически добавлять строки к переводам
@@ -238,15 +253,30 @@ var
   procedure Error(const sMessage: String);
   function  Confirm(const sMessage: String): Boolean;
 
+   // Returns the part of s before any delimiter char from sDelimiters
+  function  GetFirstWord(const s, sDelimiters: String): String;
+   // The same as GetFirstWord() but strips off from s the part being returned
+  function  ExtractFirstWord(var s: String; const sDelimiters: String): String;
+
    // Проверяет существование файла. Если он не существует, вызывает Exception
   procedure CheckFileExists(const sFileName: String);
    // Activates specified VT node if possible
   procedure ActivateVTNode(Tree: TBaseVirtualTree; Node: PVirtualNode; bScrollIntoView, bCenter: Boolean);
    // Enables or disables the given control and changes its color for clBtnFace (for disabled) or clWindow (otherwise)
   procedure EnableWndCtl(Ctl: TWinControl; bEnable: Boolean);
+   // Font to string and back conversion
+  function  FontToStr(Font: TFont): String;
+  procedure FontFromStr(Font: TFont; const sFont: String);
+   // Shows Select font dialog. Returns True if user clicked OK
+  function  SelectFont(var sFont: String): Boolean;
+   // Translates charset into code page
+  function  CharsetToCP(Charset: TFontCharset): Cardinal;
+   // Transformations Ansi<->Unicode
+  function  AnsiToUnicodeCP(const s: AnsiString; cCodePage: Cardinal): WideString;
+  function  UnicodeToAnsiCP(const s: WideString; cCodePage: Cardinal): AnsiString;
 
 implementation
-uses TypInfo, Forms;
+uses TypInfo, Forms, Dialogs;
 
   procedure TranEdError(const sMsg: String);
   begin
@@ -303,6 +333,20 @@ uses TypInfo, Forms;
     Result := Application.MessageBox(PChar(sMessage), PChar(SDlgTitle_Confirm), MB_OKCANCEL or MB_ICONQUESTION)=IDOK;
   end;
 
+  function GetFirstWord(const s, sDelimiters: String): String;
+  var i: Integer;
+  begin
+    i := 1;
+    while (i<=Length(s)) and (Pos(s[i], sDelimiters)=0) do Inc(i);
+    Result := Copy(s, 1, i-1);
+  end;
+
+  function ExtractFirstWord(var s: String; const sDelimiters: String): String;
+  begin
+    Result := GetFirstWord(s, sDelimiters);
+    Delete(s, 1, Length(Result)+1);
+  end;
+
   procedure CheckFileExists(const sFileName: String);
   begin
     if not FileExists(sFileName) then raise Exception.CreateFmt(SErrMsg_FileDoesntExist, [sFileName]);
@@ -327,6 +371,77 @@ uses TypInfo, Forms;
     Ctl.Enabled := bEnable;
     pi := GetPropInfo(Ctl, 'Color', [tkInteger]);
     if pi<>nil then SetOrdProp(Ctl, pi, iif(bEnable, clWindow, clBtnFace));
+  end;
+
+  function FontToStr(Font: TFont): String;
+  begin
+    with Font do Result := Format('%s/%d/%d/%d/%d', [Name, Size, Byte(Style), Color, Charset]);
+  end;
+
+  procedure FontFromStr(Font: TFont; const sFont: String);
+  var s: String;
+  begin
+    s := sFont;
+    with Font do begin
+      Name    := ExtractFirstWord(s, '/');
+      Size    := StrToIntDef(ExtractFirstWord(s, '/'), 10);
+      Style   := TFontStyles(Byte(StrToIntDef(ExtractFirstWord(s, '/'), 0)));
+      Color   := StrToIntDef(ExtractFirstWord(s, '/'), 0);
+      Charset := StrToIntDef(ExtractFirstWord(s, '/'), DEFAULT_CHARSET);
+    end;
+  end;
+
+  function  SelectFont(var sFont: String): Boolean;
+  begin
+    with TFontDialog.Create(nil) do
+      try      
+        FontFromStr(Font, sFont);
+        Result := Execute;
+        if Result then sFont := FontToStr(Font);
+      finally
+        Free;
+      end;
+  end;
+
+  function CharsetToCP(Charset: TFontCharset): Cardinal;
+  begin
+    case Charset of
+      VIETNAMESE_CHARSET,
+        ANSI_CHARSET:      Result := 1252; // Windows 3.1 Latin 1 (US, Western Europe) or Vietnam
+      SHIFTJIS_CHARSET:    Result := 932;  // Japan
+      HANGEUL_CHARSET,
+        JOHAB_CHARSET:     Result := 949;  // Korean
+      GB2312_CHARSET:      Result := 936;  // Chinese (PRC, Singapore)
+      CHINESEBIG5_CHARSET: Result := 950;  // Chinese (Taiwan, Hong Kong)
+      HEBREW_CHARSET:      Result := 1255; // Hebrew
+      ARABIC_CHARSET:      Result := 1256; // Arabic
+      GREEK_CHARSET:       Result := 1253; // Windows 3.1 Greek
+      TURKISH_CHARSET:     Result := 1254; // Windows 3.1 Turkish
+      THAI_CHARSET:        Result := 874;  // Thai
+      EASTEUROPE_CHARSET:  Result := 1250; // Windows 3.1 Eastern European
+      RUSSIAN_CHARSET:     Result := 1251; // Windows 3.1 Cyrillic
+      BALTIC_CHARSET:      Result := 1257; // Baltic
+      SYMBOL_CHARSET:      Result := CP_SYMBOL;
+      MAC_CHARSET:         Result := CP_MACCP;
+      OEM_CHARSET:         Result := CP_OEMCP;
+      else                 Result := CP_ACP;
+    end;
+  end;
+
+  function AnsiToUnicodeCP(const s: AnsiString; cCodePage: Cardinal): WideString;
+  var iLen: Integer;
+  begin
+    iLen := Length(s);
+    SetLength(Result, iLen);
+    MultiByteToWideChar(cCodePage, 0, @s[1], iLen, @Result[1], iLen);
+  end;
+
+  function UnicodeToAnsiCP(const s: WideString; cCodePage: Cardinal): AnsiString;
+  var iLen: Integer;
+  begin
+    iLen := Length(s);
+    SetLength(Result, iLen);
+    WideCharToMultiByte(cCodePage, 0, @s[1], iLen, @Result[1], iLen, nil, nil);
   end;
 
    //===================================================================================================================

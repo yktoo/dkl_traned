@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, DKLang,
-  StdCtrls, ExtCtrls;
+  StdCtrls, ExtCtrls, TB2MRU;
 
 type
   TdTranProps = class(TForm)
@@ -19,28 +19,28 @@ type
     mAdditionalParams: TMemo;
     lTargetApp: TLabel;
     cbTargetApp: TComboBox;
+    MRUTargetApp: TTBMRUList;
     procedure bOKClick(Sender: TObject);
     procedure AdjustOKCancel(Sender: TObject);
   private
      // The translations which properties are to edit
     FTranslations: TDKLang_CompTranslations;
-     // MRU strings for Target Application
-    FTargetAppMRUStrings: TStrings;
      // Loads the language list into cbLang
     procedure LoadLanguages;
   protected
     procedure InitializeDialog;
+    procedure FinalizeDialog;
     function  Execute: Boolean;
   end;
 
-  function EditTranslationProps(ATranslations: TDKLang_CompTranslations; TargetAppMRUStrings: TStrings): Boolean;
+  function EditTranslationProps(ATranslations: TDKLang_CompTranslations): Boolean;
 
 implementation
 {$R *.dfm}
-uses ConsVars;
+uses Registry, ConsVars;
 
 const
-   // Params considered to be known (they not appear in 'Additional parameters' list)
+   // Params considered to be known (they do not appear in 'Additional parameters' list)
   asKnownParams: Array[0..4] of String = (
     SDKLang_TranParam_LangID,
     SDKLang_TranParam_Author,
@@ -48,12 +48,11 @@ const
     SDKLang_TranParam_LastModified,
     SDKLang_TranParam_TargetApplication);
 
-  function EditTranslationProps(ATranslations: TDKLang_CompTranslations; TargetAppMRUStrings: TStrings): Boolean;
+  function EditTranslationProps(ATranslations: TDKLang_CompTranslations): Boolean;
   begin
     with TdTranProps.Create(Application) do
       try
-        FTranslations        := ATranslations;
-        FTargetAppMRUStrings := TargetAppMRUStrings;
+        FTranslations := ATranslations;
         Result := Execute;
       finally
         Free;
@@ -94,21 +93,47 @@ const
     for i := 0 to mAdditionalParams.Lines.Count-1 do
       if not ParamKnown(mAdditionalParams.Lines.Names[i]) then FTranslations.Params.Add(mAdditionalParams.Lines[i]);
      // Update MRU
-    FTargetAppMRUStrings.Add(cbTargetApp.Text);  
+    MRUTargetApp.Add(cbTargetApp.Text);
     ModalResult := mrOK;
   end;
 
   function TdTranProps.Execute: Boolean;
   begin
-    InitializeDialog;
-    Result := ShowModal=mrOK;
+    try
+      InitializeDialog;
+      Result := ShowModal=mrOK;
+    finally
+      FinalizeDialog;
+    end;
+  end;
+
+  procedure TdTranProps.FinalizeDialog;
+  var rif: TRegIniFile;
+  begin
+     // Save settings
+    rif := TRegIniFile.Create(SRegKey_Root);
+    try
+      MRUTargetApp.SaveToRegIni(rif, SRegSection_MRUTargetApp);
+    finally
+      rif.Free;
+    end;
   end;
 
   procedure TdTranProps.InitializeDialog;
-  var i: Integer;
+  var
+    i: Integer;
+    rif: TRegIniFile;
   begin
+     // Load settings
+    rif := TRegIniFile.Create(SRegKey_Root);
+    try
+      MRUTargetApp.LoadFromRegIni(rif, SRegSection_MRUTargetApp);
+    finally
+      rif.Free;
+    end;
+     // Load languages
     LoadLanguages;
-    cbTargetApp.Items.Assign(FTargetAppMRUStrings);
+    cbTargetApp.Items.Assign(MRUTargetApp.Items);
     with FTranslations.Params do begin
       cbLang.ItemIndex := cbLang.Items.IndexOfObject(Pointer(StrToIntDef(Values[SDKLang_TranParam_LangID], -1)));
       cbTargetApp.Text := Values[SDKLang_TranParam_TargetApplication];

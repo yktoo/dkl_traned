@@ -10,9 +10,10 @@ type
   TdDiffLog = class(TForm)
     bClose: TButton;
     mMain: TMemo;
+    procedure mMainKeyPress(Sender: TObject; var Key: Char);
   end;
 
-   // Show the window displaying the difference log 
+   // Show the window displaying the difference log
   procedure ShowDiffLog(const sLog: String);
 
 implementation
@@ -27,6 +28,15 @@ implementation
       finally
         Free;
       end;
+  end;
+
+   //===================================================================================================================
+   // TdDiffLog
+   //===================================================================================================================
+
+  procedure TdDiffLog.mMainKeyPress(Sender: TObject; var Key: Char);
+  begin
+    if Key=#27 then Close; 
   end;
 
 end.

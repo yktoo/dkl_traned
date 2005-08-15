@@ -107,11 +107,11 @@ UseLauncher=0
 DebugCWD=
 [Version Info]
 IncludeVerInfo=1
-AutoIncBuild=0
+AutoIncBuild=1
 MajorVer=2
 MinorVer=1
 Release=0
-Build=10
+Build=11
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=DK Software
 FileDescription=DKLang Translation Editor
-FileVersion=2.1.0.10
+FileVersion=2.1.0.11
 InternalName=DKTranEd
 LegalCopyright=©2002-2004 DK Software
 LegalTrademarks=
@@ -130,5 +130,3 @@ OriginalFilename=DKTranEd.exe
 ProductName=DKLang Translation Editor
 ProductVersion=2.1
 Comments=http://www.dk-soft.org/
-[Excluded Packages]
-C:\Progra~1\Borland\Delphi7\Bpl\tbx_d7.bpl=Toolbar2000 -- TBX Extensions (Alex Denisov)

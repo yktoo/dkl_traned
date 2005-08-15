@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.17 2004-11-27 12:38:08 dale Exp $
+//  $Id: Main.pas,v 1.18 2005-08-15 11:19:01 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//  Copyright 2002-2005 DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit Main;
 
@@ -50,6 +50,8 @@ type
     aBookmarkDelete: TAction;
     aBookmarkJump: TAction;
     aClose: TAction;
+    aCopy: TAction;
+    aCut: TAction;
     aExit: TAction;
     aFind: TAction;
     aFindNext: TAction;
@@ -62,6 +64,7 @@ type
     alMain: TActionList;
     aNewOrOpen: TAction;
     aNextEntry: TAction;
+    aPaste: TAction;
     aPrevEntry: TAction;
     aReplace: TAction;
     aSave: TAction;
@@ -73,12 +76,15 @@ type
     bBookmarkAdd: TTBXItem;
     bBookmarkDelete: TTBXItem;
     bBookmarkJump: TTBXItem;
+    bCopy: TTBXItem;
+    bCut: TTBXItem;
     bExit: TTBXItem;
     bFind: TTBXItem;
     bFindNext: TTBXItem;
     bJumpNextUntranslated: TTBXItem;
     bJumpPrevUntranslated: TTBXItem;
     bNewOrOpen: TTBXItem;
+    bPaste: TTBXItem;
     bReplace: TTBXItem;
     bSave: TTBXItem;
     bSaveAs: TTBXItem;
@@ -103,7 +109,10 @@ type
     iBookmarkAdd: TTBXItem;
     iBookmarkDelete: TTBXItem;
     iClose: TTBXItem;
+    iCopy: TTBXItem;
+    iCut: TTBXItem;
     iEditSepBookmarkAdd: TTBXSeparatorItem;
+    iEditSepFind: TTBXSeparatorItem;
     iEditSepTranProps: TTBXSeparatorItem;
     iExit: TTBXItem;
     iFileSep: TTBXSeparatorItem;
@@ -118,12 +127,23 @@ type
     ilMain: TTBImageList;
     iNewOrOpen: TTBXItem;
     iNextEntry: TTBXItem;
+    iPaste: TTBXItem;
+    ipmCurSrcEntryCopy: TTBXItem;
+    ipmCurTranEntryCopy: TTBXItem;
+    ipmCurTranEntryCut: TTBXItem;
+    ipmCurTranEntryPaste: TTBXItem;
     ipmJumpNextUntranslated: TTBXItem;
     ipmJumpPrevUntranslated: TTBXItem;
     ipmNextEntry: TTBXItem;
     ipmPrevEntry: TTBXItem;
     ipmTranProps: TTBXItem;
+    ipmTreeBookmarkAdd: TTBXItem;
+    ipmTreeCopy: TTBXItem;
+    ipmTreeCut: TTBXItem;
+    ipmTreePaste: TTBXItem;
     ipmTreeSep: TTBXSeparatorItem;
+    ipmTreeSepBookmarkAdd: TTBXSeparatorItem;
+    ipmTreeSepPrevEntry: TTBXSeparatorItem;
     iPrevEntry: TTBXItem;
     iReplace: TTBXItem;
     iSave: TTBXItem;
@@ -154,6 +174,8 @@ type
     MRUTran: TTBMRUList;
     pMain: TPanel;
     pmBookmarks: TTBXPopupMenu;
+    pmCurSrcEntry: TTBXPopupMenu;
+    pmCurTranEntry: TTBXPopupMenu;
     pmTree: TTBXPopupMenu;
     pmView: TTBXPopupMenu;
     sbarMain: TTBXStatusBar;
@@ -167,14 +189,13 @@ type
     tbBookmarks: TTBXToolbar;
     tbMain: TTBXToolbar;
     tbMenu: TTBXToolbar;
-    tbSep1: TTBXSeparatorItem;
     tbSep2: TTBXSeparatorItem;
+    tbSepCut: TTBXSeparatorItem;
+    tbSepFind: TTBXSeparatorItem;
     tbSepJumpPrevUntranslated: TTBXSeparatorItem;
     tbSepTranProps: TTBXSeparatorItem;
     tvBookmarks: TVirtualStringTree;
     tvMain: TVirtualStringTree;
-    ipmTreeSepBookmarkAdd: TTBXSeparatorItem;
-    ipmTreeBookmarkAdd: TTBXItem;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
@@ -182,6 +203,8 @@ type
     procedure aaBookmarkDelete(Sender: TObject);
     procedure aaBookmarkJump(Sender: TObject);
     procedure aaClose(Sender: TObject);
+    procedure aaCopy(Sender: TObject);
+    procedure aaCut(Sender: TObject);
     procedure aaExit(Sender: TObject);
     procedure aaFind(Sender: TObject);
     procedure aaFindNext(Sender: TObject);
@@ -193,6 +216,7 @@ type
     procedure aaJumpPrevUntranslated(Sender: TObject);
     procedure aaNewOrOpen(Sender: TObject);
     procedure aaNextEntry(Sender: TObject);
+    procedure aaPaste(Sender: TObject);
     procedure aaPrevEntry(Sender: TObject);
     procedure aaReplace(Sender: TObject);
     procedure aaSave(Sender: TObject);
@@ -238,6 +262,8 @@ type
     FLangIDTran: LANGID;
      // Flag that command line parameters have been checked
     FCmdLineChecked: Boolean;
+     // True while updating tvMain from the Translated entry editor 
+    FSettingTranTextFromEditor: Boolean;
      // Update current entry editor flag
     FUpdatingCurEntryEditor: Boolean;
      // Update entry properties flag
@@ -275,6 +301,9 @@ type
     function  GetNodeKind(Node: PVirtualNode): TNodeKind;
      // Returns translation states of a node
     function  GetNodeTranStates(Node: PVirtualNode): TDKLang_TranslationStates;
+     // Copies Node's translated text into the clipboard if the text is not empty and returns True; otherwise returns
+     //   False. Node may be nil
+    function  CopyNodeTranslatedText(Node: PVirtualNode): Boolean;
      // Tries to locate the next (bNext=True) or previous (bNext=False) untranslated node
     procedure LocateUntranslatedNode(bNext: Boolean);
      // Initially adjusts the VT column widths
@@ -310,6 +339,8 @@ type
     procedure RefreshBookmarks;
      // If node focused in tvMain corresponds to a bookmark, highlights that node in tvBookmarks
     procedure UpdateCurBookmark;
+     // Message handlers
+    procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;  
      // Prop handlers
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: String);
@@ -342,8 +373,9 @@ var
 
 implementation
 {$R *.dfm}
-uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps,
-  udFind, StrUtils, udPromptReplace;
+uses
+  Registry, Clipbrd, ShellAPI,
+  udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps, udFind, StrUtils, udPromptReplace;
 
    //===================================================================================================================
    //  TfMain
@@ -422,6 +454,28 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     CloseProject(True);
   end;
 
+  procedure TfMain.aaCopy(Sender: TObject);
+  begin
+    if ActiveControl is TCustomEdit then
+      TCustomEdit(ActiveControl).CopyToClipboard
+    else if ActiveControl=tvMain then
+      CopyNodeTranslatedText(tvMain.FocusedNode);
+  end;
+
+  procedure TfMain.aaCut(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    if ActiveControl is TCustomEdit then
+      TCustomEdit(ActiveControl).CutToClipboard
+    else if ActiveControl=tvMain then begin
+      n := tvMain.FocusedNode;
+      if CopyNodeTranslatedText(n) then begin
+        ResetSearchMatch;
+        tvMain.Text[n, IColIdx_Translated] := '';
+      end;
+    end;
+  end;
+
   procedure TfMain.aaExit(Sender: TObject);
   begin
     Close;
@@ -481,6 +535,21 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     n := tvMain.GetNext(tvMain.FocusedNode);
     if n<>nil then ActivateVTNode(tvMain, n, True, True);
+  end;
+
+  procedure TfMain.aaPaste(Sender: TObject);
+  var n: PVirtualNode;
+  begin
+    if Clipboard.HasFormat(CF_TEXT) then
+      if ActiveControl is TCustomEdit then
+        TCustomEdit(ActiveControl).PasteFromClipboard
+      else if ActiveControl=tvMain then begin
+        n := tvMain.FocusedNode;
+        if GetNodeKind(n) in [nkProp, nkConst] then begin
+          ResetSearchMatch;
+          tvMain.Text[n, IColIdx_Translated] := EncodeControlChars(Clipboard.AsText);
+        end;
+      end;
   end;
 
   procedure TfMain.aaPrevEntry(Sender: TObject);
@@ -673,6 +742,30 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
     end;
   end;
 
+  procedure TfMain.CMFocusChanged(var Msg: TMessage);
+  begin
+    EnableActions;
+  end;
+
+  function TfMain.CopyNodeTranslatedText(Node: PVirtualNode): Boolean;
+  var p: PNodeData;
+  begin
+    Result := False;
+    if Node<>nil then begin
+      p := tvMain.GetNodeData(Node);
+      case p.Kind of
+        nkProp: begin
+          Clipboard.AsText := p.pTranProp.sValue;
+          Result := True;
+        end;
+        nkConst: begin
+          Clipboard.AsText := p.pTranConst.sDefValue;
+          Result := True;
+        end;
+      end;
+    end;
+  end;
+
   procedure TfMain.dklcMainLanguageChanged(Sender: TObject);
   begin
     UpdateLangItems;
@@ -756,18 +849,26 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   end;
 
   procedure TfMain.EnableActions;
-  var bOpenFiles, bFocusedNode, bSelection, bBookmarkVis, bBookmarkSel: Boolean;
+  var
+    bOpenFiles, bFocusedNode, bSelection, bTableFocused, bTranEdFocused, bBookmarkVis, bBookmarkSel: Boolean;
+    k: TNodeKind;
   begin
-    bOpenFiles   := FLangSource<>nil;
-    bFocusedNode := bOpenFiles and (tvMain.FocusedNode<>nil);
-    bSelection   := bOpenFiles and (tvMain.SelectedCount>0);
-    bBookmarkVis := dpBookmarks.Visible;
-    bBookmarkSel := bOpenFiles and (tvBookmarks.FocusedNode<>nil);
+    k := GetNodeKind(tvMain.FocusedNode);
+    bOpenFiles     := FLangSource<>nil;
+    bFocusedNode   := bOpenFiles and (k<>nkNone);
+    bSelection     := bOpenFiles and (tvMain.SelectedCount>0);
+    bTableFocused  := ActiveControl=tvMain;
+    bTranEdFocused := ActiveControl=mCurTranEntry;
+    bBookmarkVis   := dpBookmarks.Visible;
+    bBookmarkSel   := bOpenFiles and (tvBookmarks.FocusedNode<>nil);
      // File
     aSave.Enabled                      := bOpenFiles;
     aSaveAs.Enabled                    := bOpenFiles;
     aClose.Enabled                     := bOpenFiles;
      // Edit
+    aCut.Enabled                       := (bTableFocused and (k in [nkProp, nkConst])) or bTranEdFocused;
+    aCopy.Enabled                      := (bTableFocused and (k in [nkProp, nkConst])) or (ActiveControl is TCustomEdit);
+    aPaste.Enabled                     := (bTableFocused and (k in [nkProp, nkConst])) or bTranEdFocused;
     aFind.Enabled                      := bOpenFiles;
     aFindNext.Enabled                  := bOpenFiles and (sfSearchMade in SearchParams.Flags);
     aBookmarkAdd.Enabled               := bOpenFiles and bBookmarkVis;
@@ -1151,7 +1252,12 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
   begin
     if FUpdatingCurEntryEditor then Exit;
     ResetSearchMatch;
-    tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := EncodeControlChars(mCurTranEntry.Text);
+    FSettingTranTextFromEditor := True;
+    try
+      tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := EncodeControlChars(mCurTranEntry.Text);
+    finally
+      FSettingTranTextFromEditor := False;
+    end;
   end;
 
   function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
@@ -1453,6 +1559,8 @@ uses Registry, ShellAPI, udSettings, udAbout, udOpenFiles, udDiffLog, udTranProp
       else Exit;
     end;
     Modified := True;
+     // If node is the focused one, update the translated value editor
+    if not FSettingTranTextFromEditor and (Sender.FocusedNode=Node) then UpdateCurEntry;
      // If autoadding to repository is on, register the current translation
     if bSetting_ReposAutoAdd then AddNodeTranslationToRepository(Node); 
     UpdateStatusBar;

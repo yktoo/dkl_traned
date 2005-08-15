@@ -1,6 +1,6 @@
-$Id: ReadMe.txt,v 1.3 2004-11-27 12:38:08 dale Exp $
+$Id: ReadMe.txt,v 1.4 2005-08-15 11:19:01 dale Exp $
 ------------------------------------------------------------------------------------------------------------------------
-DKLang Translation Editor v2.4
+DKLang Translation Editor v2.5
 ------------------------------------------------------------------------------------------------------------------------
 
 I. LICENSE AGREEMENT
@@ -41,6 +41,8 @@ III. INSTALLATION
    appropriate fields in the Open files dialog.
 
 IV. REVISION HISTORY
+
+DKLang Translation Editor v2.5 [xxx xx, xxxx]
 
 DKLang Translation Editor v2.4 [Nov 27, 2004]
    * Added Bookmarks

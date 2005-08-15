@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: udAbout.pas,v 1.4 2004-09-11 17:58:01 dale Exp $
+//  $Id: udAbout.pas,v 1.5 2005-08-15 11:19:01 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
+//  Copyright 2002-2005 DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit udAbout;
 
@@ -39,12 +39,6 @@ implementation
 {$R *.dfm}
 uses ShellAPI, dkWebUtils, ConsVars;
 
-const
-   // Opaque region
-  RSolid: TRect = (Left: 10; Top: 0; Right: 290; Bottom: 200);
-   // Transparent color
-  CTransp = clWhite;
-
   procedure ShowAbout;
   begin
     with TdAbout.Create(Application) do
@@ -58,48 +52,58 @@ const
   end;
 
   procedure TdAbout.ApplyWindowRgn;
+  type
+    PRGB = ^TRGB;
+    TRGB = packed record
+      bR, bG, bB: Byte;
+    end;
   var
-    hr: HRGN;
-    ih, iw: Integer;
-    cnv: TCanvas;
+    hr, _hr: HRGN;
+    ih, iw, ixL, ixR, iy: Integer;
+    p: PRGB;
 
-    procedure ProcessRect(ix1, iy1, ix2, iy2: Integer);
-    var
-      ixL, ixR, iy: Integer;
-      _hr: HRGN;
+     // Returns True if a pixel refers to the transparent color
+    function IsTransparent(p: PRGB): Boolean;
     begin
-      ixR := 0; // satisfy the compiler
-      for iy := iy1 to iy2 do begin
-        ixL := ix1;
-        repeat
-           // Ищем начало прозрачного цвета
-          while (ixL<=ix2) and (cnv.Pixels[ixL, iy]<>CTransp) do Inc(ixL);
-          if ixL<=ix2 then begin
-             // Ищем окончание прозрачного цвета
-            ixR := ixL;
-            while (ixR<=ix2) and (cnv.Pixels[ixR, iy]=CTransp) do Inc(ixR);
-             // Вычитаем регион
-            if ixL<ixR then begin
-              _hr := CreateRectRgn(ixL, iy, ixR, iy+1);
-              CombineRgn(hr, hr, _hr, RGN_DIFF);
-              DeleteObject(_hr);
-            end;
-            ixL := ixR;
-          end else
-            Break;
-        until ixR>=ix2;
-      end;
+       // Assume white ($ffffff) to be a transparent color
+      Result := (p.bR=$ff) and (p.bG=$ff) and (p.bB=$ff);
     end;
 
   begin
-    iw := ClientWidth;
-    ih := ClientHeight;
+    iw := iMain.Picture.Bitmap.Width;
+    ih := iMain.Picture.Bitmap.Height;
     hr := CreateRectRgn(0, 0, iw, ih);
-    cnv := iMain.Picture.Bitmap.Canvas;
-     // Обрабатываем область левее сплошного поля
-    ProcessRect(0, RSolid.Top, RSolid.Left, RSolid.Bottom);
-     // Обрабатываем область правее сплошного поля
-    ProcessRect(RSolid.Right, RSolid.Top, iw, RSolid.Bottom);
+    iMain.Picture.Bitmap.PixelFormat := pf24bit;
+    ixR := 0; // satisfy the compiler
+     // Loop through bitmap rows
+    for iy := 0 to ih-1 do begin
+      p := iMain.Picture.Bitmap.ScanLine[iy];
+      ixL := 0;
+      repeat
+         // Look for beginning of transparent area
+        while (ixL<=iw) and not IsTransparent(p) do begin
+          Inc(ixL);
+          Inc(p);
+        end;
+        if ixL<=iw then begin
+           // Look for ending of transparent area
+          ixR := ixL;
+          while (ixR<=iw) and IsTransparent(p) do begin
+            Inc(ixR);
+            Inc(p);
+          end;
+           // Subtract the transparent region
+          if ixL<ixR then begin
+            _hr := CreateRectRgn(ixL, iy, ixR, iy+1);
+            CombineRgn(hr, hr, _hr, RGN_DIFF);
+            DeleteObject(_hr);
+          end;
+          ixL := ixR;
+        end else
+          Break;
+      until ixR>=iw;
+    end;
+     // Apply the region
     SetWindowRgn(Handle, hr, False);
   end;
 

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.17 2004-11-27 12:38:08 dale Exp $
+//  $Id: ConsVars.pas,v 1.18 2005-09-25 16:05:01 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2004 DK Software, http://www.dk-soft.org/
@@ -291,6 +291,53 @@ const
   iiBookmarkDelete                 = 25;
   iiBookmarkJump                   = 26;
 
+resourcestring
+  SBtn_Find                        = 'Find';
+  SBtn_Replace                     = 'Replace';
+  SConfirm_FileNotSaved            = 'Translation file "%s" is modified but not saved. Do you wish to save it?';
+  SDiffDesc_AddComponent           = '+ Component: [%s]';
+  SDiffDesc_AddConstant            = '+ Constant "%s"';
+  SDiffDesc_AddProperty            = '+ Property "%s" (ID=%d)';
+  SDiffDesc_ExcessiveEntries       = 'The following entries were found excessive and deleted from the translation:';
+  SDiffDesc_MissingEntries         = 'The following entries were not found and were added to the translation:';
+  SDiffDesc_RemoveComponent        = '- Component: [%s]';
+  SDiffDesc_RemoveConstant         = '- Constant "%s"';
+  SDiffDesc_RemoveProperty         = '- Component "%s", property with ID=%d';
+  SDiffTotalsText                  = '\tComponents\tProperties\tConstants\nAdded\t%d\t%d\t%d\nRemoved\t%d\t%d\t%d\nTotal\t%d\t%d\t%d';
+  SDlgTitle_Confirm                = 'Confirm';
+  SDlgTitle_Error                  = 'Error';
+  SDlgTitle_Info                   = 'Info';
+  SDlgTitle_SaveTranFileAs         = 'Select a translation file to save to';
+  SDlgTitle_SelectDisplayFile      = 'Select a translation file used for display';
+  SDlgTitle_SelectLangSourceFile   = 'Select a language source file';
+  SDlgTitle_SelectTranFile         = 'Select a translation file';
+  SDlgTitle_SelReposPath           = 'Select translation repository path:';
+  SErrMsg_CharMissing              = '"%s" missing';
+  SErrMsg_ConstNameMissing         = 'Constant name missing';
+  SErrMsg_DuplicateCompName        = 'Duplicate component name: "%s"';
+  SErrMsg_DuplicatePropID          = 'Duplicate property ID: %d';
+  SErrMsg_DuplicatePropName        = 'Duplicate property name: "%s"';
+  SErrMsg_FileDoesntExist          = 'File "%s" doesn''t exist';
+  SErrMsg_InvalidCompName          = 'Invalid component name: "%s"';
+  SErrMsg_LoadLangSourceFailed     = 'Error loading language source:\nLine %d: %s';
+  SErrMsg_PropIDInvalid            = 'Invalid property ID';
+  SErrMsg_PropIDMissing            = 'Property ID missing';
+  SErrMsg_PropNameMissing          = 'Property name missing';
+  SErrMsg_SectionlessEntry         = 'Sectionless entries are not allowed';
+  SErrMsg_SectionNameMissing       = 'Section name missing';
+  SErrMsg_SrcAndTranLangsAreSame   = 'Source and translation languages should be different';
+  SErrMsg_WrongSectionName         = 'Wrong section name format: "%s"';
+  SLangSourceFileFilter            = 'DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*';
+  SMsg_NoSearchResults             = 'String "%s" wasn''t found.';
+  SMsg_PromptReplace               = 'Replace this occurence of "%s"?';
+  SMsg_ReplacedInfo                = 'Replaced %d occurences of "%s".';
+  SNode_Constants                  = 'Constants';
+  SStatusBar_CompCount             = 'Comp: %d';
+  SStatusBar_ConstCount            = 'Const: %d/%d';
+  SStatusBar_PropCount             = 'Prop: %d/%d';
+  SStatusBar_ReposEntryCount       = 'Repository: %d entries';
+  STranFileFilter                  = 'DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*';
+
 var
    // Main tree code page
   cTreeCodePage: Cardinal;
@@ -320,9 +367,6 @@ var
   procedure Info(const sMessage: String);
   procedure Error(const sMessage: String);
   function  Confirm(const sMessage: String): Boolean;
-
-  function  ConstVal(const sName: String): String; overload;
-  function  ConstVal(const sName: String; const aParams: Array of const): String; overload;
 
    // Returns the part of s before any delimiter char from sDelimiters
   function  GetFirstWord(const s, sDelimiters: String): String;
@@ -399,27 +443,17 @@ uses TypInfo, Forms, Dialogs;
 
   procedure Info(const sMessage: String);
   begin
-    Application.MessageBox(PChar(sMessage), PChar(ConstVal('SDlgTitle_Info')), MB_OK or MB_ICONINFORMATION);
+    Application.MessageBox(PChar(sMessage), PChar(SDlgTitle_Info), MB_OK or MB_ICONINFORMATION);
   end;
 
   procedure Error(const sMessage: String);
   begin
-    Application.MessageBox(PChar(sMessage), PChar(ConstVal('SDlgTitle_Error')), MB_OK or MB_ICONERROR);
+    Application.MessageBox(PChar(sMessage), PChar(SDlgTitle_Error), MB_OK or MB_ICONERROR);
   end;
 
   function Confirm(const sMessage: String): Boolean;
   begin
-    Result := Application.MessageBox(PChar(sMessage), PChar(ConstVal('SDlgTitle_Confirm')), MB_OKCANCEL or MB_ICONQUESTION)=IDOK;
-  end;
-
-  function ConstVal(const sName: String): String; 
-  begin
-    Result := LangManager.ConstantValue[sName];
-  end;
-
-  function ConstVal(const sName: String; const aParams: Array of const): String;
-  begin
-    Result := Format(ConstVal(sName), aParams);
+    Result := Application.MessageBox(PChar(sMessage), PChar(SDlgTitle_Confirm), MB_OKCANCEL or MB_ICONQUESTION)=IDOK;
   end;
 
   function GetFirstWord(const s, sDelimiters: String): String;
@@ -438,7 +472,7 @@ uses TypInfo, Forms, Dialogs;
 
   procedure CheckFileExists(const sFileName: String);
   begin
-    if not FileExists(sFileName) then raise Exception.CreateFmt(ConstVal('SErrMsg_FileDoesntExist'), [sFileName]);
+    if not FileExists(sFileName) then raise Exception.CreateFmt(SErrMsg_FileDoesntExist, [sFileName]);
   end;
 
   procedure SetCBObject(ComboBox: TComboBox; iID: Integer);
@@ -586,9 +620,9 @@ type
   var p: PPropertySource;
   begin
      // Check ID uniqueness and find insertion point
-    if FindID(iID, Result) then TranEdError(ConstVal('SErrMsg_DuplicatePropID'), [iID]);
+    if FindID(iID, Result) then TranEdError(SErrMsg_DuplicatePropID, [iID]);
      // Check name uniqueness
-    if IndexOfPropName(sPropName)>=0 then TranEdError(ConstVal('SErrMsg_DuplicatePropName'), [sPropName]);
+    if IndexOfPropName(sPropName)>=0 then TranEdError(SErrMsg_DuplicatePropName, [sPropName]);
      // Create the entry
     New(p);
     Insert(Result, p);
@@ -655,7 +689,7 @@ type
   begin
     inherited Create;
      // Check name format
-    if not IsValidIdent(sCompName) then TranEdError(ConstVal('SErrMsg_InvalidCompName'), [sCompName]);
+    if not IsValidIdent(sCompName) then TranEdError(SErrMsg_InvalidCompName, [sCompName]);
     FPropertySources := TPropertySources.Create;
     FCompName        := sCompName;
   end;
@@ -673,7 +707,7 @@ type
   function TComponentSources.Add(Item: TComponentSource): Integer;
   begin
      // Check name uniqueness and find insertion point
-    if FindCompName(Item.CompName, Result) then TranEdError(ConstVal('SErrMsg_DuplicateCompName'), [Item.CompName]);
+    if FindCompName(Item.CompName, Result) then TranEdError(SErrMsg_DuplicateCompName, [Item.CompName]);
     Insert(Result, Item);
   end;
 
@@ -749,7 +783,7 @@ type
           TranComp := TDKLang_CompTranslation.Create(SrcComp.CompName);
           Translations.Add(TranComp);
            // Log the difference
-          AddLine(ConstVal('SDiffDesc_AddComponent'), [SrcComp.CompName]);
+          AddLine(SDiffDesc_AddComponent, [SrcComp.CompName]);
           Inc(iCntAddedComps);
           bCompCreated := True;
         end else
@@ -764,7 +798,7 @@ type
              // Add the property to Translations
             TranComp.Add(pSrcProp.iID, pSrcProp.sValue, [dktsUntranslated]);
              // Log the difference
-            AddLine('    '+ConstVal('SDiffDesc_AddProperty'), [pSrcProp.sPropName, pSrcProp.iID]);
+            AddLine('    '+SDiffDesc_AddProperty, [pSrcProp.sPropName, pSrcProp.iID]);
             Inc(iCntAddedProps);
           end;
         end;
@@ -786,7 +820,7 @@ type
            // Add the constant to Translations
           Translations.Constants.Add(pSrcConst.sName, pSrcConst.sDefValue, [dktsUntranslated]);
            // Log the difference
-          AddLine(ConstVal('SDiffDesc_AddConstant'), [pSrcConst.sName]);
+          AddLine(SDiffDesc_AddConstant, [pSrcConst.sName]);
           Inc(iCntAddedConsts);
         end;
       end;
@@ -808,7 +842,7 @@ type
          // If not found
         if SrcComp=nil then begin
            // Log the difference
-          AddLine(ConstVal('SDiffDesc_RemoveComponent'), [TranComp.ComponentName]);
+          AddLine(SDiffDesc_RemoveComponent, [TranComp.ComponentName]);
           Inc(iCntRemovedComps);
           Inc(iCntRemovedProps, TranComp.Count);
            // Remove the component from Translations
@@ -821,7 +855,7 @@ type
              // If prop in source not found
             if SrcComp.PropertySources.IndexOfID(pTranProp.iID)<0 then begin
                // Log the difference
-              AddLine(ConstVal('SDiffDesc_RemoveProperty'), [TranComp.ComponentName, pTranProp.iID]);
+              AddLine(SDiffDesc_RemoveProperty, [TranComp.ComponentName, pTranProp.iID]);
               Inc(iCntRemovedProps);
                // Remove the property from Translations
               TranComp.Remove(pTranProp);
@@ -845,7 +879,7 @@ type
          // If source constant not found
         if FConstants.IndexOfName(pTranConst.sName)<0 then begin
            // Log the difference
-          AddLine(ConstVal('SDiffDesc_RemoveConstant'), [pTranConst.sName]);
+          AddLine(SDiffDesc_RemoveConstant, [pTranConst.sName]);
           Inc(iCntRemovedConsts);
            // Remove the constant from Translations
           Translations.Constants.Remove(pTranConst);
@@ -869,12 +903,12 @@ type
     sText := '';
     CheckMissingComps;
     CheckMissingConsts;
-    if sText<>'' then Result := Result+ConstVal('SDiffDesc_MissingEntries')+S_CRLF+sText+S_CRLF;
+    if sText<>'' then Result := Result+SDiffDesc_MissingEntries+S_CRLF+sText+S_CRLF;
      // Check excessive entries
     sText := '';
     CheckExcessiveComps;
     CheckExcessiveConsts;
-    if sText<>'' then Result := Result+ConstVal('SDiffDesc_ExcessiveEntries')+S_CRLF+sText+S_CRLF;
+    if sText<>'' then Result := Result+SDiffDesc_ExcessiveEntries+S_CRLF+sText+S_CRLF;
   end;
 
   constructor TLangSource.Create(const sFileName: String);
@@ -915,11 +949,11 @@ type
     begin
        // Check ']' position
       iBracket := Pos(']', sLine);
-      if iBracket=0 then TranEdError(ConstVal('SErrMsg_CharMissing'), [']']);
-      if iBracket<>Length(sLine) then TranEdError(ConstVal('SErrMsg_WrongSectionName'), [sLine]);
+      if iBracket=0 then TranEdError(SErrMsg_CharMissing, [']']);
+      if iBracket<>Length(sLine) then TranEdError(SErrMsg_WrongSectionName, [sLine]);
        // Extract section name
       sSectionName := Trim(Copy(sLine, 2, Length(sLine)-2));
-      if sSectionName='' then TranEdError(ConstVal('SErrMsg_SectionNameMissing'));
+      if sSectionName='' then TranEdError('SErrMsg_SectionNameMissing);
        // Check if this is constant section
       if SameText(sSectionName, SDKLang_ConstSectionName) then
         bConstantSection := True
@@ -943,10 +977,10 @@ type
     begin
        // Check '='
       iEq := Pos('=', sLine);
-      if iEq=0 then TranEdError(ConstVal('SErrMsg_CharMissing'), ['=']);
+      if iEq=0 then TranEdError(SErrMsg_CharMissing, ['=']);
        // Parse constant name
       sConstName := Trim(Copy(sLine, 1, iEq-1));
-      if sConstName='' then TranEdError(ConstVal('SErrMsg_ConstNameMissing'));
+      if sConstName='' then TranEdError(SErrMsg_ConstNameMissing);
        // Extract constant value and add the constant to the list
       FConstants.Add(sConstName, DecodeControlChars(Trim(Copy(sLine, iEq+1, MaxInt))), []);
     end;
@@ -957,21 +991,21 @@ type
       sPropName, sIDVal: String;
     begin
        // Check whether there was a section before
-      if Comp=nil then TranEdError(ConstVal('SErrMsg_SectionlessEntry'));
+      if Comp=nil then TranEdError(SErrMsg_SectionlessEntry);
        // Check '='
       iEq := Pos('=', sLine);
-      if iEq=0 then TranEdError(ConstVal('SErrMsg_CharMissing'), ['=']);
+      if iEq=0 then TranEdError(SErrMsg_CharMissing, ['=']);
        // Parse property name
       sPropName := Trim(Copy(sLine, 1, iEq-1));
-      if sPropName='' then TranEdError(ConstVal('SErrMsg_PropNameMissing'));
+      if sPropName='' then TranEdError(SErrMsg_PropNameMissing);
        // Extract ID & value
       sIDVal := Trim(Copy(sLine, iEq+1, MaxInt));
        // Parse ID
       iComma := Pos(',', sIDVal);
-      if (sIDVal='') or (iComma=1) then TranEdError(ConstVal('SErrMsg_PropIDMissing'));
-      if iComma=0 then TranEdError(ConstVal('SErrMsg_CharMissing'), [',']);
+      if (sIDVal='') or (iComma=1) then TranEdError(SErrMsg_PropIDMissing);
+      if iComma=0 then TranEdError(SErrMsg_CharMissing, [',']);
       iID := StrToIntDef(Copy(sIDVal, 1, iComma-1), 0);
-      if iID<=0 then TranEdError(ConstVal('SErrMsg_PropIDInvalid'));
+      if iID<=0 then TranEdError(SErrMsg_PropIDInvalid);
        // Extract value and add the property
       Comp.PropertySources.Add(iID, sPropName, DecodeControlChars(Trim(Copy(sIDVal, iComma+1, MaxInt))));
     end;
@@ -991,7 +1025,7 @@ type
             else if bConstantSection then ParseConstant else ParseProperty;
           end;
       except
-        on e: ETranEdError do TranEdError(ConstVal('SErrMsg_LoadLangSourceFailed'), [iLine+1, e.Message]);
+        on e: ETranEdError do TranEdError(SErrMsg_LoadLangSourceFailed, [iLine+1, e.Message]);
       end;
     end;
   end;

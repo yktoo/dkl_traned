@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udDiffLog.pas,v 1.7 2006-06-17 04:19:28 dale Exp $
+//  $Id: udDiffLog.pas,v 1.8 2006-08-05 21:42:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -10,32 +10,35 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, DKLang;
+  DKLTranEdFrm, DKLang, StdCtrls, TntStdCtrls;
 
 type
-  TdDiffLog = class(TForm)
-    bClose: TButton;
-    mMain: TMemo;
-    gbTotals: TGroupBox;
-    lbTotals: TListBox;
-    cbAutoTranslate: TCheckBox;
+  TdDiffLog = class(TDKLTranEdForm)
+    bClose: TTntButton;
+    bHelp: TTntButton;
+    cbAutoTranslate: TTntCheckBox;
     dklcMain: TDKLanguageController;
+    gbTotals: TTntGroupBox;
+    lbTotals: TTntListBox;
+    mMain: TTntMemo;
     procedure mMainKeyPress(Sender: TObject; var Key: Char);
+  protected
+    procedure DoCreate; override;
   end;
 
    // Show the window displaying the difference log
-  procedure ShowDiffLog(const sLog: String; iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer; out bAutoTranslate: Boolean);
+  procedure ShowDiffLog(const wsLog: WideString; iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer; out bAutoTranslate: Boolean);
 
 implementation
 {$R *.dfm}
 uses ConsVars;
 
-  procedure ShowDiffLog(const sLog: String; iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer; out bAutoTranslate: Boolean);
+  procedure ShowDiffLog(const wsLog: WideString; iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer; out bAutoTranslate: Boolean);
   begin
     with TdDiffLog.Create(Application) do
       try
-        mMain.Text := sLog;
-        lbTotals.Items.Text := Format(
+        mMain.Text := wsLog;
+        lbTotals.Items.Text := WideFormat(
           ConstVal('SDiffTotalsText'),
           [iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts]);
         cbAutoTranslate.Enabled := iCntAddedProps+iCntAddedConsts>0;
@@ -49,6 +52,13 @@ uses ConsVars;
    //===================================================================================================================
    // TdDiffLog
    //===================================================================================================================
+
+  procedure TdDiffLog.DoCreate;
+  begin
+    inherited DoCreate;
+     // Initialize help context ID
+    HelpContext := IDH_iface_dlg_diff_log;
+  end;
 
   procedure TdDiffLog.mMainKeyPress(Sender: TObject; var Key: Char);
   begin

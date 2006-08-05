@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.19 2006-06-17 04:19:28 dale Exp $
+//  $Id: Main.pas,v 1.20 2006-08-05 21:42:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -9,10 +9,11 @@ unit Main;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, XPMan, DKLang, ConsVars,
-  Placemnt, ImgList, TB2Item, ActnList, VirtualTrees, ExtCtrls,
-  TBXStatusBars, TBX, TB2Dock, TB2Toolbar, TB2MRU, TBXDkPanels, StdCtrls,
-  Menus;
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, XPMan, TntForms, TntSysUtils,
+  TntDialogs, DKLang, ConsVars,
+  DKLTranEdFrm, Menus, TB2Item, TBX, TB2MRU, Placemnt, ImgList, ActnList,
+  TntActnList, StdCtrls, TntStdCtrls, TBXDkPanels, VirtualTrees, ExtCtrls,
+  TntExtCtrls, TBXStatusBars, TB2Dock, TB2Toolbar;
 
 type
    // Tree node kind
@@ -42,36 +43,37 @@ type
         pTranConst:  PDKLang_Constant);             // Link to constant translation
   end;
 
-  TfMain = class(TForm)
-    aAbout: TAction;
-    aAddToRepository: TAction;
-    aAutoTranslate: TAction;
-    aBookmarkAdd: TAction;
-    aBookmarkDelete: TAction;
-    aBookmarkJump: TAction;
-    aClose: TAction;
-    aCopy: TAction;
-    aCut: TAction;
-    aExit: TAction;
-    aFind: TAction;
-    aFindNext: TAction;
-    aHelpCheckUpdates: TAction;
-    aHelpProductWebsite: TAction;
-    aHelpSupport: TAction;
-    aHelpVendorWebsite: TAction;
-    aJumpNextUntranslated: TAction;
-    aJumpPrevUntranslated: TAction;
-    alMain: TActionList;
-    aNewOrOpen: TAction;
-    aNextEntry: TAction;
-    aPaste: TAction;
-    aPrevEntry: TAction;
-    aReplace: TAction;
-    aSave: TAction;
-    aSaveAs: TAction;
-    aSettings: TAction;
-    aToggleFocus: TAction;
-    aTranProps: TAction;
+  TfMain = class(TDKLTranEdForm)
+    aAbout: TTntAction;
+    aAddToRepository: TTntAction;
+    aAutoTranslate: TTntAction;
+    aBookmarkAdd: TTntAction;
+    aBookmarkDelete: TTntAction;
+    aBookmarkJump: TTntAction;
+    aClose: TTntAction;
+    aCopy: TTntAction;
+    aCut: TTntAction;
+    aExit: TTntAction;
+    aFind: TTntAction;
+    aFindNext: TTntAction;
+    aHelpCheckUpdates: TTntAction;
+    aHelp: TTntAction;
+    aHelpProductWebsite: TTntAction;
+    aHelpSupport: TTntAction;
+    aHelpVendorWebsite: TTntAction;
+    aJumpNextUntranslated: TTntAction;
+    aJumpPrevUntranslated: TTntAction;
+    alMain: TTntActionList;
+    aNewOrOpen: TTntAction;
+    aNextEntry: TTntAction;
+    aPaste: TTntAction;
+    aPrevEntry: TTntAction;
+    aReplace: TTntAction;
+    aSave: TTntAction;
+    aSaveAs: TTntAction;
+    aSettings: TTntAction;
+    aToggleFocus: TTntAction;
+    aTranProps: TTntAction;
     bAbout: TTBXItem;
     bBookmarkAdd: TTBXItem;
     bBookmarkDelete: TTBXItem;
@@ -119,6 +121,7 @@ type
     iFind: TTBXItem;
     iFindNext: TTBXItem;
     iHelpCheckUpdates: TTBXItem;
+    iHelp: TTBXItem;
     iHelpProductWebsite: TTBXItem;
     iHelpSupport: TTBXItem;
     iHelpVendorWebsite: TTBXItem;
@@ -161,8 +164,8 @@ type
     iViewSep1: TTBXSeparatorItem;
     iViewSep2: TTBXSeparatorItem;
     lEntryStates: TTBXLabel;
-    mCurSrcEntry: TMemo;
-    mCurTranEntry: TMemo;
+    mCurSrcEntry: TTntMemo;
+    mCurTranEntry: TTntMemo;
     mdkBottom: TTBXMultiDock;
     mdkLeft: TTBXMultiDock;
     mdkRight: TTBXMultiDock;
@@ -172,7 +175,7 @@ type
     MRUSearch: TTBMRUList;
     MRUSource: TTBMRUList;
     MRUTran: TTBMRUList;
-    pMain: TPanel;
+    pMain: TTntPanel;
     pmBookmarks: TTBXPopupMenu;
     pmCurSrcEntry: TTBXPopupMenu;
     pmCurTranEntry: TTBXPopupMenu;
@@ -228,9 +231,6 @@ type
     procedure cbEntryStateUntranslatedChange(Sender: TObject);
     procedure dklcMainLanguageChanged(Sender: TObject);
     procedure EnableActionsNotify(Sender: TObject);
-    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
     procedure fpMainRestorePlacement(Sender: TObject);
     procedure fpMainSavePlacement(Sender: TObject);
     procedure mCurTranEntryChange(Sender: TObject);
@@ -276,9 +276,9 @@ type
     FBookmarks: TStringList;
      // Prop storage
     FModified: Boolean;
-    FTranFileName: String;
-    FSourceFileName: String;
-    FDisplayFileName: String;
+    FTranFileName: WideString;
+    FSourceFileName: WideString;
+    FDisplayFileName: WideString;
      // Redisplays the language source tree
     procedure UpdateTree;
      // Updates current entry panel contents
@@ -287,10 +287,10 @@ type
     function  CheckSave: Boolean;
      // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
      //   clicked OK
-    function  OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
+    function  OpenFiles(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): Boolean;
      // File loading/saving
-    procedure DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
-    procedure DoSave(const sFileName: String);
+    procedure DoLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString);
+    procedure DoSave(const wsFileName: WideString; bUnicode: Boolean);
      // Updates form caption
     procedure UpdateCaption;
      // Adjusts Actions availability
@@ -340,23 +340,27 @@ type
      // If node focused in tvMain corresponds to a bookmark, highlights that node in tvBookmarks
     procedure UpdateCurBookmark;
      // Message handlers
-    procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;  
+    procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;
      // Prop handlers
     procedure SetModified(Value: Boolean);
-    procedure SetTranFileName(const Value: String);
-    function  GetDisplayTranFileName: String;
+    procedure SetTranFileName(const Value: WideString);
+    function  GetDisplayTranFileName: WideString;
+  protected
+    procedure DoCreate; override;
+    procedure DoDestroy; override;
   public
+    function  CloseQuery: Boolean; override;
      // Props
      // -- Name of the file used for display-translation. Empty string if no such translation was open
-    property DisplayFileName: String read FDisplayFileName;
+    property DisplayFileName: WideString read FDisplayFileName;
      // -- Displayed name of translation file currently open
-    property DisplayTranFileName: String read GetDisplayTranFileName;
+    property DisplayTranFileName: WideString read GetDisplayTranFileName;
      // -- True, if editor contents was saved since last save
     property Modified: Boolean read FModified write SetModified;
      // -- Name of the language source file currently open
-    property SourceFileName: String read FSourceFileName;
+    property SourceFileName: WideString read FSourceFileName;
      // -- Name of the translation file currently open
-    property TranFileName: String read FTranFileName write SetTranFileName;
+    property TranFileName: WideString read FTranFileName write SetTranFileName;
   end;
 
 const
@@ -374,8 +378,10 @@ var
 implementation
 {$R *.dfm}
 uses
-  Registry, Clipbrd, ShellAPI,
-  udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps, udFind, StrUtils, udPromptReplace;
+  Registry, ShellAPI,
+  TntClipbrd, 
+  udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps, udFind, StrUtils, udPromptReplace,
+  ChmHlp;
 
    //===================================================================================================================
    //  TfMain
@@ -540,14 +546,14 @@ uses
   procedure TfMain.aaPaste(Sender: TObject);
   var n: PVirtualNode;
   begin
-    if Clipboard.HasFormat(CF_TEXT) then
+    if TntClipboard.HasFormat(CF_UNICODETEXT) or TntClipboard.HasFormat(CF_TEXT) then
       if ActiveControl is TCustomEdit then
         TCustomEdit(ActiveControl).PasteFromClipboard
       else if ActiveControl=tvMain then begin
         n := tvMain.FocusedNode;
         if GetNodeKind(n) in [nkProp, nkConst] then begin
           ResetSearchMatch;
-          tvMain.Text[n, IColIdx_Translated] := EncodeControlChars(Clipboard.AsText);
+          tvMain.Text[n, IColIdx_Translated] := EncodeControlChars(TntClipboard.AsWideText);
         end;
       end;
   end;
@@ -567,19 +573,28 @@ uses
 
   procedure TfMain.aaSave(Sender: TObject);
   begin
-    if FTranFileName='' then aaSaveAs(Sender) else DoSave(FTranFileName);
+    if FTranFileName='' then aaSaveAs(Sender) else DoSave(FTranFileName, FTranslations.IsStreamUnicode);
   end;
 
   procedure TfMain.aaSaveAs(Sender: TObject);
+  const
+    IFilterIndex_Ansi    = 1;
+    IFilterIndex_Unicode = 2;
   begin
-    with TSaveDialog.Create(Self) do
+    with TTntSaveDialog.Create(Self) do
       try
-        DefaultExt := STranFileExt;
-        Filter     := ConstVal('STranFileFilter');
-        Options    := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing];
-        Title      := ConstVal('SDlgTitle_SaveTranFileAs');
-        FileName   := DisplayTranFileName;
-        if Execute then DoSave(FileName);
+        DefaultExt  := STranFileExt;
+        Filter      := ConstVal('STranFileFilterAnsi')+'|'+ConstVal('STranFileFilterUnicode');
+         // Determine the default encoding. When saving a new translation, take the LangSource's encoding instead
+        FilterIndex := iif(
+          ((FTranFileName='') and FLangSource.IsFileUnicode) or
+            ((FTranFileName<>'') and FTranslations.IsStreamUnicode),
+          IFilterIndex_Unicode,
+          IFilterIndex_Ansi);
+        Options     := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing];
+        Title       := ConstVal('SDlgTitle_SaveTranFileAs');
+        FileName    := DisplayTranFileName;
+        if Execute then DoSave(FileName, FilterIndex=IFilterIndex_Unicode);
       finally
         Free;
       end;
@@ -610,9 +625,9 @@ uses
     if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
       case p.Kind of
         nkProp: if not (dktsUntranslated in p.pTranProp.TranStates) then
-          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.sValue)]     := ReposFixPrefixChar(p.pTranProp.sValue);
+          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.wsValue)]     := ReposFixPrefixChar(p.pTranProp.wsValue);
         nkConst: if not (dktsUntranslated in p.pTranConst.TranStates) then
-          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.sDefValue)] := ReposFixPrefixChar(p.pTranConst.sDefValue);
+          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.wsDefValue)] := ReposFixPrefixChar(p.pTranConst.wsDefValue);
       end;
   end;
 
@@ -669,11 +684,10 @@ uses
   procedure TfMain.ApplySettings;
   begin
      // Adjust interface font
-    FontFromStr(Font, sSetting_InterfaceFont);
+    FontFromStr(Font, wsSetting_InterfaceFont);
     ToolbarFont.Assign(Font);
      // Adjust table font
-    FontFromStr(tvMain.Font, sSetting_TableFont);
-    cTreeCodePage := CharsetToCP(tvMain.Font.Charset);
+    FontFromStr(tvMain.Font, wsSetting_TableFont);
   end;
 
   procedure TfMain.cbEntryStateAutotranslatedChange(Sender: TObject);
@@ -717,7 +731,11 @@ uses
   begin
     Result := not Modified;
     if not Result then
-      case MessageBox(Handle, PChar(Format(ConstVal('SConfirm_FileNotSaved'), [DisplayTranFileName])), PChar(ConstVal('SDlgTitle_Confirm')), MB_ICONEXCLAMATION or MB_YESNOCANCEL) of
+      case MessageBoxW(
+          Handle,
+          PWideChar(ConstVal('SConfirm_FileNotSaved', [DisplayTranFileName])),
+          PWideChar(ConstVal('SDlgTitle_Confirm')),
+          MB_ICONEXCLAMATION or MB_YESNOCANCEL) of
         IDYES: begin
           aSave.Execute;
           Result := not Modified;
@@ -742,6 +760,11 @@ uses
     end;
   end;
 
+  function TfMain.CloseQuery: Boolean;
+  begin
+    Result := inherited CloseQuery and CheckSave;
+  end;
+
   procedure TfMain.CMFocusChanged(var Msg: TMessage);
   begin
     EnableActions;
@@ -755,11 +778,11 @@ uses
       p := tvMain.GetNodeData(Node);
       case p.Kind of
         nkProp: begin
-          Clipboard.AsText := p.pTranProp.sValue;
+          TntClipboard.AsWideText := p.pTranProp.wsValue;
           Result := True;
         end;
         nkConst: begin
-          Clipboard.AsText := p.pTranConst.sDefValue;
+          TntClipboard.AsWideText := p.pTranConst.wsDefValue;
           Result := True;
         end;
       end;
@@ -772,9 +795,40 @@ uses
     UpdateStatusBar;
   end;
 
-  procedure TfMain.DoLoad(const sLangSrcFileName, sDisplayFileName, sTranFileName: String);
+  procedure TfMain.DoCreate;
+  begin
+    inherited DoCreate;
+     // Initialize help context ID
+    HelpContext := IDH_iface_wnd_main;
+     // Adjust fpMain
+    fpMain.IniFileName := SRegKey_Root;
+    fpMain.IniSection  := SRegSection_MainWindow;
+     // Adjust Application
+    Application.OnHint := AppHint;
+    Application.OnIdle := AppIdle;
+     // Adjust tvMain
+    tvMain.NodeDataSize := SizeOf(TNodeData);
+     // Create the repository
+    FRepository := TTranRepository.Create;
+     // Initialize language items
+    InitLanguages;
+     // Create bookmark list
+    FBookmarks := TStringList.Create;
+     // Update the tree
+    UpdateTree;
+  end;
+
+  procedure TfMain.DoDestroy;
+  begin
+    CloseProject(False);
+    FBookmarks.Free;
+    FRepository.Free;
+    inherited DoDestroy;
+  end;
+
+  procedure TfMain.DoLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString);
   var
-    sDiff: String;
+    wsDiff: WideString;
     iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer;
     bAutoTranslate: Boolean;
   begin
@@ -782,40 +836,40 @@ uses
     CloseProject(True);
     try
        // Create (and load) new langsource
-      FLangSource := TLangSource.Create(sLangSrcFileName);
+      FLangSource := TLangSource.Create(wsLangSrcFileName);
        // Create and load, if needed, display-translations
-      if sDisplayFileName<>'' then begin
+      if wsDisplayFileName<>'' then begin
         FDisplayTranslations := TDKLang_CompTranslations.Create;
-        FDisplayTranslations.LoadFromFile(sDisplayFileName);
+        FDisplayTranslations.Text_LoadFromFile(wsDisplayFileName);
       end;
        // Create (and load, if needed) translations. Determine the languages
       FTranslations := TDKLang_CompTranslations.Create;
-      if sTranFileName='' then begin
+      if wsTranFileName='' then begin
         FLangIDSource := ILangID_USEnglish;
         FLangIDTran   := 0;
       end else begin
-        FTranslations.LoadFromFile(sTranFileName);
+        FTranslations.Text_LoadFromFile(wsTranFileName);
         FLangIDSource := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_SourceLangID], ILangID_USEnglish);
         FLangIDTran   := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_LangID],       0);
       end;
        // Now compare the source and the translation and update the latter
-      sDiff := FLangSource.CompareStructureWith(
+      wsDiff := FLangSource.CompareStructureWith(
         FTranslations,
         iCntAddedComps, iCntAddedProps, iCntAddedConsts,
         iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts,
         iCntComps, iCntProps, iCntConsts);
        // Update the properties
       FModified        := False;
-      FSourceFileName  := sLangSrcFileName;
-      FDisplayFileName := sDisplayFileName;
-      FTranFileName    := sTranFileName;
+      FSourceFileName  := wsLangSrcFileName;
+      FDisplayFileName := wsDisplayFileName;
+      FTranFileName    := wsTranFileName;
       MRUSource.Add(FSourceFileName);
       MRUDisplay.Add(FDisplayFileName);
       if FTranFileName<>'' then MRUTran.Add(FTranFileName);
       UpdateCaption;
        // Show the differences unless this is a new translation
       bAutoTranslate := False;
-      if (sTranFileName<>'') and (sDiff<>'') then ShowDiffLog(sDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts, bAutoTranslate);
+      if (wsTranFileName<>'') and (wsDiff<>'') then ShowDiffLog(wsDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts, bAutoTranslate);
        // Reload the tree
       UpdateTree;
     except
@@ -829,8 +883,19 @@ uses
     if bAutoTranslate then TranslateAllNodes(False); 
   end;
 
-  procedure TfMain.DoSave(const sFileName: String);
+  procedure TfMain.DoSave(const wsFileName: WideString; bUnicode: Boolean);
   begin
+     // Warn if language source and translation encodings differ
+    if not bSetting_IgnoreEncodingMismatch and (FLangSource.IsFileUnicode<>bUnicode) then
+      case MessageBoxW(
+          Application.Handle,
+          PWideChar(ConstVal(iif(bUnicode, 'SWarnMsg_SavingInUnicode', 'SWarnMsg_SavingInAnsi'))),
+          PWideChar(ConstVal('SDlgTitle_Confirm')),
+          MB_ICONQUESTION or MB_YESNOCANCEL) of
+        IDYES: bUnicode := not bUnicode;
+        IDNO: { nothing };
+        else Exit;
+      end;
      // Update translation parameter values
     with FTranslations.Params do begin
       Values[SDKLang_TranParam_SourceLangID] := IntToStr(FLangIDSource);
@@ -839,10 +904,10 @@ uses
       Values[SDKLang_TranParam_LastModified] := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
     end;
      // Save the translations
-    FTranslations.SaveToFile(sFileName, True);
+    FTranslations.Text_SaveToFile(wsFileName, bUnicode, True);
      // Update properties
     FModified := False;
-    FTranFileName := sFileName;
+    FTranFileName := wsFileName;
     UpdateCaption;
      // Register translation in the MRU list
     MRUTran.Add(FTranFileName);
@@ -896,7 +961,7 @@ uses
   function TfMain.Find(var Params: TSearchParams): Boolean;
   var
     n: PVirtualNode;
-    sSearch, sEntry: String;
+    wsSearch, wsEntry: WideString;
     iPatLen, iReplacePatLen, iMatchCount, iMatchPos, iSearchTranStartPos, iReplacedCount: Integer;
     pData: PNodeData;
     bMatches, bReplaceAllMode, bDoReplace, bSearchCancelled: Boolean;
@@ -918,21 +983,29 @@ uses
       until False;
     end;
 
-     // Returns True if s contains sSearch, search from iStartPos char, also returns the match position in iMatchPos 
-    function Matches(const s: String; iStartPos: Integer; out iMatchPos: Integer): Boolean;
-    const NoWordChars = [#0..'/', ':'..'@', '['..'`', '{'..#137, '«', '»'];
-    var sWhere: String;
+     // Returns True if wc is a non-word character
+    function IsNonWordChar(wc: WideChar): Boolean;
     begin
-      sWhere := Copy(s, iStartPos, MaxInt); 
-      if not (sfCaseSensitive in Params.Flags) then sWhere := AnsiUpperCase(sWhere);
-      iMatchPos := AnsiPos(sSearch, sWhere);
+      case wc of
+        #0..'/', ':'..'@', '['..'`', '{'..#137, '«', '»': Result := True;
+        else                                              Result := False;
+      end;
+    end;
+
+     // Returns True if s contains wsSearch, search from iStartPos char, also returns the match position in iMatchPos
+    function Matches(const ws: WideString; iStartPos: Integer; out iMatchPos: Integer): Boolean;
+    var wsWhere: WideString;
+    begin
+      wsWhere := Copy(ws, iStartPos, MaxInt); 
+      if not (sfCaseSensitive in Params.Flags) then wsWhere := WideUpperCase(wsWhere);
+      iMatchPos := Pos(wsSearch, wsWhere);
       Result := iMatchPos>0;
       Inc(iMatchPos, iStartPos-1);
        // If whole words are accepted only
       if Result and (sfWholeWordsOnly in Params.Flags) then
         Result :=
-          ((iMatchPos=1) or (s[iMatchPos-1] in NoWordChars)) and
-          ((iMatchPos>Length(s)-iPatLen) or (s[iMatchPos+iPatLen] in NoWordChars));
+          ((iMatchPos=1) or IsNonWordChar(ws[iMatchPos-1])) and
+          ((iMatchPos>Length(ws)-iPatLen) or IsNonWordChar(ws[iMatchPos+iPatLen]));
     end;
 
      // Advances to the next node in the search sequence
@@ -945,14 +1018,14 @@ uses
     end;
 
   begin
-    MRUSearch.Add(Params.sSearchPattern);
-    if (sfReplace in Params.Flags) and (Params.sReplacePattern<>'') then MRUReplace.Add(Params.sReplacePattern);
+    MRUSearch.Add(Params.wsSearchPattern);
+    if (sfReplace in Params.Flags) and (Params.wsReplacePattern<>'') then MRUReplace.Add(Params.wsReplacePattern);
     bReplaceAllMode := Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll];
      // Prepare the pattern
-    sSearch := Params.sSearchPattern;
-    if not (sfCaseSensitive in Params.Flags) then sSearch := AnsiUpperCase(sSearch);
-    iPatLen := Length(sSearch);
-    iReplacePatLen := Length(Params.sReplacePattern);
+    wsSearch := Params.wsSearchPattern;
+    if not (sfCaseSensitive in Params.Flags) then wsSearch := WideUpperCase(wsSearch);
+    iPatLen := Length(wsSearch);
+    iReplacePatLen := Length(Params.wsReplacePattern);
      // Determine the start of the search
     n := tvMain.FocusedNode;
      // -- Restart search
@@ -983,31 +1056,31 @@ uses
            // Test Name
           if not bMatches and (sfSearchNames in Params.Flags) then begin
             case pData.Kind of
-              nkComp:  sEntry := pData.CompSource.CompName;
-              nkProp:  sEntry := pData.pSrcProp.sPropName;
-              nkConst: sEntry := pData.pSrcConst.sName;
-              else     sEntry := '';
+              nkComp:  wsEntry := pData.CompSource.CompName;
+              nkProp:  wsEntry := pData.pSrcProp.sPropName;
+              nkConst: wsEntry := pData.pSrcConst.sName;
+              else     wsEntry := '';
             end;
-            if sEntry<>'' then bMatches := Matches(sEntry, 1, iMatchPos);
+            if wsEntry<>'' then bMatches := Matches(wsEntry, 1, iMatchPos);
           end;
            // Test Original Value
           if not bMatches and (sfSearchOriginal in Params.Flags) then begin
             case pData.Kind of
-              nkProp:  if pData.pDisplProp=nil  then sEntry := pData.pSrcProp.sValue     else sEntry := pData.pDisplProp.sValue;
-              nkConst: if pData.pDisplConst=nil then sEntry := pData.pSrcConst.sDefValue else sEntry := pData.pDisplConst.sDefValue;
-              else     sEntry := '';
+              nkProp:  if pData.pDisplProp=nil  then wsEntry := pData.pSrcProp.wsValue     else wsEntry := pData.pDisplProp.wsValue;
+              nkConst: if pData.pDisplConst=nil then wsEntry := pData.pSrcConst.wsDefValue else wsEntry := pData.pDisplConst.wsDefValue;
+              else     wsEntry := '';
             end;
-            if sEntry<>'' then bMatches := Matches(sEntry, 1, iMatchPos);
+            if wsEntry<>'' then bMatches := Matches(wsEntry, 1, iMatchPos);
           end;
         end;
          // Finally, test Translated Value
         if not bMatches and (sfSearchTranslated in Params.Flags) then begin
           case pData.Kind of
-            nkProp:  sEntry := pData.pTranProp.sValue;
-            nkConst: sEntry := pData.pTranConst.sDefValue;
-            else     sEntry := '';
+            nkProp:  wsEntry := pData.pTranProp.wsValue;
+            nkConst: wsEntry := pData.pTranConst.wsDefValue;
+            else     wsEntry := '';
           end;
-          if sEntry<>'' then bMatches := Matches(sEntry, iSearchTranStartPos, iMatchPos);
+          if wsEntry<>'' then bMatches := Matches(wsEntry, iSearchTranStartPos, iMatchPos);
         end;
          // Found the match?
         if bMatches then begin
@@ -1029,7 +1102,7 @@ uses
                // Display replace prompt dialog
               with tvMain.GetDisplayRect(n, -1, False, False) do
                 rItem := Rect(tvMain.ClientToScreen(TopLeft), tvMain.ClientToScreen(BottomRight));
-              case PromptForReplace(sEntry, Params.sSearchPattern, iMatchPos, rItem) of
+              case PromptForReplace(wsEntry, Params.wsSearchPattern, iMatchPos, rItem) of
                 mrYes: {accept};
                 mrYesToAll: Exclude(Params.Flags, sfPromptOnReplace);
                 mrNo: bDoReplace := False;
@@ -1041,10 +1114,10 @@ uses
             end;
              // If replace required
             if bDoReplace then begin
-              sEntry := Copy(sEntry, 1, iMatchPos-1)+Params.sReplacePattern+Copy(sEntry, iMatchPos+iPatLen, MaxInt);
+              wsEntry := Copy(wsEntry, 1, iMatchPos-1)+Params.wsReplacePattern+Copy(wsEntry, iMatchPos+iPatLen, MaxInt);
               case pData.Kind of
-                nkProp:  pData.pTranProp.sValue     := sEntry;
-                nkConst: pData.pTranConst.sDefValue := sEntry;
+                nkProp:  pData.pTranProp.wsValue     := wsEntry;
+                nkConst: pData.pTranConst.wsDefValue := wsEntry;
               end;
               tvMain.InvalidateNode(n);
               Inc(iReplacedCount);
@@ -1071,42 +1144,10 @@ uses
     else begin
       Result := iMatchCount>0;
       if not Result then
-        Info(ConstVal('SMsg_NoSearchResults', [Params.sSearchPattern]))
+        Info(ConstVal('SMsg_NoSearchResults', [Params.wsSearchPattern]))
       else if Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll] then
-        Info(ConstVal('SMsg_ReplacedInfo', [iReplacedCount, Params.sSearchPattern]));
+        Info(ConstVal('SMsg_ReplacedInfo', [iReplacedCount, Params.wsSearchPattern]));
     end;
-  end;
-
-  procedure TfMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-  begin
-    CanClose := CheckSave;
-  end;
-
-  procedure TfMain.FormCreate(Sender: TObject);
-  begin
-     // Adjust fpMain
-    fpMain.IniFileName := SRegKey_Root;
-    fpMain.IniSection  := SRegSection_MainWindow;
-     // Adjust Application
-    Application.OnHint := AppHint;
-    Application.OnIdle := AppIdle;
-     // Adjust tvMain
-    tvMain.NodeDataSize := SizeOf(TNodeData);
-     // Create the repository
-    FRepository := TTranRepository.Create;
-     // Initialize language items
-    InitLanguages;
-     // Create bookmark list
-    FBookmarks := TStringList.Create;
-     // Update the tree
-    UpdateTree;
-  end;
-
-  procedure TfMain.FormDestroy(Sender: TObject);
-  begin
-    CloseProject(False);
-    FBookmarks.Free;
-    FRepository.Free;
   end;
 
   procedure TfMain.fpMainRestorePlacement(Sender: TObject);
@@ -1122,16 +1163,17 @@ uses
     MRUSearch.LoadFromRegIni (rif, SRegSection_MRUSearch);
     MRUReplace.LoadFromRegIni(rif, SRegSection_MRUReplace);
      // Load settings
-    LangManager.LanguageID       := rif.ReadInteger(SRegSection_Preferences, 'Language',          ILangID_USEnglish);
-    sbarMain.Visible             := rif.ReadBool   (SRegSection_Preferences, 'StatusBarVisible',  True);
-    sSetting_InterfaceFont       := rif.ReadString (SRegSection_Preferences, 'InterfaceFont',     FontToStr(Font));
-    sSetting_TableFont           := rif.ReadString (SRegSection_Preferences, 'TableFont',         sSetting_InterfaceFont);
-    sSetting_RepositoryDir       := rif.ReadString (SRegSection_Preferences, 'RepositoryPath',    ExtractFileDir(ParamStr(0)));
-    bSetting_ReposRemovePrefix   := rif.ReadBool   (SRegSection_Preferences, 'ReposRemovePrefix', True);
-    bSetting_ReposAutoAdd        := rif.ReadBool   (SRegSection_Preferences, 'ReposAutoAdd',      True);
+    LangManager.LanguageID          := rif.ReadInteger(SRegSection_Preferences, 'Language',               ILangID_USEnglish);
+    sbarMain.Visible                := rif.ReadBool   (SRegSection_Preferences, 'StatusBarVisible',       True);
+    wsSetting_InterfaceFont         := rif.ReadString (SRegSection_Preferences, 'InterfaceFont',          FontToStr(Font));
+    wsSetting_TableFont             := rif.ReadString (SRegSection_Preferences, 'TableFont',              wsSetting_InterfaceFont);
+    wsSetting_RepositoryDir         := rif.ReadString (SRegSection_Preferences, 'RepositoryPath',         ExtractFileDir(ParamStr(0)));
+    bSetting_ReposRemovePrefix      := rif.ReadBool   (SRegSection_Preferences, 'ReposRemovePrefix',      True);
+    bSetting_ReposAutoAdd           := rif.ReadBool   (SRegSection_Preferences, 'ReposAutoAdd',           True);
+    bSetting_IgnoreEncodingMismatch := rif.ReadBool   (SRegSection_Preferences, 'IgnoreEncodingMismatch', False);
      // Load search params
-    SearchParams.sSearchPattern  := rif.ReadString (SRegSection_Search, 'SearchPattern',    '');
-    SearchParams.sReplacePattern := rif.ReadString (SRegSection_Search, 'ReplacePattern',   '');
+    SearchParams.wsSearchPattern    := rif.ReadString (SRegSection_Search, 'SearchPattern',    '');
+    SearchParams.wsReplacePattern   := rif.ReadString (SRegSection_Search, 'ReplacePattern',   '');
     SearchParams.Flags := [];
     if rif.ReadBool(SRegSection_Search, 'CaseSensitive',    False) then Include(SearchParams.Flags, sfCaseSensitive);
     if rif.ReadBool(SRegSection_Search, 'WholeWordsOnly',   False) then Include(SearchParams.Flags, sfWholeWordsOnly);
@@ -1143,7 +1185,7 @@ uses
     if rif.ReadBool(SRegSection_Search, 'SearchTranslated', True)  then Include(SearchParams.Flags, sfSearchTranslated);
     if rif.ReadBool(SRegSection_Search, 'Backward',         False) then Include(SearchParams.Flags, sfBackward);
      // Load the repository
-    FRepository.LoadFromFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
+    FRepository.LoadFromFile(WideIncludeTrailingPathDelimiter(wsSetting_RepositoryDir)+SRepositoryFileName);
      // Apply loaded settings
     ApplySettings;
     UpdateLangItems;
@@ -1163,16 +1205,17 @@ uses
     MRUSearch.SaveToRegIni (rif, SRegSection_MRUSearch);
     MRUReplace.SaveToRegIni(rif, SRegSection_MRUReplace);
      // Save settings
-    rif.WriteInteger(SRegSection_Preferences, 'Language',          LangManager.LanguageID);
-    rif.WriteBool   (SRegSection_Preferences, 'StatusBarVisible',  sbarMain.Visible);
-    rif.WriteString (SRegSection_Preferences, 'InterfaceFont',     sSetting_InterfaceFont);
-    rif.WriteString (SRegSection_Preferences, 'TableFont',         sSetting_TableFont);
-    rif.WriteString (SRegSection_Preferences, 'RepositoryPath',    sSetting_RepositoryDir);
-    rif.WriteBool   (SRegSection_Preferences, 'ReposRemovePrefix', bSetting_ReposRemovePrefix);
-    rif.WriteBool   (SRegSection_Preferences, 'ReposAutoAdd',      bSetting_ReposAutoAdd);
+    rif.WriteInteger(SRegSection_Preferences, 'Language',               LangManager.LanguageID);
+    rif.WriteBool   (SRegSection_Preferences, 'StatusBarVisible',       sbarMain.Visible);
+    rif.WriteString (SRegSection_Preferences, 'InterfaceFont',          wsSetting_InterfaceFont);
+    rif.WriteString (SRegSection_Preferences, 'TableFont',              wsSetting_TableFont);
+    rif.WriteString (SRegSection_Preferences, 'RepositoryPath',         wsSetting_RepositoryDir);
+    rif.WriteBool   (SRegSection_Preferences, 'ReposRemovePrefix',      bSetting_ReposRemovePrefix);
+    rif.WriteBool   (SRegSection_Preferences, 'ReposAutoAdd',           bSetting_ReposAutoAdd);
+    rif.WriteBool   (SRegSection_Preferences, 'IgnoreEncodingMismatch', bSetting_IgnoreEncodingMismatch);
      // Save search params
-    rif.WriteString (SRegSection_Search, 'SearchPattern',    SearchParams.sSearchPattern);
-    rif.WriteString (SRegSection_Search, 'ReplacePattern',   SearchParams.sReplacePattern);
+    rif.WriteString (SRegSection_Search, 'SearchPattern',    SearchParams.wsSearchPattern);
+    rif.WriteString (SRegSection_Search, 'ReplacePattern',   SearchParams.wsReplacePattern);
     rif.WriteBool   (SRegSection_Search, 'CaseSensitive',    sfCaseSensitive    in SearchParams.Flags);
     rif.WriteBool   (SRegSection_Search, 'WholeWordsOnly',   sfWholeWordsOnly   in SearchParams.Flags);
     rif.WriteBool   (SRegSection_Search, 'SelectedOnly',     sfSelectedOnly     in SearchParams.Flags);
@@ -1183,10 +1226,10 @@ uses
     rif.WriteBool   (SRegSection_Search, 'SearchTranslated', sfSearchTranslated in SearchParams.Flags);
     rif.WriteBool   (SRegSection_Search, 'Backward',         sfBackward         in SearchParams.Flags);
      // Save the repository
-    FRepository.SaveToFile(IncludeTrailingPathDelimiter(sSetting_RepositoryDir)+SRepositoryFileName);
+    FRepository.SaveToFile(WideIncludeTrailingPathDelimiter(wsSetting_RepositoryDir)+SRepositoryFileName);
   end;
 
-  function TfMain.GetDisplayTranFileName: String;
+  function TfMain.GetDisplayTranFileName: WideString;
   begin
     Result := iif(FTranFileName='', STranFileDefaultName, FTranFileName);
   end;
@@ -1260,16 +1303,16 @@ uses
     end;
   end;
 
-  function TfMain.OpenFiles(const sLangSrcFileName, sDisplayFileName, sTranFileName: String): Boolean;
-  var sSourceFile, sDisplayFile, sTranFile: String;
+  function TfMain.OpenFiles(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): Boolean;
+  var wsSourceFile, wsDisplayFile, wsTranFile: WideString;
   begin
     Result := CheckSave;
     if Result then begin
-      sSourceFile  := sLangSrcFileName;
-      sTranFile    := sTranFileName;
-      sDisplayFile := sDisplayFileName;
-      Result := SelectLangFiles(sSourceFile, sDisplayFile, sTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
-      if Result then DoLoad(sSourceFile, sDisplayFile, sTranFile);
+      wsSourceFile  := wsLangSrcFileName;
+      wsTranFile    := wsTranFileName;
+      wsDisplayFile := wsDisplayFileName;
+      Result := SelectLangFiles(wsSourceFile, wsDisplayFile, wsTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
+      if Result then DoLoad(wsSourceFile, wsDisplayFile, wsTranFile);
     end;
   end;
 
@@ -1296,7 +1339,7 @@ uses
     end;
   end;
 
-  procedure TfMain.SetTranFileName(const Value: String);
+  procedure TfMain.SetTranFileName(const Value: WideString);
   begin
     if FTranFileName<>Value then begin
       FTranFileName := Value;
@@ -1320,17 +1363,17 @@ uses
   procedure TfMain.TranslateNodeFromRepository(Node: PVirtualNode);
   var
     p: PNodeData;
-    s: String;
+    ws: WideString;
   begin
     p := tvMain.GetNodeData(Node);
     if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
       case p.Kind of
         nkProp:
           if dktsUntranslated in p.pTranProp.TranStates then begin
-            s := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.sValue)];
-            if s<>'' then begin
+            ws := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.wsValue)];
+            if ws<>'' then begin
               with p.pTranProp^ do begin
-                sValue     := s;
+                wsValue    := ws;
                 TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
               end;
               Modified := True;
@@ -1338,11 +1381,11 @@ uses
           end;
         nkConst:
           if dktsUntranslated in p.pTranConst.TranStates then begin
-            s := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.sDefValue)];
-            if s<>'' then begin
+            ws := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.wsDefValue)];
+            if ws<>'' then begin
               with p.pTranConst^ do begin
-                sDefValue  := s;
-                sValue     := s;
+                wsDefValue := ws;
+                wsValue    := ws;
                 TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
               end;
               Modified := True;
@@ -1406,7 +1449,7 @@ uses
       ItemColor := CBack_SearchMatch
      // Else paint the background according to node kind
     else
-      ItemColor   := aColors[GetNodeKind(Node)];
+      ItemColor := aColors[GetNodeKind(Node)];
     EraseAction := eaColor;
   end;
 
@@ -1445,42 +1488,39 @@ uses
   end;
 
   procedure TfMain.tvMainGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
-  var
-    p: PNodeData;
-    s: String;
+  var p: PNodeData;
   begin
     p := Sender.GetNodeData(Node);
-    s := '';
+    CellText := '';
     case TextType of
        // Normal text
       ttNormal:
         case p.Kind of
-          nkComp: if Column=IColIdx_Name then s := p.CompSource.CompName;
+          nkComp: if Column=IColIdx_Name then CellText := p.CompSource.CompName;
           nkProp:
             case Column of
-              IColIdx_Name: s := p.pSrcProp.sPropName;
-              IColIdx_ID:   s := IntToStr(p.pSrcProp.iID);
+              IColIdx_Name: CellText := p.pSrcProp.sPropName;
+              IColIdx_ID:   CellText := IntToStr(p.pSrcProp.iID);
               IColIdx_Original: begin
-                if p.pDisplProp=nil then s := p.pSrcProp.sValue else s := p.pDisplProp.sValue;
-                s := EncodeControlChars(s);
+                if p.pDisplProp=nil then CellText := p.pSrcProp.wsValue else CellText := p.pDisplProp.wsValue;
+                CellText := EncodeControlChars(CellText);
               end;
-              IColIdx_Translated: s := EncodeControlChars(p.pTranProp.sValue);
+              IColIdx_Translated: CellText := EncodeControlChars(p.pTranProp.wsValue);
             end;
-          nkConsts: if Column=IColIdx_Name then s := ConstVal('SNode_Constants');
+          nkConsts: if Column=IColIdx_Name then CellText := ConstVal('SNode_Constants');
           nkConst:
             case Column of
-              IColIdx_Name: s := p.pSrcConst.sName;
+              IColIdx_Name: CellText := p.pSrcConst.sName;
               IColIdx_Original: begin
-                if p.pDisplConst=nil then s := p.pSrcConst.sDefValue else s := p.pDisplConst.sDefValue;
-                s := EncodeControlChars(s);
+                if p.pDisplConst=nil then CellText := p.pSrcConst.wsDefValue else CellText := p.pDisplConst.wsDefValue;
+                CellText := EncodeControlChars(CellText);
               end;
-              IColIdx_Translated: s := EncodeControlChars(p.pTranConst.sDefValue);
+              IColIdx_Translated: CellText := EncodeControlChars(p.pTranConst.wsDefValue);
             end;
         end;
        // Static text
-      ttStatic: if (Column=IColIdx_Name) and (p.Kind in [nkComp, nkConsts]) then s := Format('(%d)', [Sender.ChildCount[Node]]);
+      ttStatic: if (Column=IColIdx_Name) and (p.Kind in [nkComp, nkConsts]) then CellText := WideFormat('(%d)', [Sender.ChildCount[Node]]);
     end;
-    CellText := AnsiToUnicodeCP(s, cTreeCodePage);
   end;
 
   procedure TfMain.tvMainInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
@@ -1538,22 +1578,19 @@ uses
   end;
 
   procedure TfMain.tvMainNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; NewText: WideString);
-  var
-    p: PNodeData;
-    s: String;
+  var p: PNodeData;
   begin
-    s := UnicodeToAnsiCP(NewText, cTreeCodePage);
     p := Sender.GetNodeData(Node);
     case p.Kind of
       nkProp:
         with p.pTranProp^ do begin
-          sValue := DecodeControlChars(s);
+          wsValue    := DecodeControlChars(NewText);
           TranStates := TranStates-[dktsUntranslated, dktsAutotranslated];
         end;
       nkConst:
         with p.pTranConst^ do begin
-          sValue     := DecodeControlChars(s);
-          sDefValue  := sValue;
+          wsValue    := DecodeControlChars(NewText);
+          wsDefValue := wsValue;
           TranStates := TranStates-[dktsUntranslated, dktsAutotranslated];
         end;
       else Exit;
@@ -1576,9 +1613,9 @@ uses
   end;
 
   procedure TfMain.UpdateCaption;
-  const asMod: Array[Boolean] of String[1] = ('', '*');
+  const awsMod: Array[Boolean] of WideString = ('', '*');
   begin
-    Caption := Format('[%s%s] - %s', [ExtractFileName(DisplayTranFileName), asMod[Modified], SAppCaption]);
+    Caption := WideFormat('[%s%s] - %s', [WideExtractFileName(DisplayTranFileName), awsMod[Modified], SAppCaption]);
     Application.Title := Caption;
   end;
 
@@ -1597,31 +1634,31 @@ uses
   procedure TfMain.UpdateCurEntry;
   var
     p: PNodeData;
-    sSrc, sTran: String;
+    wsSrc, wsTran: WideString;
     bEnable: Boolean;
   begin
-    sSrc  := '';
-    sTran := '';
+    wsSrc  := '';
+    wsTran := '';
     bEnable := False;
     p := tvMain.GetNodeData(tvMain.FocusedNode);
     if p<>nil then begin
       bEnable := p.Kind in [nkProp, nkConst];
       case p.Kind of
         nkProp: begin
-          sSrc  := p.pSrcProp.sValue;
-          sTran := p.pTranProp.sValue;
+          wsSrc  := p.pSrcProp.wsValue;
+          wsTran := p.pTranProp.wsValue;
         end;
         nkConst: begin
-          sSrc  := p.pSrcConst.sDefValue;
-          sTran := p.pTranConst.sDefValue;
+          wsSrc  := p.pSrcConst.wsDefValue;
+          wsTran := p.pTranConst.wsDefValue;
         end;
       end;
     end;
      // Update curent entry editors
     FUpdatingCurEntryEditor := True;
     try
-      mCurSrcEntry.Text  := sSrc;
-      mCurTranEntry.Text := sTran;
+      mCurSrcEntry.Text  := wsSrc;
+      mCurTranEntry.Text := wsTran;
       EnableWndCtl(mCurSrcEntry,  bEnable);
       EnableWndCtl(mCurTranEntry, bEnable);
     finally
@@ -1675,8 +1712,7 @@ uses
   var i: Integer;
   begin
     for i := 0 to smLanguage.Count-1 do
-      with smLanguage[i] do
-        Checked := Tag=LangManager.LanguageID;
+      with smLanguage[i] do Checked := Tag=LangManager.LanguageID;
   end;
 
   procedure TfMain.UpdateStatusBar;
@@ -1712,10 +1748,10 @@ uses
     end;
      // Update status bar
     with sbarMain.Panels do begin
-      Items[ISBPanelIdx_CompCount].Caption       := Format(ConstVal('SStatusBar_CompCount'),       [iCntComp]);
-      Items[ISBPanelIdx_PropCount].Caption       := Format(ConstVal('SStatusBar_PropCount'),       [iCntProp, iCntPropUntr]);
-      Items[ISBPanelIdx_ConstCount].Caption      := Format(ConstVal('SStatusBar_ConstCount'),      [iCntConst, iCntConstUntr]);
-      Items[ISBPanelIdx_ReposEntryCount].Caption := Format(ConstVal('SStatusBar_ReposEntryCount'), [FRepository.EntryCount]);
+      Items[ISBPanelIdx_CompCount].Caption       := ConstVal('SStatusBar_CompCount',       [iCntComp]);
+      Items[ISBPanelIdx_PropCount].Caption       := ConstVal('SStatusBar_PropCount',       [iCntProp, iCntPropUntr]);
+      Items[ISBPanelIdx_ConstCount].Caption      := ConstVal('SStatusBar_ConstCount',      [iCntConst, iCntConstUntr]);
+      Items[ISBPanelIdx_ReposEntryCount].Caption := ConstVal('SStatusBar_ReposEntryCount', [FRepository.EntryCount]);
     end;
   end;
 

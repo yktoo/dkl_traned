@@ -1,16 +1,5 @@
-object fMain: TfMain
-  Left = 394
-  Top = 180
-  AutoScroll = False
+inherited fMain: TfMain
   Caption = 'DKLang Translation Editor'
-  ClientHeight = 377
-  ClientWidth = 590
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
   Icon.Data = {
     0000010008001010100000000000280100008600000010100000010008006805
     0000AE010000101000000100180068030000160700002020100000000000E802
@@ -459,18 +448,12 @@ object fMain: TfMain
     00008000000080000000800000008000000080000000C0000001C0000001C000
     0001E0000003E0000003F0000007F800000FFC00001FFE00003FFF8000FFFFF0
     07FFFFFFFFFF}
-  OldCreateOrder = False
-  Position = poScreenCenter
-  ShowHint = True
-  OnCloseQuery = FormCloseQuery
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object dkTop: TTBXDock
     Left = 0
     Top = 0
-    Width = 590
+    Width = 688
     Height = 26
     PopupMenu = pmView
     object tbMenu: TTBXToolbar
@@ -614,6 +597,9 @@ object fMain: TfMain
         object iAbout: TTBXItem
           Action = aAbout
         end
+        object iHelp: TTBXItem
+          Action = aHelp
+        end
         object smHelpInternet: TTBXSubmenuItem
           Caption = '&Internet'
           object iHelpCheckUpdates: TTBXItem
@@ -698,17 +684,17 @@ object fMain: TfMain
   end
   object dkBottom: TTBXDock
     Left = 0
-    Top = 346
-    Width = 590
+    Top = 420
+    Width = 688
     Height = 9
     PopupMenu = pmView
     Position = dpBottom
   end
   object dkRight: TTBXDock
-    Left = 581
+    Left = 679
     Top = 33
     Width = 9
-    Height = 181
+    Height = 255
     PopupMenu = pmView
     Position = dpRight
   end
@@ -716,14 +702,14 @@ object fMain: TfMain
     Left = 0
     Top = 33
     Width = 9
-    Height = 181
+    Height = 255
     PopupMenu = pmView
     Position = dpLeft
   end
   object sbarMain: TTBXStatusBar
     Left = 0
-    Top = 355
-    Width = 590
+    Top = 429
+    Width = 688
     Panels = <
       item
         StretchPriority = 1
@@ -760,11 +746,11 @@ object fMain: TfMain
     PopupMenu = pmView
     UseSystemFont = False
   end
-  object pMain: TPanel
+  object pMain: TTntPanel
     Left = 141
     Top = 33
-    Width = 433
-    Height = 181
+    Width = 531
+    Height = 255
     Align = alClient
     BevelOuter = bvNone
     Color = clAppWorkSpace
@@ -773,8 +759,8 @@ object fMain: TfMain
     object tvMain: TVirtualStringTree
       Left = 0
       Top = 0
-      Width = 433
-      Height = 181
+      Width = 531
+      Height = 255
       Align = alClient
       AutoScrollDelay = 150
       AutoScrollInterval = 100
@@ -818,7 +804,7 @@ object fMain: TfMain
         item
           Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAutoSpring]
           Position = 0
-          Width = 124
+          Width = 156
           WideText = 'Component/Property/Constant'
         end
         item
@@ -830,13 +816,13 @@ object fMain: TfMain
         item
           Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAutoSpring]
           Position = 2
-          Width = 134
+          Width = 166
           WideText = 'Default value'
         end
         item
           Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAutoSpring]
           Position = 3
-          Width = 134
+          Width = 166
           WideText = 'Translated value'
         end>
       WideDefaultText = ''
@@ -845,7 +831,7 @@ object fMain: TfMain
   object mdkTop: TTBXMultiDock
     Left = 0
     Top = 26
-    Width = 590
+    Width = 688
     Height = 7
     PopupMenu = pmView
   end
@@ -853,7 +839,7 @@ object fMain: TfMain
     Left = 9
     Top = 33
     Width = 132
-    Height = 181
+    Height = 255
     PopupMenu = pmView
     Position = dpLeft
     object dpEntryProps: TTBXDockablePanel
@@ -924,7 +910,7 @@ object fMain: TfMain
         Left = 0
         Top = 22
         Width = 128
-        Height = 35
+        Height = 109
         Align = alClient
         DefaultNodeHeight = 16
         Header.AutoSizeIndex = 0
@@ -976,17 +962,17 @@ object fMain: TfMain
     end
   end
   object mdkRight: TTBXMultiDock
-    Left = 574
+    Left = 672
     Top = 33
     Width = 7
-    Height = 181
+    Height = 255
     PopupMenu = pmView
     Position = dpRight
   end
   object mdkBottom: TTBXMultiDock
     Left = 0
-    Top = 214
-    Width = 590
+    Top = 288
+    Width = 688
     Height = 132
     PopupMenu = pmView
     Position = dpBottom
@@ -997,10 +983,10 @@ object fMain: TfMain
       DockPos = 0
       SupportedDocks = [dkMultiDock]
       TabOrder = 0
-      object mCurSrcEntry: TMemo
+      object mCurSrcEntry: TTntMemo
         Left = 0
         Top = 0
-        Width = 265
+        Width = 314
         Height = 128
         Align = alClient
         PopupMenu = pmCurSrcEntry
@@ -1011,16 +997,16 @@ object fMain: TfMain
       end
     end
     object dpCurTranEntry: TTBXDockablePanel
-      Left = 287
+      Left = 336
       Top = 0
       Caption = 'Current translated entry'
-      DockPos = 287
+      DockPos = 336
       SupportedDocks = [dkMultiDock]
       TabOrder = 1
-      object mCurTranEntry: TMemo
+      object mCurTranEntry: TTntMemo
         Left = 0
         Top = 0
-        Width = 265
+        Width = 314
         Height = 128
         Align = alClient
         PopupMenu = pmCurTranEntry
@@ -1031,11 +1017,11 @@ object fMain: TfMain
       end
     end
   end
-  object alMain: TActionList
+  object alMain: TTntActionList
     Images = ilMain
     Left = 152
     Top = 56
-    object aCut: TAction
+    object aCut: TTntAction
       Category = 'Edit'
       Caption = 'C&ut'
       Hint = 'Cut|Cut selected text to the clipboard'
@@ -1045,7 +1031,7 @@ object fMain: TfMain
         'Shift+Del')
       OnExecute = aaCut
     end
-    object aCopy: TAction
+    object aCopy: TTntAction
       Category = 'Edit'
       Caption = '&Copy'
       Hint = 'Copy|Copy selected text into the clipboard'
@@ -1053,7 +1039,7 @@ object fMain: TfMain
       ShortCut = 16451
       OnExecute = aaCopy
     end
-    object aPaste: TAction
+    object aPaste: TTntAction
       Category = 'Edit'
       Caption = '&Paste'
       Hint = 'Paste|Paste text from the clipboard'
@@ -1061,7 +1047,7 @@ object fMain: TfMain
       ShortCut = 16470
       OnExecute = aaPaste
     end
-    object aFind: TAction
+    object aFind: TTntAction
       Category = 'Edit'
       Caption = '&Find...'
       Hint = 'Find...|Search entries using a given pattern'
@@ -1069,7 +1055,7 @@ object fMain: TfMain
       ShortCut = 16454
       OnExecute = aaFind
     end
-    object aFindNext: TAction
+    object aFindNext: TTntAction
       Category = 'Edit'
       Caption = 'Find ne&xt'
       Hint = 'Find next|Find the next occurence of string searched before'
@@ -1077,7 +1063,7 @@ object fMain: TfMain
       ShortCut = 114
       OnExecute = aaFindNext
     end
-    object aReplace: TAction
+    object aReplace: TTntAction
       Category = 'Edit'
       Caption = '&Replace...'
       Hint = 'Replace...|Replace one string with another one'
@@ -1085,7 +1071,7 @@ object fMain: TfMain
       ShortCut = 16456
       OnExecute = aaReplace
     end
-    object aBookmarkAdd: TAction
+    object aBookmarkAdd: TTntAction
       Category = 'Edit'
       Caption = '&Add bookmark'
       Hint = 'Add bookmark|Add current entry to the bookmark list'
@@ -1093,7 +1079,7 @@ object fMain: TfMain
       ShortCut = 16450
       OnExecute = aaBookmarkAdd
     end
-    object aBookmarkDelete: TAction
+    object aBookmarkDelete: TTntAction
       Category = 'Edit'
       Caption = '&Delete bookmark'
       Hint = 'Delete bookmark|Remove the bookmark currently selected'
@@ -1101,7 +1087,7 @@ object fMain: TfMain
       ShortCut = 24642
       OnExecute = aaBookmarkDelete
     end
-    object aBookmarkJump: TAction
+    object aBookmarkJump: TTntAction
       Category = 'Edit'
       Caption = '&Jump to bookmark'
       Hint = 
@@ -1110,7 +1096,7 @@ object fMain: TfMain
       ImageIndex = 26
       OnExecute = aaBookmarkJump
     end
-    object aPrevEntry: TAction
+    object aPrevEntry: TTntAction
       Category = 'Edit'
       Caption = 'Previous entr&y'
       Hint = 'Previous entry|Step to previous entry'
@@ -1118,7 +1104,7 @@ object fMain: TfMain
       ShortCut = 16422
       OnExecute = aaPrevEntry
     end
-    object aNextEntry: TAction
+    object aNextEntry: TTntAction
       Category = 'Edit'
       Caption = '&Next entry'
       Hint = 'Next entry|Step to next entry'
@@ -1126,7 +1112,7 @@ object fMain: TfMain
       ShortCut = 16424
       OnExecute = aaNextEntry
     end
-    object aNewOrOpen: TAction
+    object aNewOrOpen: TTntAction
       Category = 'File'
       Caption = '&New or Open...'
       Hint = 'New or Open...|Create new translation or open an existing one'
@@ -1136,7 +1122,7 @@ object fMain: TfMain
         'Ctrl+O')
       OnExecute = aaNewOrOpen
     end
-    object aSave: TAction
+    object aSave: TTntAction
       Category = 'File'
       Caption = '&Save'
       Hint = 'Save|Save the current translation'
@@ -1144,7 +1130,7 @@ object fMain: TfMain
       ShortCut = 16467
       OnExecute = aaSave
     end
-    object aSaveAs: TAction
+    object aSaveAs: TTntAction
       Category = 'File'
       Caption = 'Save &as...'
       Hint = 'Save as...|Save the current translation into another file'
@@ -1152,7 +1138,7 @@ object fMain: TfMain
       ShortCut = 123
       OnExecute = aaSaveAs
     end
-    object aClose: TAction
+    object aClose: TTntAction
       Category = 'File'
       Caption = '&Close'
       Hint = 'Close|Close the files currently open'
@@ -1160,14 +1146,14 @@ object fMain: TfMain
       ShortCut = 16499
       OnExecute = aaClose
     end
-    object aExit: TAction
+    object aExit: TTntAction
       Category = 'File'
       Caption = '&Exit'
       Hint = 'Exit|Exit the program'
       ImageIndex = 6
       OnExecute = aaExit
     end
-    object aSettings: TAction
+    object aSettings: TTntAction
       Category = 'Tools'
       Caption = '&Program settings...'
       Hint = 'Program settings...|View or modify the program settings'
@@ -1175,7 +1161,7 @@ object fMain: TfMain
       ShortCut = 115
       OnExecute = aaSettings
     end
-    object aAbout: TAction
+    object aAbout: TTntAction
       Category = 'Help'
       Caption = '&About...'
       Hint = 'About...|Version and copyright info'
@@ -1183,7 +1169,7 @@ object fMain: TfMain
       ShortCut = 16496
       OnExecute = aaAbout
     end
-    object aJumpPrevUntranslated: TAction
+    object aJumpPrevUntranslated: TTntAction
       Category = 'Edit'
       Caption = 'Jump to pre&vious untranslated entry'
       Hint = 'Jump to previous untranslated or autotranslated entry'
@@ -1191,7 +1177,7 @@ object fMain: TfMain
       ShortCut = 32806
       OnExecute = aaJumpPrevUntranslated
     end
-    object aJumpNextUntranslated: TAction
+    object aJumpNextUntranslated: TTntAction
       Category = 'Edit'
       Caption = 'Jump to next untran&slated entry'
       Hint = 'Jump to next untranslated or autotranslated entry'
@@ -1199,7 +1185,7 @@ object fMain: TfMain
       ShortCut = 32808
       OnExecute = aaJumpNextUntranslated
     end
-    object aAutoTranslate: TAction
+    object aAutoTranslate: TTntAction
       Category = 'Tools'
       Caption = 'A&utotranslate selected'
       Hint = 
@@ -1208,7 +1194,7 @@ object fMain: TfMain
       ShortCut = 16460
       OnExecute = aaAutoTranslate
     end
-    object aAddToRepository: TAction
+    object aAddToRepository: TTntAction
       Category = 'Tools'
       Caption = 'Add selected to &Repository'
       Hint = 
@@ -1217,13 +1203,13 @@ object fMain: TfMain
       ShortCut = 16466
       OnExecute = aaAddToRepository
     end
-    object aHelpCheckUpdates: TAction
+    object aHelpCheckUpdates: TTntAction
       Category = 'Help'
       Caption = 'Check for &updates'
       Hint = 'Check for updates|Check for program updates on the web'
       OnExecute = aaHelpCheckUpdates
     end
-    object aHelpProductWebsite: TAction
+    object aHelpProductWebsite: TTntAction
       Category = 'Help'
       Caption = 'DKLang Translation Editor ho&me site'
       Hint = 
@@ -1232,20 +1218,20 @@ object fMain: TfMain
       ShortCut = 16471
       OnExecute = aaHelpProductWebsite
     end
-    object aHelpSupport: TAction
+    object aHelpSupport: TTntAction
       Category = 'Help'
       Caption = 'Product &support'
       Hint = 'Product support|Open the product support page in the browser'
       OnExecute = aaHelpSupport
     end
-    object aHelpVendorWebsite: TAction
+    object aHelpVendorWebsite: TTntAction
       Category = 'Help'
       Caption = 'DK Software &Website'
       Hint = 'DK Software Website|Open the vendor home site in the browser'
       ImageIndex = 30
       OnExecute = aaHelpVendorWebsite
     end
-    object aToggleFocus: TAction
+    object aToggleFocus: TTntAction
       Category = 'Edit'
       Caption = 'To&ggle focus'
       Hint = 
@@ -1254,7 +1240,7 @@ object fMain: TfMain
       ShortCut = 117
       OnExecute = aaToggleFocus
     end
-    object aTranProps: TAction
+    object aTranProps: TTntAction
       Category = 'Edit'
       Caption = '&Translation properties...'
       Hint = 
@@ -1263,6 +1249,12 @@ object fMain: TfMain
       ImageIndex = 12
       ShortCut = 32781
       OnExecute = aaTranProps
+    end
+    object aHelp: TTntAction
+      Category = 'Help'
+      Caption = '&Help'
+      Hint = 'Help|Display program help'
+      OnExecute = ShowHelpNotify
     end
   end
   object ilMain: TTBImageList
@@ -2088,7 +2080,6 @@ object fMain: TfMain
   end
   object dklcMain: TDKLanguageController
     IgnoreList.Strings = (
-      '*.Font.Name'
       '*.SecondaryShortCuts'
       '.Caption'
       'fpMain.*'
@@ -2100,7 +2091,7 @@ object fMain: TfMain
     Left = 244
     Top = 156
     LangData = {
-      0500664D61696E0001980000000500646B546F700000060074624D656E750101
+      0500664D61696E00019A0000000500646B546F700000060074624D656E750101
       00000002000000070043617074696F6E000600736D46696C6501010000000300
       0000070043617074696F6E000A00694E65774F724F70656E0000050069536176
       6500000700695361766541730000060069436C6F7365000008006946696C6553
@@ -2228,7 +2219,9 @@ object fMain: TfMain
       6E456E7472790000120069706D4375725472616E456E74727943757400001300
       69706D4375725472616E456E747279436F70790000140069706D437572547261
       6E456E7472795061737465000006006250617374650000050062436F70790000
-      0400624375740000080074625365704375740000}
+      040062437574000008007462536570437574000005006148656C700103000000
+      8F000000070043617074696F6E8E000000080043617465676F72799000000004
+      0048696E740005006948656C700000}
   end
   object MRUSearch: TTBMRUList
     AddFullPath = False

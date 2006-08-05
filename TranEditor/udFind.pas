@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udFind.pas,v 1.5 2006-06-17 04:19:28 dale Exp $
+//  $Id: udFind.pas,v 1.6 2006-08-05 21:42:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -10,29 +10,30 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, ConsVars,
-  ExtCtrls, StdCtrls, DKLang;
+  DKLTranEdFrm, DKLang, TntExtCtrls, StdCtrls, TntStdCtrls;
 
 type
-  TdFind = class(TForm)
-    bAll: TButton;
-    bClose: TButton;
-    bOK: TButton;
-    cbCaseSensitive: TCheckBox;
-    cbPattern: TComboBox;
-    cbPrompt: TCheckBox;
-    cbReplace: TCheckBox;
-    cbReplacePattern: TComboBox;
-    cbSearchNames: TCheckBox;
-    cbSearchOriginal: TCheckBox;
-    cbSearchTranslated: TCheckBox;
-    cbSelOnly: TCheckBox;
-    cbWholeWords: TCheckBox;
+  TdFind = class(TDKLTranEdForm)
+    bAll: TTntButton;
+    bClose: TTntButton;
+    bHelp: TTntButton;
+    bOK: TTntButton;
+    cbCaseSensitive: TTntCheckBox;
+    cbPattern: TTntComboBox;
+    cbPrompt: TTntCheckBox;
+    cbReplace: TTntCheckBox;
+    cbReplacePattern: TTntComboBox;
+    cbSearchNames: TTntCheckBox;
+    cbSearchOriginal: TTntCheckBox;
+    cbSearchTranslated: TTntCheckBox;
+    cbSelOnly: TTntCheckBox;
+    cbWholeWords: TTntCheckBox;
     dklcMain: TDKLanguageController;
-    gbOptions: TGroupBox;
-    gbScope: TGroupBox;
-    lPattern: TLabel;
-    rgDirection: TRadioGroup;
-    rgOrigin: TRadioGroup;
+    gbOptions: TTntGroupBox;
+    gbScope: TTntGroupBox;
+    lPattern: TTntLabel;
+    rgDirection: TTntRadioGroup;
+    rgOrigin: TTntRadioGroup;
     procedure bAllClick(Sender: TObject);
     procedure bOKClick(Sender: TObject);
     procedure cbReplaceClick(Sender: TObject);
@@ -48,8 +49,8 @@ type
      // Starts searching/replacement
     procedure DoFind(bAll: Boolean);
   protected
-    procedure InitializeDialog;
-    function  Execute: Boolean;
+    procedure DoCreate; override;
+    procedure ExecuteInitialize; override;
   end;
 
   function ShowFindDialog(AFindCallback: TFindCallback; ASearchMRUStrings, AReplaceMRUStrings: TStrings): Boolean;
@@ -64,7 +65,7 @@ implementation
         FFindCallback      := AFindCallback;
         FSearchMRUStrings  := ASearchMRUStrings;
         FReplaceMRUStrings := AReplaceMRUStrings;
-        Result := Execute;
+        Result := ExecuteModal;
       finally
         Free;
       end;
@@ -97,14 +98,21 @@ implementation
     if Visible then StateChanged;
   end;
 
+  procedure TdFind.DoCreate;
+  begin
+    inherited DoCreate;
+     // Initialize help context ID
+    HelpContext := IDH_iface_dlg_find;
+  end;
+
   procedure TdFind.DoFind(bAll: Boolean);
   begin
      // Clear the search-from-the-next flag on invoke
     Exclude(SearchParams.Flags, sfFromNext);
      // Save search parameters
-    SearchParams.sSearchPattern  := cbPattern.Text;
-    SearchParams.sReplacePattern := cbReplacePattern.Text;
-    SearchParams.Flags           := [];
+    SearchParams.wsSearchPattern  := cbPattern.Text;
+    SearchParams.wsReplacePattern := cbReplacePattern.Text;
+    SearchParams.Flags            := [];
     if cbReplace.Checked          then Include(SearchParams.Flags, sfReplace);
     if cbCaseSensitive.Checked    then Include(SearchParams.Flags, sfCaseSensitive);
     if cbWholeWords.Checked       then Include(SearchParams.Flags, sfWholeWordsOnly);
@@ -125,20 +133,15 @@ implementation
     end;
   end;
 
-  function TdFind.Execute: Boolean;
+  procedure TdFind.ExecuteInitialize;
   begin
-    InitializeDialog;
-    Result := ShowModal=mrOK;
-  end;
-
-  procedure TdFind.InitializeDialog;
-  begin
+    inherited ExecuteInitialize;
      // Initialize the controls
     cbPattern.Items.Assign(FSearchMRUStrings);
     cbReplacePattern.Items.Assign(FReplaceMRUStrings);
-    cbPattern.Text             := SearchParams.sSearchPattern;
+    cbPattern.Text             := SearchParams.wsSearchPattern;
     cbReplace.Checked          := sfReplace in SearchParams.Flags;
-    cbReplacePattern.Text      := SearchParams.sReplacePattern;
+    cbReplacePattern.Text      := SearchParams.wsReplacePattern;
     cbCaseSensitive.Checked    := sfCaseSensitive in SearchParams.Flags;
     cbWholeWords.Checked       := sfWholeWordsOnly in SearchParams.Flags;
     cbSelOnly.Checked          := sfSelectedOnly in SearchParams.Flags;

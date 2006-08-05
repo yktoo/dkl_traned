@@ -1,0 +1,19 @@
+object DKLTranEdForm: TDKLTranEdForm
+  Left = 248
+  Top = 109
+  AutoScroll = False
+  Caption = '<caption>'
+  ClientHeight = 451
+  ClientWidth = 688
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poScreenCenter
+  ShowHint = True
+  PixelsPerInch = 96
+  TextHeight = 13
+end

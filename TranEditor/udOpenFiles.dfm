@@ -1,25 +1,15 @@
-object dOpenFiles: TdOpenFiles
-  Left = 357
-  Top = 263
+inherited dOpenFiles: TdOpenFiles
   ActiveControl = cbSourceFile
   BorderStyle = bsDialog
   Caption = 'Open language files'
   ClientHeight = 226
   ClientWidth = 592
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  Position = poMainFormCenter
   DesignSize = (
     592
     226)
   PixelsPerInch = 96
   TextHeight = 13
-  object pMain: TPanel
+  object pMain: TTntPanel
     Left = 8
     Top = 8
     Width = 577
@@ -31,7 +21,7 @@ object dOpenFiles: TdOpenFiles
     DesignSize = (
       577
       181)
-    object lSource: TLabel
+    object lSource: TTntLabel
       Left = 12
       Top = 12
       Width = 103
@@ -39,7 +29,7 @@ object dOpenFiles: TdOpenFiles
       Caption = '&Language source file:'
       FocusControl = cbSourceFile
     end
-    object cbSourceFile: TComboBox
+    object cbSourceFile: TTntComboBox
       Left = 12
       Top = 28
       Width = 473
@@ -56,7 +46,7 @@ object dOpenFiles: TdOpenFiles
       TabOrder = 0
       OnChange = AdjustOKCancel
     end
-    object bSourceFileBrowse: TButton
+    object bSourceFileBrowse: TTntButton
       Left = 488
       Top = 28
       Width = 75
@@ -66,7 +56,7 @@ object dOpenFiles: TdOpenFiles
       TabOrder = 1
       OnClick = bSourceFileBrowseClick
     end
-    object cbTranFile: TComboBox
+    object cbTranFile: TTntComboBox
       Left = 28
       Top = 144
       Width = 457
@@ -80,20 +70,20 @@ object dOpenFiles: TdOpenFiles
       Font.Style = []
       ItemHeight = 13
       ParentFont = False
-      TabOrder = 5
+      TabOrder = 7
       OnChange = AdjustOKCancel
     end
-    object bTranFileBrowse: TButton
+    object bTranFileBrowse: TTntButton
       Left = 488
       Top = 144
       Width = 75
       Height = 23
       Anchors = [akTop, akRight]
       Caption = 'Bro&wse...'
-      TabOrder = 6
+      TabOrder = 8
       OnClick = bTranFileBrowseClick
     end
-    object cbDisplayFile: TComboBox
+    object cbDisplayFile: TTntComboBox
       Left = 12
       Top = 72
       Width = 473
@@ -110,7 +100,7 @@ object dOpenFiles: TdOpenFiles
       TabOrder = 3
       OnChange = AdjustOKCancel
     end
-    object bDisplayFileBrowse: TButton
+    object bDisplayFileBrowse: TTntButton
       Left = 488
       Top = 72
       Width = 75
@@ -120,7 +110,7 @@ object dOpenFiles: TdOpenFiles
       TabOrder = 4
       OnClick = bDisplayFileBrowseClick
     end
-    object cbUseDisplayFile: TCheckBox
+    object cbUseDisplayFile: TTntCheckBox
       Left = 12
       Top = 52
       Width = 557
@@ -131,7 +121,7 @@ object dOpenFiles: TdOpenFiles
       TabOrder = 2
       OnClick = cbUseDisplayFileClick
     end
-    object rbNewTran: TRadioButton
+    object rbNewTran: TTntRadioButton
       Left = 12
       Top = 104
       Width = 557
@@ -139,23 +129,23 @@ object dOpenFiles: TdOpenFiles
       Anchors = [akLeft, akTop, akRight]
       Caption = '&Create new translation'
       Checked = True
-      TabOrder = 7
+      TabOrder = 5
       TabStop = True
       OnClick = RBTranClick
     end
-    object rbOpenTran: TRadioButton
+    object rbOpenTran: TTntRadioButton
       Left = 12
       Top = 124
       Width = 557
       Height = 17
       Anchors = [akLeft, akTop, akRight]
       Caption = '&Open an existing translation file:'
-      TabOrder = 8
+      TabOrder = 6
       OnClick = RBTranClick
     end
   end
-  object bOK: TButton
-    Left = 431
+  object bOK: TTntButton
+    Left = 352
     Top = 196
     Width = 75
     Height = 23
@@ -165,8 +155,8 @@ object dOpenFiles: TdOpenFiles
     TabOrder = 1
     OnClick = bOKClick
   end
-  object bCancel: TButton
-    Left = 511
+  object bCancel: TTntButton
+    Left = 432
     Top = 196
     Width = 75
     Height = 23
@@ -176,14 +166,21 @@ object dOpenFiles: TdOpenFiles
     ModalResult = 2
     TabOrder = 2
   end
+  object bHelp: TTntButton
+    Left = 512
+    Top = 196
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Help'
+    TabOrder = 3
+    OnClick = ShowHelpNotify
+  end
   object dklcMain: TDKLanguageController
-    IgnoreList.Strings = (
-      '*.Font.Name'
-      '*.SecondaryShortCuts')
     Left = 8
     Top = 188
     LangData = {
-      0A00644F70656E46696C6573010100000001000000070043617074696F6E010D
+      0A00644F70656E46696C6573010100000001000000070043617074696F6E010E
       0000000500704D61696E000007006C536F757263650101000000020000000700
       43617074696F6E000C006362536F7572636546696C650000110062536F757263
       6546696C6542726F777365010100000003000000070043617074696F6E000A00
@@ -194,6 +191,7 @@ object dOpenFiles: TdOpenFiles
       000000070043617074696F6E00090072624E65775472616E0101000000070000
       00070043617074696F6E000A0072624F70656E5472616E010100000008000000
       070043617074696F6E000300624F4B010100000009000000070043617074696F
-      6E0007006243616E63656C01010000000A000000070043617074696F6E00}
+      6E0007006243616E63656C01010000000A000000070043617074696F6E000500
+      6248656C7001010000000B000000070043617074696F6E00}
   end
 end

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udOpenFiles.pas,v 1.7 2006-06-17 04:19:28 dale Exp $
+//  $Id: udOpenFiles.pas,v 1.8 2006-08-05 21:42:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -10,36 +10,37 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, DKLang;
+  DKLTranEdFrm, DKLang, StdCtrls, TntStdCtrls, ExtCtrls, TntExtCtrls;
 
 type
-  TdOpenFiles = class(TForm)
-    pMain: TPanel;
-    bOK: TButton;
-    bCancel: TButton;
-    lSource: TLabel;
-    cbSourceFile: TComboBox;
-    bSourceFileBrowse: TButton;
-    cbTranFile: TComboBox;
-    bTranFileBrowse: TButton;
-    cbDisplayFile: TComboBox;
-    bDisplayFileBrowse: TButton;
-    cbUseDisplayFile: TCheckBox;
-    rbNewTran: TRadioButton;
-    rbOpenTran: TRadioButton;
+  TdOpenFiles = class(TDKLTranEdForm)
+    bCancel: TTntButton;
+    bDisplayFileBrowse: TTntButton;
+    bHelp: TTntButton;
+    bOK: TTntButton;
+    bSourceFileBrowse: TTntButton;
+    bTranFileBrowse: TTntButton;
+    cbDisplayFile: TTntComboBox;
+    cbSourceFile: TTntComboBox;
+    cbTranFile: TTntComboBox;
+    cbUseDisplayFile: TTntCheckBox;
     dklcMain: TDKLanguageController;
-    procedure bSourceFileBrowseClick(Sender: TObject);
-    procedure bTranFileBrowseClick(Sender: TObject);
-    procedure bOKClick(Sender: TObject);
+    lSource: TTntLabel;
+    pMain: TTntPanel;
+    rbNewTran: TTntRadioButton;
+    rbOpenTran: TTntRadioButton;
     procedure AdjustOKCancel(Sender: TObject);
     procedure bDisplayFileBrowseClick(Sender: TObject);
+    procedure bOKClick(Sender: TObject);
+    procedure bSourceFileBrowseClick(Sender: TObject);
+    procedure bTranFileBrowseClick(Sender: TObject);
     procedure cbUseDisplayFileClick(Sender: TObject);
     procedure RBTranClick(Sender: TObject);
   private
      // Source, display and translation file names
-    FSourceFile: String;
-    FDisplayFile: String;
-    FTranFile: String;
+    FSourceFile: WideString;
+    FDisplayFile: WideString;
+    FTranFile: WideString;
      // Source, display and translation MRU lists
     FSourceMRUStrings: TStrings;
     FDisplayMRUStrings: TStrings;
@@ -49,33 +50,33 @@ type
      // Updates the translation-file controls depending on state of radiobuttons
     procedure UpdateTranFileCtls;
   protected
-    procedure InitializeDialog;
-    function  Execute: Boolean;
+    procedure DoCreate; override;
+    procedure ExecuteInitialize; override;
   end;
 
    // Shows new/open translation dialog. If bNewMode=True, the dialog is for creating a new translation; otherwise this
    //   is for opening an existing one
-  function SelectLangFiles(var sSourceFile, sDisplayFile, sTranFile: String; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings): Boolean;
+  function SelectLangFiles(var wsSourceFile, wsDisplayFile, wsTranFile: WideString; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings): Boolean;
 
 implementation
 {$R *.dfm}
 uses ConsVars;
 
-  function SelectLangFiles(var sSourceFile, sDisplayFile, sTranFile: String; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings): Boolean;
+  function SelectLangFiles(var wsSourceFile, wsDisplayFile, wsTranFile: WideString; SourceMRUStrings, DisplayMRUStrings, TranMRUStrings: TStrings): Boolean;
   begin
     with TdOpenFiles.Create(Application) do
       try
-        FSourceFile        := sSourceFile;
-        FDisplayFile       := sDisplayFile;
-        FTranFile          := sTranFile;
+        FSourceFile        := wsSourceFile;
+        FDisplayFile       := wsDisplayFile;
+        FTranFile          := wsTranFile;
         FSourceMRUStrings  := SourceMRUStrings;
         FDisplayMRUStrings := DisplayMRUStrings;
         FTranMRUStrings    := TranMRUStrings;
-        Result := Execute;
+        Result := ExecuteModal;
         if Result then begin
-          sSourceFile  := FSourceFile;
-          sDisplayFile := FDisplayFile;
-          sTranFile    := FTranFile;
+          wsSourceFile  := FSourceFile;
+          wsDisplayFile := FDisplayFile;
+          wsTranFile    := FTranFile;
         end;
       finally
         Free;
@@ -175,14 +176,16 @@ uses ConsVars;
     AdjustOKCancel(nil);
   end;
 
-  function TdOpenFiles.Execute: Boolean;
+  procedure TdOpenFiles.DoCreate;
   begin
-    InitializeDialog;
-    Result := ShowModal=mrOK;
+    inherited DoCreate;;
+     // Initialize help context ID
+    HelpContext := IDH_iface_dlg_open_files;
   end;
 
-  procedure TdOpenFiles.InitializeDialog;
+  procedure TdOpenFiles.ExecuteInitialize;
   begin
+    inherited ExecuteInitialize;
      // Source file
     cbSourceFile.Items.Assign(FSourceMRUStrings);
     cbSourceFile.Text := FSourceFile;

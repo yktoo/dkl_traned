@@ -1,27 +1,17 @@
-object dDiffLog: TdDiffLog
-  Left = 348
-  Top = 175
+inherited dDiffLog: TdDiffLog
   ActiveControl = mMain
   BorderStyle = bsDialog
   Caption = 'Differences found'
   ClientHeight = 431
   ClientWidth = 592
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  Position = poMainFormCenter
   DesignSize = (
     592
     431)
   PixelsPerInch = 96
   TextHeight = 13
-  object bClose: TButton
-    Left = 511
-    Top = 401
+  object bClose: TTntButton
+    Left = 432
+    Top = 400
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]
@@ -31,7 +21,7 @@ object dDiffLog: TdDiffLog
     ModalResult = 2
     TabOrder = 3
   end
-  object mMain: TMemo
+  object mMain: TTntMemo
     Left = 8
     Top = 8
     Width = 575
@@ -43,7 +33,7 @@ object dDiffLog: TdDiffLog
     WordWrap = False
     OnKeyPress = mMainKeyPress
   end
-  object gbTotals: TGroupBox
+  object gbTotals: TTntGroupBox
     Left = 8
     Top = 320
     Width = 575
@@ -51,7 +41,7 @@ object dDiffLog: TdDiffLog
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Totals'
     TabOrder = 1
-    object lbTotals: TListBox
+    object lbTotals: TTntListBox
       Left = 2
       Top = 15
       Width = 571
@@ -64,10 +54,10 @@ object dDiffLog: TdDiffLog
       TabWidth = 70
     end
   end
-  object cbAutoTranslate: TCheckBox
+  object cbAutoTranslate: TTntCheckBox
     Left = 8
     Top = 404
-    Width = 501
+    Width = 421
     Height = 17
     Anchors = [akLeft, akTop, akRight]
     Caption = 
@@ -76,18 +66,27 @@ object dDiffLog: TdDiffLog
     Checked = True
     State = cbChecked
     TabOrder = 2
+    WordWrap = True
+  end
+  object bHelp: TTntButton
+    Left = 512
+    Top = 400
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Help'
+    TabOrder = 4
+    OnClick = ShowHelpNotify
   end
   object dklcMain: TDKLanguageController
-    IgnoreList.Strings = (
-      '*.Font.Name'
-      '*.SecondaryShortCuts')
-    Left = 468
-    Top = 376
+    Left = 528
+    Top = 12
     LangData = {
-      080064446966664C6F67010100000001000000070043617074696F6E01050000
+      080064446966664C6F67010100000001000000070043617074696F6E01060000
       00060062436C6F7365010100000002000000070043617074696F6E0005006D4D
       61696E000008006762546F74616C73010100000003000000070043617074696F
       6E0008006C62546F74616C7300000F0063624175746F5472616E736C61746501
-      0100000004000000070043617074696F6E00}
+      0100000004000000070043617074696F6E0005006248656C7001010000000500
+      0000070043617074696F6E00}
   end
 end

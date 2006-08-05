@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udSettings.pas,v 1.7 2006-06-17 04:19:28 dale Exp $
+//  $Id: udSettings.pas,v 1.8 2006-08-05 21:42:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -10,62 +10,62 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  StdCtrls, ExtCtrls, ComCtrls, DKLang;
+  DKLTranEdFrm, DKLang, StdCtrls, TntStdCtrls;
 
 type
-  TdSettings = class(TForm)
-    bOK: TButton;
-    bCancel: TButton;
-    pcMain: TPageControl;
-    tsRepository: TTabSheet;
-    tsInterface: TTabSheet;
-    lReposPath: TLabel;
-    lRemovePrefix: TLabel;
-    eReposPath: TEdit;
-    bBrowseReposPath: TButton;
-    cbRemovePrefix: TCheckBox;
-    cbAutoAddStrings: TCheckBox;
-    bInterfaceFont: TButton;
-    bTableFont: TButton;
-    lInterfaceFont: TLabel;
-    lTableFont: TLabel;
+  TdSettings = class(TDKLTranEdForm)
+    bBrowseReposPath: TTntButton;
+    bCancel: TTntButton;
+    bHelp: TTntButton;
+    bInterfaceFont: TTntButton;
+    bOK: TTntButton;
+    bTableFont: TTntButton;
+    cbAutoAddStrings: TTntCheckBox;
+    cbIgnoreEncodingMismatch: TTntCheckBox;
+    cbRemovePrefix: TTntCheckBox;
     dklcMain: TDKLanguageController;
+    eReposPath: TTntEdit;
+    gbInterface: TGroupBox;
+    gbRepository: TGroupBox;
+    lInterfaceFont: TTntLabel;
+    lRemovePrefix: TTntLabel;
+    lReposPath: TTntLabel;
+    lTableFont: TTntLabel;
+    procedure AdjustOKCancel(Sender: TObject);
     procedure bBrowseReposPathClick(Sender: TObject);
     procedure bInterfaceFontClick(Sender: TObject);
-    procedure bTableFontClick(Sender: TObject);
-    procedure AdjustOKCancel(Sender: TObject);
     procedure bOKClick(Sender: TObject);
+    procedure bTableFontClick(Sender: TObject);
   private
      // Fonts
-    FInterfaceFont: String;
-    FTableFont: String;
+    FInterfaceFont: WideString;
+    FTableFont: WideString;
      // Updates info about selected fonts
     procedure UpdateFonts;
   protected
-    procedure InitializeDialog;
-    procedure FinalizeDialog;
-    function  Execute: Boolean;
+    procedure DoCreate; override;
+    procedure ExecuteInitialize; override;
   end;
 
   function EditSettings: Boolean;
 
 implementation
 {$R *.dfm}
-uses ConsVars, FileCtrl;
+uses ConsVars, TntFileCtrl;
 
   function EditSettings: Boolean;
   begin
     with TdSettings.Create(Application) do
       try
-        Result := Execute;
-        if Result then begin
-          bSetting_ReposRemovePrefix := cbRemovePrefix.Checked;
-          bSetting_ReposAutoAdd      := cbAutoAddStrings.Checked;
-        end;
+        Result := ExecuteModal;
       finally
         Free;
       end;
   end;
+
+   //===================================================================================================================
+   // TdSettings
+   //===================================================================================================================
 
   procedure TdSettings.AdjustOKCancel(Sender: TObject);
   begin
@@ -73,10 +73,10 @@ uses ConsVars, FileCtrl;
   end;
 
   procedure TdSettings.bBrowseReposPathClick(Sender: TObject);
-  var s: String;
+  var ws: WideString;
   begin
-    s := eReposPath.Text;
-    if SelectDirectory(ConstVal('SDlgTitle_SelReposPath'), '', s) then eReposPath.Text := s;
+    ws := eReposPath.Text;
+    if WideSelectDirectory(ConstVal('SDlgTitle_SelReposPath'), '', ws) then eReposPath.Text := ws;
   end;
 
   procedure TdSettings.bInterfaceFontClick(Sender: TObject);
@@ -90,10 +90,14 @@ uses ConsVars, FileCtrl;
   procedure TdSettings.bOKClick(Sender: TObject);
   begin
      // Repository
-    sSetting_RepositoryDir := eReposPath.Text;
+    wsSetting_RepositoryDir         := eReposPath.Text;
+    bSetting_ReposRemovePrefix      := cbRemovePrefix.Checked;
+    bSetting_ReposAutoAdd           := cbAutoAddStrings.Checked;
      // Interface
-    sSetting_InterfaceFont := FInterfaceFont;
-    sSetting_TableFont     := FTableFont;
+    wsSetting_InterfaceFont         := FInterfaceFont;
+    wsSetting_TableFont             := FTableFont;
+     // Misc
+    bSetting_IgnoreEncodingMismatch := cbIgnoreEncodingMismatch.Checked; 
     ModalResult := mrOK;
   end;
 
@@ -105,40 +109,34 @@ uses ConsVars, FileCtrl;
     end;
   end;
 
-  function TdSettings.Execute: Boolean;
+  procedure TdSettings.DoCreate;
   begin
-    try
-      InitializeDialog;
-      Result := ShowModal=mrOK;
-    finally
-      FinalizeDialog;
-    end;
+    inherited DoCreate;
+     // Initialize help context ID
+    HelpContext := IDH_iface_dlg_settings;
   end;
 
-  procedure TdSettings.FinalizeDialog;
+  procedure TdSettings.ExecuteInitialize;
   begin
-    { does nothing }
-  end;
-
-  procedure TdSettings.InitializeDialog;
-  begin
+    inherited ExecuteInitialize;
      // Repository
-    eReposPath.Text          := sSetting_RepositoryDir;
-    cbRemovePrefix.Checked   := bSetting_ReposRemovePrefix;
-    cbAutoAddStrings.Checked := bSetting_ReposAutoAdd;
+    eReposPath.Text                  := wsSetting_RepositoryDir;
+    cbRemovePrefix.Checked           := bSetting_ReposRemovePrefix;
+    cbAutoAddStrings.Checked         := bSetting_ReposAutoAdd;
      // Interface
-    FInterfaceFont := sSetting_InterfaceFont;
-    FTableFont     := sSetting_TableFont;
+    FInterfaceFont                   := wsSetting_InterfaceFont;
+    FTableFont                       := wsSetting_TableFont;
     UpdateFonts;
-    pcMain.ActivePageIndex := 0;
+     // Misc
+    cbIgnoreEncodingMismatch.Checked := bSetting_IgnoreEncodingMismatch;
   end;
 
   procedure TdSettings.UpdateFonts;
 
-    procedure ShowFont(const sFont: String; Lbl: TLabel);
+    procedure ShowFont(const wsFont: WideString; Lbl: TTntLabel);
     begin
-      Lbl.Caption := GetFirstWord(sFont, '/');
-      FontFromStr(Lbl.Font, sFont);
+      Lbl.Caption := GetFirstWord(wsFont, '/');
+      FontFromStr(Lbl.Font, wsFont);
     end;
 
   begin

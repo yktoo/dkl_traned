@@ -1,25 +1,15 @@
-object dFind: TdFind
-  Left = 331
-  Top = 235
+inherited dFind: TdFind
   ActiveControl = cbPattern
   BorderStyle = bsDialog
   Caption = 'Find or replace'
   ClientHeight = 293
-  ClientWidth = 549
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  Position = poMainFormCenter
+  ClientWidth = 547
   DesignSize = (
-    549
+    547
     293)
   PixelsPerInch = 96
   TextHeight = 13
-  object lPattern: TLabel
+  object lPattern: TTntLabel
     Left = 12
     Top = 16
     Width = 54
@@ -27,8 +17,8 @@ object dFind: TdFind
     Caption = '&Search for:'
     FocusControl = cbPattern
   end
-  object bOK: TButton
-    Left = 264
+  object bOK: TTntButton
+    Left = 186
     Top = 263
     Width = 95
     Height = 23
@@ -39,8 +29,8 @@ object dFind: TdFind
     TabOrder = 7
     OnClick = bOKClick
   end
-  object bClose: TButton
-    Left = 464
+  object bClose: TTntButton
+    Left = 386
     Top = 263
     Width = 75
     Height = 23
@@ -50,10 +40,10 @@ object dFind: TdFind
     ModalResult = 2
     TabOrder = 9
   end
-  object cbPattern: TComboBox
+  object cbPattern: TTntComboBox
     Left = 120
     Top = 12
-    Width = 415
+    Width = 417
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 16
@@ -61,10 +51,10 @@ object dFind: TdFind
     TabOrder = 0
     OnChange = DlgDataChange
   end
-  object cbReplacePattern: TComboBox
+  object cbReplacePattern: TTntComboBox
     Left = 120
     Top = 44
-    Width = 415
+    Width = 417
     Height = 21
     Anchors = [akLeft, akTop, akRight]
     DropDownCount = 16
@@ -72,7 +62,7 @@ object dFind: TdFind
     TabOrder = 2
     OnChange = DlgDataChange
   end
-  object gbOptions: TGroupBox
+  object gbOptions: TTntGroupBox
     Left = 12
     Top = 76
     Width = 257
@@ -82,7 +72,7 @@ object dFind: TdFind
     DesignSize = (
       257
       109)
-    object cbCaseSensitive: TCheckBox
+    object cbCaseSensitive: TTntCheckBox
       Left = 16
       Top = 20
       Width = 225
@@ -92,7 +82,7 @@ object dFind: TdFind
       TabOrder = 0
       OnClick = DlgDataChange
     end
-    object cbWholeWords: TCheckBox
+    object cbWholeWords: TTntCheckBox
       Left = 16
       Top = 40
       Width = 225
@@ -102,7 +92,7 @@ object dFind: TdFind
       TabOrder = 1
       OnClick = DlgDataChange
     end
-    object cbSelOnly: TCheckBox
+    object cbSelOnly: TTntCheckBox
       Left = 16
       Top = 60
       Width = 225
@@ -112,7 +102,7 @@ object dFind: TdFind
       TabOrder = 2
       OnClick = DlgDataChange
     end
-    object cbPrompt: TCheckBox
+    object cbPrompt: TTntCheckBox
       Left = 16
       Top = 80
       Width = 225
@@ -123,7 +113,7 @@ object dFind: TdFind
       OnClick = DlgDataChange
     end
   end
-  object rgOrigin: TRadioGroup
+  object rgOrigin: TTntRadioGroup
     Left = 12
     Top = 192
     Width = 257
@@ -136,7 +126,7 @@ object dFind: TdFind
     TabOrder = 5
     OnClick = DlgDataChange
   end
-  object rgDirection: TRadioGroup
+  object rgDirection: TTntRadioGroup
     Left = 280
     Top = 192
     Width = 257
@@ -149,8 +139,8 @@ object dFind: TdFind
     TabOrder = 6
     OnClick = DlgDataChange
   end
-  object bAll: TButton
-    Left = 364
+  object bAll: TTntButton
+    Left = 286
     Top = 263
     Width = 95
     Height = 23
@@ -159,7 +149,7 @@ object dFind: TdFind
     TabOrder = 8
     OnClick = bAllClick
   end
-  object cbReplace: TCheckBox
+  object cbReplace: TTntCheckBox
     Left = 12
     Top = 44
     Width = 97
@@ -168,7 +158,7 @@ object dFind: TdFind
     TabOrder = 1
     OnClick = cbReplaceClick
   end
-  object gbScope: TGroupBox
+  object gbScope: TTntGroupBox
     Left = 280
     Top = 76
     Width = 257
@@ -178,7 +168,7 @@ object dFind: TdFind
     DesignSize = (
       257
       109)
-    object cbSearchNames: TCheckBox
+    object cbSearchNames: TTntCheckBox
       Left = 12
       Top = 24
       Width = 225
@@ -188,7 +178,7 @@ object dFind: TdFind
       TabOrder = 0
       OnClick = DlgDataChange
     end
-    object cbSearchOriginal: TCheckBox
+    object cbSearchOriginal: TTntCheckBox
       Left = 12
       Top = 44
       Width = 225
@@ -198,7 +188,7 @@ object dFind: TdFind
       TabOrder = 1
       OnClick = DlgDataChange
     end
-    object cbSearchTranslated: TCheckBox
+    object cbSearchTranslated: TTntCheckBox
       Left = 12
       Top = 64
       Width = 225
@@ -211,15 +201,23 @@ object dFind: TdFind
       OnClick = DlgDataChange
     end
   end
+  object bHelp: TTntButton
+    Left = 466
+    Top = 263
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Help'
+    TabOrder = 10
+    OnClick = ShowHelpNotify
+  end
   object dklcMain: TDKLanguageController
     IgnoreList.Strings = (
-      '*.Font.Name'
-      '*.SecondaryShortCuts'
       'bOK.Caption')
     Left = 8
     Top = 260
     LangData = {
-      05006446696E64010100000001000000070043617074696F6E01120000000300
+      05006446696E64010100000001000000070043617074696F6E01130000000300
       624F4B0000060062436C6F7365010100000003000000070043617074696F6E00
       08006C5061747465726E010100000004000000070043617074696F6E00090063
       625061747465726E0000100063625265706C6163655061747465726E00000900
@@ -236,6 +234,7 @@ object dFind: TdFind
       6E000D0063625365617263684E616D6573010100000013000000070043617074
       696F6E00100063625365617263684F726967696E616C01010000001400000007
       0043617074696F6E00120063625365617263685472616E736C61746564010100
-      000015000000070043617074696F6E00}
+      000015000000070043617074696F6E0005006248656C70010100000016000000
+      070043617074696F6E00}
   end
 end

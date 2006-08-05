@@ -1,25 +1,15 @@
-object dTranProps: TdTranProps
-  Left = 473
-  Top = 238
+inherited dTranProps: TdTranProps
   ActiveControl = cbSrcLang
   BorderStyle = bsDialog
   Caption = 'Translation properties'
   ClientHeight = 377
   ClientWidth = 459
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
-  Font.Style = []
-  OldCreateOrder = False
-  Position = poMainFormCenter
   DesignSize = (
     459
     377)
   PixelsPerInch = 96
   TextHeight = 13
-  object pMain: TPanel
+  object pMain: TTntPanel
     Left = 8
     Top = 8
     Width = 444
@@ -31,7 +21,7 @@ object dTranProps: TdTranProps
     DesignSize = (
       444
       332)
-    object lSrcLang: TLabel
+    object lSrcLang: TTntLabel
       Left = 12
       Top = 12
       Width = 249
@@ -39,7 +29,7 @@ object dTranProps: TdTranProps
       Caption = '&Source Language (used for Translation Repository):'
       FocusControl = cbSrcLang
     end
-    object lTranLang: TLabel
+    object lTranLang: TTntLabel
       Left = 12
       Top = 52
       Width = 104
@@ -47,7 +37,7 @@ object dTranProps: TdTranProps
       Caption = '&Translation language:'
       FocusControl = cbTranLang
     end
-    object lAuthor: TLabel
+    object lAuthor: TTntLabel
       Left = 12
       Top = 132
       Width = 37
@@ -55,7 +45,7 @@ object dTranProps: TdTranProps
       Caption = '&Author:'
       FocusControl = eAuthor
     end
-    object lAdditionalParams: TLabel
+    object lAdditionalParams: TTntLabel
       Left = 12
       Top = 172
       Width = 250
@@ -63,7 +53,7 @@ object dTranProps: TdTranProps
       Caption = 'A&dditional parameters (in the format '#39'Name=Value'#39'):'
       FocusControl = mAdditionalParams
     end
-    object lTargetApp: TLabel
+    object lTargetApp: TTntLabel
       Left = 12
       Top = 92
       Width = 130
@@ -71,7 +61,7 @@ object dTranProps: TdTranProps
       Caption = '&Target Application/Version:'
       FocusControl = cbTargetApp
     end
-    object cbSrcLang: TComboBox
+    object cbSrcLang: TTntComboBox
       Left = 12
       Top = 28
       Width = 421
@@ -83,7 +73,7 @@ object dTranProps: TdTranProps
       TabOrder = 0
       OnChange = AdjustOKCancel
     end
-    object cbTranLang: TComboBox
+    object cbTranLang: TTntComboBox
       Left = 12
       Top = 68
       Width = 421
@@ -95,7 +85,7 @@ object dTranProps: TdTranProps
       TabOrder = 1
       OnChange = AdjustOKCancel
     end
-    object eAuthor: TEdit
+    object eAuthor: TTntEdit
       Left = 12
       Top = 148
       Width = 421
@@ -104,7 +94,7 @@ object dTranProps: TdTranProps
       TabOrder = 3
       OnChange = AdjustOKCancel
     end
-    object mAdditionalParams: TMemo
+    object mAdditionalParams: TTntMemo
       Left = 12
       Top = 188
       Width = 421
@@ -115,7 +105,7 @@ object dTranProps: TdTranProps
       WordWrap = False
       OnChange = AdjustOKCancel
     end
-    object cbTargetApp: TComboBox
+    object cbTargetApp: TTntComboBox
       Left = 12
       Top = 108
       Width = 421
@@ -127,9 +117,9 @@ object dTranProps: TdTranProps
       OnChange = AdjustOKCancel
     end
   end
-  object bOK: TButton
-    Left = 298
-    Top = 347
+  object bOK: TTntButton
+    Left = 216
+    Top = 348
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]
@@ -139,9 +129,9 @@ object dTranProps: TdTranProps
     TabOrder = 1
     OnClick = bOKClick
   end
-  object bCancel: TButton
-    Left = 378
-    Top = 347
+  object bCancel: TTntButton
+    Left = 296
+    Top = 348
     Width = 75
     Height = 23
     Anchors = [akRight, akBottom]
@@ -149,6 +139,16 @@ object dTranProps: TdTranProps
     Caption = 'Cancel'
     ModalResult = 2
     TabOrder = 2
+  end
+  object bHelp: TTntButton
+    Left = 376
+    Top = 348
+    Width = 75
+    Height = 23
+    Anchors = [akRight, akBottom]
+    Caption = 'Help'
+    TabOrder = 3
+    OnClick = ShowHelpNotify
   end
   object MRUTargetApp: TTBMRUList
     MaxItems = 30
@@ -158,13 +158,11 @@ object dTranProps: TdTranProps
   end
   object dklcMain: TDKLanguageController
     IgnoreList.Strings = (
-      '*.Font.Name'
-      '*.SecondaryShortCuts'
       'MRU*.Prefix')
     Left = 84
     Top = 212
     LangData = {
-      0A00645472616E50726F7073010100000001000000070043617074696F6E010E
+      0A00645472616E50726F7073010100000001000000070043617074696F6E010F
       0000000500704D61696E000008006C5372634C616E6701010000000200000007
       0043617074696F6E0009006C5472616E4C616E67010100000003000000070043
       617074696F6E0007006C417574686F7201010000000400000007004361707469
@@ -174,6 +172,7 @@ object dTranProps: TdTranProps
       670000070065417574686F72000011006D4164646974696F6E616C506172616D
       7300000B00636254617267657441707000000300624F4B010100000007000000
       070043617074696F6E0007006243616E63656C01010000000800000007004361
-      7074696F6E000C004D52555461726765744170700000}
+      7074696F6E000C004D5255546172676574417070000005006248656C70010100
+      000009000000070043617074696F6E00}
   end
 end

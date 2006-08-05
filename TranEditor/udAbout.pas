@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udAbout.pas,v 1.6 2006-06-17 04:19:28 dale Exp $
+//  $Id: udAbout.pas,v 1.7 2006-08-05 21:42:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -10,27 +10,29 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  ExtCtrls, StdCtrls, DKLang;
+  DKLTranEdFrm, DKLang, StdCtrls, TntStdCtrls, ExtCtrls;
 
 type
-  TdAbout = class(TForm)
-    iMain: TImage;
-    lVersion: TLabel;
-    lWebsite: TLabel;
-    lWebsiteTitle: TLabel;
-    lOK: TLabel;
-    lEmailTitle: TLabel;
-    lEmail: TLabel;
+  TdAbout = class(TDKLTranEdForm)
     dklcMain: TDKLanguageController;
-    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    iMain: TImage;
+    lEmail: TTntLabel;
+    lEmailTitle: TTntLabel;
+    lOK: TTntLabel;
+    lVersion: TTntLabel;
+    lWebsite: TTntLabel;
+    lWebsiteTitle: TTntLabel;
     procedure FormCreate(Sender: TObject);
-    procedure lWebsiteClick(Sender: TObject);
-    procedure lOKClick(Sender: TObject);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure lEmailClick(Sender: TObject);
+    procedure lOKClick(Sender: TObject);
+    procedure lWebsiteClick(Sender: TObject);
   private
     procedure ApplyWindowRgn;
     procedure Fadeout;
     procedure WMNCHitTest(var Msg: TWMNCHitTest); message WM_NCHITTEST;
+  protected
+    procedure DoCreate; override;
   end;
 
   procedure ShowAbout;
@@ -55,7 +57,7 @@ uses ShellAPI, dkWebUtils, ConsVars;
   type
     PRGB = ^TRGB;
     TRGB = packed record
-      bR, bG, bB: Byte;
+      bB, bG, bR: Byte;
     end;
   var
     hr, _hr: HRGN;
@@ -65,8 +67,8 @@ uses ShellAPI, dkWebUtils, ConsVars;
      // Returns True if a pixel refers to the transparent color
     function IsTransparent(p: PRGB): Boolean;
     begin
-       // Assume white ($ffffff) to be a transparent color
-      Result := (p.bR=$ff) and (p.bG=$ff) and (p.bB=$ff);
+       // Assume yellow ($00ffff) to be a transparent color
+      Result := (p.bR=$ff) and (p.bG=$ff) and (p.bB=$00);
     end;
 
   begin
@@ -105,6 +107,13 @@ uses ShellAPI, dkWebUtils, ConsVars;
     end;
      // Apply the region
     SetWindowRgn(Handle, hr, False);
+  end;
+
+  procedure TdAbout.DoCreate;
+  begin
+    inherited DoCreate;
+     // Initialize help context ID
+    HelpContext := IDH_iface_dlg_about;
   end;
 
   procedure TdAbout.Fadeout;
@@ -152,7 +161,7 @@ uses ShellAPI, dkWebUtils, ConsVars;
   var c: TControl;
   begin
     c := ControlAtPos(ScreenToClient(Point(Msg.XPos, Msg.YPos)), False);
-    if (c<>nil) and (c is TLabel) and (TLabel(c).Cursor=crHandPoint) then inherited else Msg.Result := HTCAPTION;
+    if (c<>nil) and (c is TTntLabel) and (TTntLabel(c).Cursor=crHandPoint) then inherited else Msg.Result := HTCAPTION;
   end;
 
 end.

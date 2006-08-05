@@ -1,0 +1,67 @@
+<html>
+<!-- $Id: iface-dlg-settings.html,v 1.1 2006-08-05 21:37:25 dale Exp $ -->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <title>Program settings dialog</title>
+<head>
+<body>
+
+<h1>Program settings dialog</h1>
+
+<div class=pagebody>
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<p><b>Program settings</b> dialog allows you to view or edit program preferences.
+
+<p>To display the dialog use <b>Tools | Program settings...</b> main menu item or <b>F4</b> shortcut key.
+
+<h2>Controls</h2>
+<table class=framed>
+  <tr>
+    <td class=control>Repository</td>
+    <td>Specifies Translation Repository properties</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Translation Repository path</td>
+    <td>Specifies directory where Repository file is stored. You may click <b>Browse...</b> button to browse for
+        directory.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Remove prefix character ('&amp;')<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;when adding strings to the Repository</td>
+    <td>When checked, all <b>&amp;</b> characters will be stripped from text being placed into Repository. This is
+        useful when you want Repository to be able to translate both <b>&amp;Yes</b> and <b>Y&amp;es</b> with the same
+        rule, but it requires manual shortcut assignment. If this option is unchecked, the Repository will only
+        recognize strings which exactly match the source, considering the prefix characters.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Automatically add new translations<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;to the Repository</td>
+    <td>When checked, each entered translated value will automatically be placed into the Repository. When unchecked,
+      you can only fill the Repository with translations using <b>Tools | Add selected to Repository</b> main menu
+      item.</td>
+  </tr>
+  <tr>
+    <td class=control>Interface</td>
+    <td>Allows you to change user interface settings.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Interface font...</td>
+    <td>Invokes standard Select font dialog to select font used for the whole program interface except table.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Table font...</td>
+    <td>Invokes standard Select font dialog to select font used for the table.</td>
+  </tr>
+  <tr>
+    <td class=control>Don't warn if language source<br>and translation being saved<br>have different encodings</td>
+    <td>When checked, the program won't display warning if language source file uses Unicode and you save translation in
+      ANSI, and vice versa.</td>
+  </tr>
+</table>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+</div>
+</body>
+</html>

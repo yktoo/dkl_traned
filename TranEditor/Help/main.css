@@ -1,0 +1,74 @@
+/* $Id: main.css,v 1.1 2006-08-05 21:37:25 dale Exp $ */
+
+body {
+  font-family: Verdana,Arial,serif;
+  font-size: 8pt;
+  margin: 0;
+  padding: 0;
+}
+table {
+  font-family: Verdana,Arial,serif;
+  font-size: 8pt;
+  border-collapse: collapse;
+}
+td {
+  vertical-align: top;
+  margin: 0;
+  padding: 2px 4px;
+}
+th {
+  font-weight: bold; 
+  margin: 0;
+  padding: 2px 4px;
+  background-color: #e0e0e0; 
+}
+table.framed {
+  border: 1px solid gray;
+}
+table.framed td {
+  border: 1px solid gray;
+}
+table.framed th {
+  border: 1px solid gray;
+}
+td.control { 
+  color: #408040;
+  white-space: nowrap;
+}
+h1 {
+  font-family: Trebuchet MS,Verdana,Arial,serif;
+  font-size: 12pt;
+  text-align: center;
+  margin: 0;
+  padding: 8px;
+  background-color: #f0f0f0;
+  border-bottom: 1px solid gray;
+}
+h2 {
+  font-family: Trebuchet MS,Verdana,Arial,serif;
+  font-size: 10pt;
+  text-align: left;
+  margin: 0;
+  padding: 3px 0;
+}
+a {
+  color: blue;
+  text-decoration: none;
+}
+a:hover {
+  color: red;
+}
+div.code {
+  font-family: monospace;
+  padding: 12px;
+  background-color: #f0f0ff;
+  border: 1px dotted gray;
+}
+div.pagebody {
+  margin: 0;
+  padding: 8px;
+}
+p {
+  margin: 0;
+  padding: 3px 0;
+}

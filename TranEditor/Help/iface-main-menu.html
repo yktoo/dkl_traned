@@ -1,0 +1,190 @@
+<html>
+<!-- $Id: iface-main-menu.html,v 1.1 2006-08-05 21:37:25 dale Exp $ -->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <title>Main menu</title>
+<head>
+<body>
+
+<h1>Main menu</h1>
+
+<div class=pagebody>
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<ul>
+	<li><a href="#file">File menu</a>
+	<li><a href="#edit">Edit menu</a>
+	<li><a href="#view">View menu</a>
+	<li><a href="#tools">Tools menu</a>
+	<li><a href="#help">Help menu</a>
+</ul>
+
+<h2><a name="file"></a>File menu</h2>
+<table class=framed>
+  <tr>
+    <td class=control>New or Open...</td>
+    <td>Creates a new translation or opens an existing one with <a href="iface-dlg-open-files.html">Open language files
+        dialog</a>.</td>
+  </tr>
+  <tr>
+    <td class=control>Save</td>
+    <td>Saves current translation using the same file name.</td>
+  </tr>
+  <tr>
+    <td class=control>Save as...</td>
+    <td>Saves current translation into another file.</td>
+  </tr>
+  <tr>
+    <td class=control>Close</td>
+    <td>Closes both language source file and translation file.</td>
+  </tr>
+  <tr>
+    <td class=control>Exit</td>
+    <td>Exits the program.</td>
+  </tr>
+</table>
+
+<h2><a name="edit"></a>Edit menu</h2>
+<table class=framed>
+  <tr>
+    <td class=control>Cut</td>
+    <td>Deletes text currently selected and moves it to the clipboard.</td>
+  </tr>
+  <tr>
+    <td class=control>Copy</td>
+    <td>Copies text currently selected to the clipboard.</td>
+  </tr>
+  <tr>
+    <td class=control>Paste</td>
+    <td>Pastes text from the clipboard into the edit field.</td>
+  </tr>
+  <tr>
+    <td class=control>Find...</td>
+    <td>Finds the specified text with <a href="iface-dlg-find.html">Find or replace dialog</a>.</td>
+  </tr>
+  <tr>
+    <td class=control>Find next</td>
+    <td>Finds the next matching text.</td>
+  </tr>
+  <tr>
+    <td class=control>Replace...</td>
+    <td>Replaces specific text with different text with <a href="iface-dlg-find.html">Find or replace dialog</a>.</td>
+  </tr>
+  <tr>
+    <td class=control>Add bookmark</td>
+    <td>Adds current entry to bookmarks.</td>
+  </tr>
+  <tr>
+    <td class=control>Delete bookmark</td>
+    <td>Deletes current bookmark.</td>
+  </tr>
+  <tr>
+    <td class=control>Previous entry</td>
+    <td>Select previous entry in the table.</td>
+  </tr>
+  <tr>
+    <td class=control>Next entry</td>
+    <td>Select next entry in the table.</td>
+  </tr>
+  <tr>
+    <td class=control>Jump to previous untranslated entry</td>
+    <td>Select previous untranslated or autotranslated entry in the table.</td>
+  </tr>
+  <tr>
+    <td class=control>Jump to next untranslated entry</td>
+    <td>Select next untranslated or autotranslated entry in the table.</td>
+  </tr>
+  <tr>
+    <td class=control>Toggle focus</td>
+    <td>Toggles focus between the table and the translated value editor.</td>
+  </tr>
+  <tr>
+    <td class=control>Translation properties...</td>
+    <td>Allows you to view or modify the translation properties using <a href="iface-dlg-tran-props.html">Translation
+        properties dialog</a>.</td>
+  </tr>
+</table>
+
+<h2><a name="view"></a>View menu</h2>
+<table class=framed>
+  <tr>
+    <td class=control>Toolbar</td>
+    <td>Shows or hides the toolbar.</td>
+  </tr>
+  <tr>
+    <td class=control>Current source entry</td>
+    <td>Shows or hides the Current source entry panel.</td>
+  </tr>
+  <tr>
+    <td class=control>Current translated entry</td>
+    <td>Shows or hides the Current translated entry panel.</td>
+  </tr>
+  <tr>
+    <td class=control>Entry properties</td>
+    <td>Shows or hides the Entry properties panel.</td>
+  </tr>
+  <tr>
+    <td class=control>Bookmarks</td>
+    <td>Shows or hides the Bookmarks panel.</td>
+  </tr>
+  <tr>
+    <td class=control>Status bar</td>
+    <td>Shows or hides the status bar.</td>
+  </tr>
+  <tr>
+    <td class=control>Language</td>
+    <td>Allows you to change program language.</td>
+  </tr>
+</table>
+
+<h2><a name="tools"></a>Tools menu</h2>
+<table class=framed>
+  <tr>
+    <td class=control>Add selected to Repository</td>
+    <td>Adds all selected items to the Translation Repository, or updates Repository entries as needed.</td>
+  </tr>
+  <tr>
+    <td class=control>Autotranslate selected</td>
+    <td>Attempts to automatically translate all selected entries using the Translation Repository. Entries with no
+        appropriate Repository record found remain unchanged; all translated entries get <b>Autotranslated</b> state
+        flag.</td>
+  </tr>
+  <tr>
+    <td class=control>Program settings...</td>
+    <td>Sets program preferences with <a href="iface-dlg-settings.html">Program settings dialog</a>.</td>
+  </tr>
+</table>
+
+<h2><a name="help"></a>Help menu</h2>
+<table class=framed>
+  <tr>
+    <td class=control>About...</td>
+    <td>Displays program version and copyright info using <a href="iface-dlg-about.html">About dialog</a>.</td>
+  </tr>
+  <tr>
+    <td class=control>Help</td>
+    <td>Invokes this online help.</td>
+  </tr>
+  <tr>
+    <td class=control>Internet | Check for updates</td>
+    <td>Checks if there is a more recent version of the program available.</td>
+  </tr>
+  <tr>
+    <td class=control>Internet | DKLang Translation Editor home site</td>
+    <td>Opens program home site with the default browser.</td>
+  </tr>
+  <tr>
+    <td class=control>Internet | Product support</td>
+    <td>Opens program support page with the default browser.</td>
+  </tr>
+  <tr>
+    <td class=control>Internet | DK Software Website</td>
+    <td>Opens DK Software home page with the default browser.</td>
+  </tr>
+</table>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+</div>
+</body>
+</html>

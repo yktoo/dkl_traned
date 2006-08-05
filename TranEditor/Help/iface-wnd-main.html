@@ -1,0 +1,116 @@
+<html>
+<!-- $Id: iface-wnd-main.html,v 1.1 2006-08-05 21:37:25 dale Exp $ -->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <title>Main window</title>
+<head>
+<body>
+
+<h1>Main window</h1>
+
+<div class=pagebody>
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<p><b>Main window</b> of the program consists of the following interface elements:
+  <ul>
+    <li><a href="#main_menu">Main menu</a>
+    <li><a href="#toolbar">Toolbar</a>
+    <li>Some <a href="#panels">dockable panels</a>
+    <li><a href="#table">Main table</a>
+    <li><a href="#status_bar">Status bar</a>
+  </ul>
+
+<h2><a name=main_menu></a>Main menu</h2>
+
+<p>Refer to <a href="iface-main-menu.html">Main menu</a> section to get detailed menu command description.
+
+<h2><a name=toolbar></a>Toolbar</h2>
+
+<p>Toolbar allows quick execution of frequently used commands. You can show or hide the toolbar with <b>View |
+  Toolbar</b> main menu item. You can also drag and dock the toolbar with the mouse.
+
+<h2><a name=panels></a>Dockable panels</h2>
+
+<p>Dockable panels, like the toolbar, can be dragged and docked with the mouse, and toggled using corresponding
+  <b>View</b> menu item.
+
+<table class=framed>
+  <tr>
+    <td class=control>Current source entry</td>
+    <td>Displays read-only text of the source component property or constant value.</td>
+  </tr>
+  <tr>
+    <td class=control>Current translated entry</td>
+    <td>Is a editor for entering translated component property or constant value.</td>
+  </tr>
+  <tr>
+    <td class=control>Entry properties</td>
+    <td>Allows to change flags for all selected entries at once.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Untranslated</td>
+    <td>Indicates that there's still no translated value for the entry. Such entries are <b>not</b> saved with the
+        translation. This flag is automatically cleared when you change the translated value.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Autotranslated</td>
+    <td>Indicates that the translation was obtained using Translation Repository and hence you should check the value
+        for accuracy. This flag doesn't affect way the entry translation is saved.</td>
+  </tr>
+  <tr>
+    <td class=control>Bookmarks</td>
+    <td>Displays list of bookmarks you can navigate to with a double-click or <b>Enter</b> key.</td>
+  </tr>
+</table>
+
+<h2><a name=table></a>Main table</h2>
+
+<p>The main table consists of the four columns:
+<table class=framed>
+  <tr>
+    <td class=control>Component/Property/Constant</td>
+    <td>Displays form, component property or constant name.</td>
+  </tr>
+  <tr>
+    <td class=control>ID</td>
+    <td>Displays component property ID.</td>
+  </tr>
+  <tr>
+    <td class=control>Default value</td>
+    <td>Displays original (source) value of a property or a constant.</td>
+  </tr>
+  <tr>
+    <td class=control>Translated value</td>
+    <td>Displays translated value of a property or a constant. To edit it you use <b>Current translated entry</b>
+      <a href="#panels">dockable panel</a>.</td>
+  </tr>
+</table>
+
+<h2><a name=status_bar></a>Status bar</h2>
+
+<p>Status bar shows hints and statistical information about the current translation and Translation Repository:
+
+<table class=framed>
+  <tr>
+    <td class=control>Comp</td>
+    <td>Total number of component entries.</td>
+  </tr>
+  <tr>
+    <td class=control>Prop</td>
+    <td>Number of component property entries total/untranslated.</td>
+  </tr>
+  <tr>
+    <td class=control>Const</td>
+    <td>Number of constant entries total/untranslated.</td>
+  </tr>
+  <tr>
+    <td class=control>Repository</td>
+    <td>Number of Translation Repository entries.</td>
+  </tr>
+</table>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+</div>
+</body>
+</html>

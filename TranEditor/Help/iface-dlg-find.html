@@ -1,0 +1,103 @@
+<html>
+<!-- $Id: iface-dlg-find.html,v 1.1 2006-08-05 21:37:25 dale Exp $ -->
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <title>Find or replace dialog</title>
+<head>
+<body>
+
+<h1>Find or replace dialog</h1>
+
+<div class=pagebody>
+<!--------------------------------------------------------------------------------------------------------------------->
+
+<p><b>Find or replace</b> dialog allows you to find a text in source or translated part of an entry, and (if you're
+  searching the translated value) optionally replace it with another text.
+
+<p>To display the dialog use <b>Edit | Find...</b> or <b>Edit | Replace...</b> main menu item.
+
+<h2>Controls</h2>
+<table class=framed>
+  <tr>
+    <td class=control>Search for</td>
+    <td>Specifies the search pattern. The dropdown list contains the most recently used strings.</td>
+  </tr>
+  <tr>
+    <td class=control>Replace with</td>
+    <td>When checked, the dialog allows you to specify the string to replace the search match with. The dropdown list
+        contains the most recently used strings.</td>
+  </tr>
+  <tr>
+    <td class=control>Options</td>
+    <td>Allows you to configure the search/replace options.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Case sensitive</td>
+    <td>When checked, the search will distinguish between lower- and uppercase letters. When unchecked, the strings are
+        compared ignoring the case.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Whole words only</td>
+    <td>When checked, only strings containing search pattern located on word boundary will be found. E.g. pattern
+      <i>and</i> will match <i>Me and you</i>, but won't match <i>Random</i>.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Search selected only</td>
+    <td>When checked, only the selected entries will be searched. When unchecked, the whole list is searched.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Prompt on replace</td>
+    <td>Enabled only when <b>Replace with</b> is checked. When checked, the program will display
+        <a href="iface-dlg-prompt-replace.html">Confirm replace</a> dialog on each match before making the replace. When
+        unchecked, all the occurrencies will be replaced without any questions.</td>
+  </tr>
+  <tr>
+    <td class=control>Scope</td>
+    <td>Determines entry parts to search in.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Search entry names</td>
+    <td>When checked, component, property and constant names will be searched. Enabled only when <b>Replace with</b> is
+        unchecked (because you can't change the names).</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Search original values</td>
+    <td>When checked, the source (original) property and constant values will be searched. Enabled only when <b>Replace
+        with</b> is unchecked (because you can't change original values).</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Search translated values</td>
+    <td>When checked, the translated property and constant values will be searched (and replaced, if <b>Replace with</b>
+        is checked).</td>
+  </tr>
+  <tr>
+    <td class=control>Origin</td>
+    <td>Specifies the initial point of the search.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;From the focused entry</td>
+    <td>When checked, the search will start from the entry currently focused.</td>
+  </tr>
+  <tr>
+    <td class=control>&nbsp;&nbsp;&nbsp;&nbsp;Entire scope</td>
+    <td>When checked, the search will start from the very beginning of the entry list.</td>
+  </tr>
+  <tr>
+    <td class=control>Direction</td>
+    <td>Specifies direction of the search.</td>
+  </tr>
+  <tr>
+    <td class=control>Find/Replace</td>
+    <td>Starts search or replace. Search and replace will stop after the first match.</td>
+  </tr>
+  <tr>
+    <td class=control>Replace all</td>
+    <td>Starts replace for all occurrences of the pattern. Enabled only when <b>Replace with</b> is unchecked.</td>
+  </tr>
+</table>
+
+<!--------------------------------------------------------------------------------------------------------------------->
+</div>
+</body>
+</html>

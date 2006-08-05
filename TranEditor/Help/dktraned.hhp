@@ -1,0 +1,44 @@
+;***********************************************************************************************************************
+;   $Id: dktraned.hhp,v 1.1 2006-08-05 21:37:25 dale Exp $
+;-----------------------------------------------------------------------------------------------------------------------
+;   DKLang Translation Editor
+;   Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+;***********************************************************************************************************************
+[OPTIONS]
+Auto Index=Yes
+Compatibility=1.1 or later
+Compiled file=dktraned.chm
+Contents file=dktraned.hhc
+Default topic=index.html
+Display compile notes=No
+Display compile progress=No
+Full-text search=Yes
+Language=0x409 Английский (США)
+Title=DKLang Translation Editor Help
+
+
+[FILES]
+iface-dlg-about.html
+iface-dlg-diff-log.html
+iface-dlg-find.html
+iface-dlg-open-files.html
+iface-dlg-prompt-replace.html
+iface-dlg-settings.html
+iface-dlg-tran-props.html
+iface-main-menu.html
+iface-wnd-main.html
+index.html
+main-contact-information.html
+main-installation.html
+main-license-agreement.html
+main-package-contents.html
+main-revision-history.html
+
+[ALIAS]
+#include aliases.h
+
+[MAP]
+#include maps.h
+
+[INFOTYPES]
+

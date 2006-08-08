@@ -1,0 +1,266 @@
+﻿;***********************************************************************************************************************
+;  $Id: DKTranEd.dklang,v 1.13 2006-08-08 17:35:49 dale Exp $
+;-----------------------------------------------------------------------------------------------------------------------
+;  DKLang Translation Editor
+;  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+;***********************************************************************************************************************
+
+[dTranProps]
+Caption=00000001,Translation properties
+lSrcLang.Caption=00000002,&Source Language (used for Translation Repository):
+lTranLang.Caption=00000003,&Translation language:
+lAuthor.Caption=00000004,&Author:
+lAdditionalParams.Caption=00000005,A&dditional parameters (in the format 'Name=Value'):
+lTargetApp.Caption=00000006,&Target Application/Version:
+bOK.Caption=00000007,OK
+bCancel.Caption=00000008,Cancel
+bHelp.Caption=00000009,Help
+
+[dSettings]
+Caption=00000001,Program settings
+bOK.Caption=00000002,OK
+bCancel.Caption=00000003,Cancel
+lReposPath.Caption=00000005,Tra&nslation Repository path:
+lRemovePrefix.Caption=00000006,(in this case you'll have to assign shortcuts manually later)
+bBrowseReposPath.Caption=00000007,&Browse...
+cbRemovePrefix.Caption=00000008,&Remove prefix character ('&&') when adding strings to the Repository
+cbAutoAddStrings.Caption=00000009,&Automatically add new translations to the Repository
+bInterfaceFont.Caption=00000013,&Interface font...
+bTableFont.Caption=00000014,&Table font...
+cbIgnoreEncodingMismatch.Caption=00000015,Don't &warn if language source and translation being saved have different encodings
+gbRepository.Caption=00000016,Repository
+gbInterface.Caption=00000017,Interface
+bHelp.Caption=00000018,Help
+
+[dOpenFiles]
+Caption=00000001,Open language files
+lSource.Caption=00000002,&Language source file:
+bSourceFileBrowse.Caption=00000003,&Browse...
+bTranFileBrowse.Caption=00000004,Bro&wse...
+bDisplayFileBrowse.Caption=00000005,Brow&se...
+cbUseDisplayFile.Caption=00000006,&Use the following translation file to display the values (instead of ones of the source file):
+rbNewTran.Caption=00000007,&Create new translation
+rbOpenTran.Caption=00000008,&Open an existing translation file:
+bOK.Caption=00000009,OK
+bCancel.Caption=00000010,Cancel
+bHelp.Caption=00000011,Help
+
+[dDiffLog]
+Caption=00000001,Differences found
+bClose.Caption=00000002,Close
+gbTotals.Caption=00000003,Totals
+cbAutoTranslate.Caption=00000004,&Automatically translate all untranslated entries using Translation Repository
+bHelp.Caption=00000005,Help
+
+[dAbout]
+Caption=00000001,About
+lWebsiteTitle.Caption=00000004,Internet:
+lOK.Caption=00000005,ОК
+lEmailTitle.Caption=00000006,Contact e-mail:
+
+[fMain]
+tbMenu.Caption=00000002,Main Menu
+smFile.Caption=00000003,&File
+smEdit.Caption=00000004,&Edit
+smView.Caption=00000005,&View
+iToggleToolbar.Caption=00000006,&Toolbar
+iToggleToolbar.Hint=00000007,Show/hide the toolbar
+iToggleCurSrcEntry.Caption=00000008,Current so&urce entry
+iToggleCurSrcEntry.Hint=00000009,Show/hide the Current Source Entry panel
+iToggleStatusBar.Caption=00000010,&Status bar
+iToggleStatusBar.Hint=00000011,Show/hide the status bar
+smLanguage.Caption=00000012,&Language
+smTools.Caption=00000013,&Tools
+smHelp.Caption=00000014,&Help
+tbMain.Caption=00000015,Toolbar
+sbarMain.Panels[1].Hint=00000018,Total number of component entries
+sbarMain.Panels[2].Hint=00000020,Number of component property entries total/untranslated
+sbarMain.Panels[3].Hint=00000022,Number of constant entries total/untranslated
+sbarMain.Panels[4].Hint=00000024,Number of Repository entries
+tvMain.Header.Columns[0].Text=00000105,Component/Property/Constant
+tvMain.Header.Columns[1].Text=00000106,ID
+tvMain.Header.Columns[2].Text=00000107,Default value
+tvMain.Header.Columns[3].Text=00000108,Translated value
+aNewOrOpen.Caption=00000026,&New or Open...
+aNewOrOpen.Category=00000025,File
+aNewOrOpen.Hint=00000027,New or Open...|Create new translation or open an existing one
+aSave.Caption=00000029,&Save
+aSave.Category=00000028,File
+aSave.Hint=00000030,Save|Save the current translation
+aSaveAs.Caption=00000032,Save &as...
+aSaveAs.Category=00000031,File
+aSaveAs.Hint=00000033,Save as...|Save the current translation into another file
+aClose.Caption=00000035,&Close
+aClose.Category=00000034,File
+aClose.Hint=00000036,Close|Close the files currently open
+aExit.Caption=00000038,&Exit
+aExit.Category=00000037,File
+aExit.Hint=00000039,Exit|Exit the program
+aSettings.Caption=00000041,&Program settings...
+aSettings.Category=00000040,Tools
+aSettings.Hint=00000042,Program settings...|View or modify the program settings
+aAbout.Caption=00000044,&About...
+aAbout.Category=00000043,Help
+aAbout.Hint=00000045,About...|Version and copyright info
+aJumpPrevUntranslated.Caption=00000047,Jump to pre&vious untranslated entry
+aJumpPrevUntranslated.Category=00000046,Edit
+aJumpPrevUntranslated.Hint=00000048,Jump to previous untranslated or autotranslated entry
+aJumpNextUntranslated.Caption=00000050,Jump to next untran&slated entry
+aJumpNextUntranslated.Category=00000049,Edit
+aJumpNextUntranslated.Hint=00000051,Jump to next untranslated or autotranslated entry
+aTranProps.Caption=00000059,&Translation properties...
+aTranProps.Category=00000058,Edit
+aTranProps.Hint=00000060,Translation properties...|View or modify the translation properties
+aAutoTranslate.Caption=00000065,A&utotranslate selected
+aAutoTranslate.Category=00000064,Tools
+aAutoTranslate.Hint=00000066,Autotranslate selected|Autotranslate untranslated entries currently selected with using translation repository
+aAddToRepository.Caption=00000068,Add selected to &Repository
+aAddToRepository.Category=00000067,Tools
+aAddToRepository.Hint=00000069,Add selected to Repository|Add selected entries to Translation Repository
+aHelpCheckUpdates.Caption=00000074,Check for &updates
+aHelpCheckUpdates.Category=00000073,Help
+aHelpCheckUpdates.Hint=00000075,Check for updates|Check for program updates on the web
+aHelpProductWebsite.Caption=00000077,DKLang Translation Editor ho&me site
+aHelpProductWebsite.Category=00000076,Help
+aHelpProductWebsite.Hint=00000078,DKLang Translation Editor home site|Open the program home site in the browser
+aHelpSupport.Caption=00000080,Product &support
+aHelpSupport.Category=00000079,Help
+aHelpSupport.Hint=00000081,Product support|Open the product support page in the browser
+aHelpVendorWebsite.Caption=00000083,DK Software &Website
+aHelpVendorWebsite.Category=00000082,Help
+aHelpVendorWebsite.Hint=00000084,DK Software Website|Open the vendor home site in the browser
+smHelpInternet.Caption=00000087,&Internet
+aToggleFocus.Caption=00000089,To&ggle focus
+aToggleFocus.Category=00000088,Edit
+aToggleFocus.Hint=00000090,Toggle focus|Toggle the focus between the table and the translated value editor
+aPrevEntry.Caption=00000092,Previous entr&y
+aPrevEntry.Category=00000091,Edit
+aPrevEntry.Hint=00000093,Previous entry|Step to previous entry
+aNextEntry.Caption=00000095,&Next entry
+aNextEntry.Category=00000094,Edit
+aNextEntry.Hint=00000096,Next entry|Step to next entry
+dpEntryProps.Caption=00000097,Entry properties
+dpCurSrcEntry.Caption=00000098,Current source entry
+dpCurTranEntry.Caption=00000099,Current translated entry
+cbEntryStateUntranslated.Caption=00000100,&Untranslated
+lEntryStates.Caption=00000101,Entry states
+cbEntryStateAutotranslated.Caption=00000102,&Autotranslated
+iToggleEntryProps.Caption=00000103,&Entry properties
+iToggleEntryProps.Hint=00000120,Show/hide the Entry Properties panel
+iToggleCurTranEntry.Caption=00000104,Current t&ranslated entry
+iToggleCurTranEntry.Hint=00000119,Show/hide the Current Translated Entry panel
+aFind.Caption=00000110,&Find...
+aFind.Category=00000109,Edit
+aFind.Hint=00000111,Find...|Search entries using a given pattern
+aFindNext.Caption=00000113,Find ne&xt
+aFindNext.Category=00000112,Edit
+aFindNext.Hint=00000114,Find next|Find the next occurence of string searched before
+aReplace.Caption=00000116,&Replace...
+aReplace.Category=00000115,Edit
+aReplace.Hint=00000117,Replace...|Replace one string with another one
+dpBookmarks.Caption=00000118,Bookmarks
+iToggleBookmarks.Caption=00000121,&Bookmarks
+iToggleBookmarks.Hint=00000122,Show/hide the Bookmarks panel
+aBookmarkAdd.Caption=00000124,&Add bookmark
+aBookmarkAdd.Category=00000123,Edit
+aBookmarkAdd.Hint=00000125,Add bookmark|Add current entry to the bookmark list
+aBookmarkDelete.Caption=00000127,&Delete bookmark
+aBookmarkDelete.Category=00000126,Edit
+aBookmarkDelete.Hint=00000128,Delete bookmark|Remove the bookmark currently selected
+aBookmarkJump.Caption=00000130,&Jump to bookmark
+aBookmarkJump.Category=00000129,Edit
+aBookmarkJump.Hint=00000131,Jump to bookmark|Jump to bookmark currently selected in the bookmark window
+tbBookmarks.Caption=00000132,Bookmarks toolbar
+aCopy.Caption=00000134,&Copy
+aCopy.Category=00000133,Edit
+aCopy.Hint=00000139,Copy|Copy selected text into the clipboard
+aPaste.Caption=00000136,&Paste
+aPaste.Category=00000135,Edit
+aPaste.Hint=00000140,Paste|Paste text from the clipboard
+aCut.Caption=00000138,C&ut
+aCut.Category=00000137,Edit
+aCut.Hint=00000141,Cut|Cut selected text to the clipboard
+aHelp.Caption=00000143,&Help
+aHelp.Category=00000142,Help
+aHelp.Hint=00000144,Help|Display program help
+
+[$CONSTANTS]
+SBtn_Find=Find
+SBtn_Replace=Replace
+SConfirm_FileNotSaved=Translation file "%s" is modified but not saved. Do you wish to save it?
+SDiffDesc_AddComponent=+ Component: [%s]
+SDiffDesc_AddConstant=+ Constant "%s"
+SDiffDesc_AddProperty=+ Property "%s" (ID=%d)
+SDiffDesc_ExcessiveEntries=The following entries were found excessive and deleted from the translation:
+SDiffDesc_MissingEntries=The following entries were not found and were added to the translation:
+SDiffDesc_RemoveComponent=- Component: [%s]
+SDiffDesc_RemoveConstant=- Constant "%s"
+SDiffDesc_RemoveProperty=- Component "%s", property with ID=%d
+SDiffTotalsText=\tComponents\tProperties\tConstants\nAdded\t%d\t%d\t%d\nRemoved\t%d\t%d\t%d\nTotal\t%d\t%d\t%d
+SDlgTitle_Confirm=Confirm
+SDlgTitle_Error=Error
+SDlgTitle_Info=Info
+SDlgTitle_SaveTranFileAs=Select a translation file to save to
+SDlgTitle_SelectDisplayFile=Select a translation file used for display
+SDlgTitle_SelectLangSourceFile=Select a language source file
+SDlgTitle_SelectTranFile=Select a translation file
+SDlgTitle_SelReposPath=Select translation repository path:
+SErrMsg_CharMissing="%s" missing
+SErrMsg_ConstNameMissing=Constant name missing
+SErrMsg_DuplicateCompName=Duplicate component name: "%s"
+SErrMsg_DuplicatePropID=Duplicate property ID: %d
+SErrMsg_DuplicatePropName=Duplicate property name: "%s"
+SErrMsg_FileDoesntExist=File "%s" doesn't exist
+SErrMsg_InvalidCompName=Invalid component name: "%s"
+SErrMsg_LoadLangSourceFailed=Error loading language source:\nLine %d: %s
+SErrMsg_PropIDInvalid=Invalid property ID
+SErrMsg_PropIDMissing=Property ID missing
+SErrMsg_PropNameMissing=Property name missing
+SErrMsg_SectionlessEntry=Sectionless entries are not allowed
+SErrMsg_SectionNameMissing=Section name missing
+SErrMsg_SrcAndTranLangsAreSame=Source and translation languages should be different
+SErrMsg_WrongSectionName=Wrong section name format: "%s"
+SLangSourceFileFilter=DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*
+SMsg_NoSearchResults=String "%s" wasn't found.
+SMsg_PromptReplace=Replace this occurence of "%s"?
+SMsg_ReplacedInfo=Replaced %d occurences of "%s".
+SNode_Constants=Constants
+SStatusBar_CompCount=Comp: %d
+SStatusBar_ConstCount=Const: %d/%d
+SStatusBar_PropCount=Prop: %d/%d
+SStatusBar_ReposEntryCount=Repository: %d entries
+STranFileFilter=DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*
+STranFileFilterAnsi=DKLang Ansi translation files (*.lng)|*.lng
+STranFileFilterUnicode=DKLang Unicode translation files (*.lng)|*.lng
+SWarnMsg_SavingInAnsi=You are about to save the translation in ANSI format while the language source file used has Unicode encoding.\nSaving the translation as ANSI may result in wrong characters displaying in the program you're translating. As long as that program uses Unicode it is almost always better to save the translation also as Unicode.\n\nDo you want to save the translation in Unicode encoding instead?
+SWarnMsg_SavingInUnicode=You are about to save the translation in Unicode format while the language source file used has ANSI encoding.\nSaving the translation in Unicode may prevent the program from being able to use it. As long as that program uses ANSI, the most safe way is to save the translation also in ANSI.\n\nDo you want to save the translation in ANSI encoding instead?
+
+[dFind]
+Caption=00000001,Find or replace
+bClose.Caption=00000003,Close
+lPattern.Caption=00000004,&Search for:
+gbOptions.Caption=00000006,Options
+cbCaseSensitive.Caption=00000007,&Case sensitive
+cbWholeWords.Caption=00000008,&Whole words only
+cbSelOnly.Caption=00000010,Search selecte&d only
+rgOrigin.Caption=00000011,Origin
+rgOrigin.Items=00000012,Fro&m the focused entry\n&Entire scope\n
+rgDirection.Caption=00000013,Direction
+rgDirection.Items=00000014,&Forward\n&Backward\n
+cbPrompt.Caption=00000015,&Prompt on replace
+bAll.Caption=00000016,Replace &all
+cbReplace.Caption=00000017,&Replace with:
+gbScope.Caption=00000018,Scope
+cbSearchNames.Caption=00000019,Search entry &names
+cbSearchOriginal.Caption=00000020,Search &original values
+cbSearchTranslated.Caption=00000021,Search &translated values
+bHelp.Caption=00000022,Help
+
+[dPromptReplace]
+Caption=00000001,Confirm replace
+bYes.Caption=00000009,&Yes
+bCancel.Caption=00000010,Cancel
+bReplaceAll.Caption=00000012,Replace &all
+bNo.Caption=00000013,&No
+bHelp.Caption=00000014,Help
+

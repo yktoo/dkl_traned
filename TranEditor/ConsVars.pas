@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.20 2006-08-05 21:42:34 dale Exp $
+//  $Id: ConsVars.pas,v 1.21 2006-08-09 12:19:29 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -1129,6 +1129,7 @@ type
 
   procedure TTranRepository.SaveToFile(const wsFileName: WideString);
   var
+    wcBOM: WideChar;
     fs: TTntFileStream;
     i: Integer;
     SL: TTntStringList;
@@ -1144,6 +1145,9 @@ type
   begin
     fs := TTntFileStream.Create(wsFileName, fmCreate);
     try
+       // Write byte order mark
+      wcBOM := UNICODE_BOM;
+      fs.WriteBuffer(wcBOM, SizeOf(wcBOM));
        // Write the header comment
       WriteLine('; '+SRepositoryFileHeader);
       WriteLine('; '+DKWeb.MainSiteURI);

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DKTranEd.dpr,v 1.9 2006-08-05 21:42:34 dale Exp $
+//  $Id: DKTranEd.dpr,v 1.10 2006-08-10 16:34:20 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -23,6 +23,7 @@ uses
   udPromptReplace in 'udPromptReplace.pas' {dPromptReplace};
 
 {$R *.res}
+{$R *.dkl_const.res}
 
 var
   hMtx: THandle;

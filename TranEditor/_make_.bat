@@ -1,6 +1,6 @@
 @echo off
 rem ********************************************************************************************************************
-rem $Id: _make_.bat,v 1.1 2006-08-05 21:42:34 dale Exp $
+rem $Id: _make_.bat,v 1.2 2006-08-11 18:17:29 dale Exp $
 rem --------------------------------------------------------------------------------------------------------------------
 rem DKLang Localization Package
 rem Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -28,7 +28,7 @@ set DELPHI_COMPILER="%DELPHI%\Bin\dcc32.exe"
 set HELP_COMPILER=C:\Program Files\HTML Help Workshop\hhc.exe  
 set SETUP_COMPILER=C:\Program Files\Inno Setup 5\iscc.exe
 set ARCHIVER=C:\Program Files\WinRAR\rar.exe
-set CLEANER=C:\Delphi\CVS projects\dale\DKLang\cleanup.bat
+set CLEANER=C:\Delphi\CVS projects\dale\DKLang\_cleanup_.bat
 
 if exist %LANGSRC_FILE_NAME% del %LANGSRC_FILE_NAME%
 

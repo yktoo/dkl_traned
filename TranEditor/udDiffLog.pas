@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: udDiffLog.pas,v 1.8 2006-08-05 21:42:34 dale Exp $
+//  $Id: udDiffLog.pas,v 1.9 2006-08-23 15:19:11 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit udDiffLog;
 
@@ -39,7 +39,7 @@ uses ConsVars;
       try
         mMain.Text := wsLog;
         lbTotals.Items.Text := WideFormat(
-          ConstVal('SDiffTotalsText'),
+          DKLangConstW('SDiffTotalsText'),
           [iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts]);
         cbAutoTranslate.Enabled := iCntAddedProps+iCntAddedConsts>0;
         ShowModal;
@@ -66,3 +66,5 @@ uses ConsVars;
   end;
 
 end.
+
+

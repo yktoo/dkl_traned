@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: udFind.pas,v 1.6 2006-08-05 21:42:34 dale Exp $
+//  $Id: udFind.pas,v 1.7 2006-08-23 15:19:11 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit udFind;
 
@@ -166,8 +166,10 @@ implementation
     cbSearchNames.Enabled    := not bReplaceMode;
     cbSearchOriginal.Enabled := not bReplaceMode;
     bOK.Enabled              := bPattern and bScope;
-    bOK.Caption              := ConstVal(iif(bReplaceMode, 'SBtn_Replace', 'SBtn_Find'));
+    bOK.Caption              := DKLangConstW(iif(bReplaceMode, 'SBtn_Replace', 'SBtn_Find'));
     bAll.Enabled             := bReplaceMode and bPattern and bScope;
   end;
 
 end.
+
+

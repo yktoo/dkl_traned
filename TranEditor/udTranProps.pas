@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: udTranProps.pas,v 1.9 2006-08-05 21:42:34 dale Exp $
+//  $Id: udTranProps.pas,v 1.10 2006-08-23 15:19:11 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit udTranProps;
 
@@ -106,7 +106,7 @@ const
      // Get LangIDs
     FSrcLangID  := GetCBObject(cbSrcLang);
     FTranLangID := GetCBObject(cbTranLang);
-    if FSrcLangID=FTranLangID then TranEdError(ConstVal('SErrMsg_SrcAndTranLangsAreSame'));
+    if FSrcLangID=FTranLangID then TranEdError(DKLangConstW('SErrMsg_SrcAndTranLangsAreSame'));
      // Update translation params
     FTranslations.Params.Clear;
     with FTranslations.Params do begin
@@ -183,3 +183,5 @@ const
   end;
 
 end.
+
+

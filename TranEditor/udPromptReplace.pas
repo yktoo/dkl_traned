@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: udPromptReplace.pas,v 1.4 2006-08-05 21:42:34 dale Exp $
+//  $Id: udPromptReplace.pas,v 1.5 2006-08-23 15:19:11 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit udPromptReplace;
 
@@ -38,7 +38,7 @@ uses ConsVars;
   begin
     with TdPromptReplace.Create(Application) do
       try
-        lMessage.Caption := ConstVal('SMsg_PromptReplace', [wsSearchPattern]);
+        lMessage.Caption := DKLangConstW('SMsg_PromptReplace', [wsSearchPattern]);
         mText.Text      := wsSourceText;
         mText.SelStart  := iMatchPos-1;
         mText.SelLength := Length(wsSearchPattern);
@@ -63,3 +63,5 @@ uses ConsVars;
   end;
 
 end.
+
+

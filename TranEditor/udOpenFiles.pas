@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: udOpenFiles.pas,v 1.8 2006-08-05 21:42:34 dale Exp $
+//  $Id: udOpenFiles.pas,v 1.9 2006-08-23 15:19:11 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit udOpenFiles;
 
@@ -100,10 +100,10 @@ uses ConsVars;
     with TOpenDialog.Create(Self) do
       try
         DefaultExt := STranFileExt;
-        Filter     := ConstVal('STranFileFilter');
+        Filter     := DKLangConstW('STranFileFilter');
         FileName   := cbDisplayFile.Text;
         Options    := [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing];
-        Title      := ConstVal('SDlgTitle_SelectDisplayFile');
+        Title      := DKLangConstW('SDlgTitle_SelectDisplayFile');
         if Execute then begin
           cbDisplayFile.Text := FileName;
           AdjustOKCancel(nil);
@@ -138,10 +138,10 @@ uses ConsVars;
     with TOpenDialog.Create(Self) do
       try
         DefaultExt := SLangSourceFileExt;
-        Filter     := ConstVal('SLangSourceFileFilter');
+        Filter     := DKLangConstW('SLangSourceFileFilter');
         FileName   := cbSourceFile.Text;
         Options    := [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing];
-        Title      := ConstVal('SDlgTitle_SelectLangSourceFile');
+        Title      := DKLangConstW('SDlgTitle_SelectLangSourceFile');
         if Execute then begin
           cbSourceFile.Text := FileName;
           AdjustOKCancel(nil);
@@ -156,10 +156,10 @@ uses ConsVars;
     with TSaveDialog.Create(Self) do
       try
         DefaultExt := STranFileExt;
-        Filter     := ConstVal('STranFileFilter');
+        Filter     := DKLangConstW('STranFileFilter');
         FileName   := cbTranFile.Text;
         Options    := [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing];
-        Title      := ConstVal('SDlgTitle_SelectTranFile');
+        Title      := DKLangConstW('SDlgTitle_SelectTranFile');
         if Execute then begin
           cbTranFile.Text := FileName;
           AdjustOKCancel(nil);
@@ -222,3 +222,5 @@ uses ConsVars;
   end;
 
 end.
+
+

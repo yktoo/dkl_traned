@@ -1,5 +1,5 @@
 ﻿;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.13 2006-08-08 17:35:49 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.14 2006-08-23 15:18:30 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -210,6 +210,7 @@ SErrMsg_ConstNameMissing=Constant name missing
 SErrMsg_DuplicateCompName=Duplicate component name: "%s"
 SErrMsg_DuplicatePropID=Duplicate property ID: %d
 SErrMsg_DuplicatePropName=Duplicate property name: "%s"
+SErrMsg_FailedCreatingPlugin=Creating plugin(s) from the module "%s" failed:\n%s
 SErrMsg_FileDoesntExist=File "%s" doesn't exist
 SErrMsg_InvalidCompName=Invalid component name: "%s"
 SErrMsg_LoadLangSourceFailed=Error loading language source:\nLine %d: %s
@@ -232,6 +233,7 @@ SStatusBar_ReposEntryCount=Repository: %d entries
 STranFileFilter=DKLang translation files (*.lng)|*.lng|All Files (*.*)|*.*
 STranFileFilterAnsi=DKLang Ansi translation files (*.lng)|*.lng
 STranFileFilterUnicode=DKLang Unicode translation files (*.lng)|*.lng
+STranPluginItemHint=Translate using %s
 SWarnMsg_SavingInAnsi=You are about to save the translation in ANSI format while the language source file used has Unicode encoding.\nSaving the translation as ANSI may result in wrong characters displaying in the program you're translating. As long as that program uses Unicode it is almost always better to save the translation also as Unicode.\n\nDo you want to save the translation in Unicode encoding instead?
 SWarnMsg_SavingInUnicode=You are about to save the translation in Unicode format while the language source file used has ANSI encoding.\nSaving the translation in Unicode may prevent the program from being able to use it. As long as that program uses ANSI, the most safe way is to save the translation also in ANSI.\n\nDo you want to save the translation in ANSI encoding instead?
 

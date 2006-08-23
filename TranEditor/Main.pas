@@ -1,16 +1,16 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.20 2006-08-05 21:42:34 dale Exp $
+//  $Id: Main.pas,v 1.21 2006-08-23 15:18:21 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit Main;
 
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, XPMan, TntForms, TntSysUtils,
-  TntDialogs, DKLang, ConsVars,
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, XPMan, TntSystem, TntWindows,
+  TntSysUtils, TntDialogs, TntForms, DKLang, ConsVars, uTranEdPlugin, 
   DKLTranEdFrm, Menus, TB2Item, TBX, TB2MRU, Placemnt, ImgList, ActnList,
   TntActnList, StdCtrls, TntStdCtrls, TBXDkPanels, VirtualTrees, ExtCtrls,
   TntExtCtrls, TBXStatusBars, TB2Dock, TB2Toolbar;
@@ -56,8 +56,8 @@ type
     aExit: TTntAction;
     aFind: TTntAction;
     aFindNext: TTntAction;
-    aHelpCheckUpdates: TTntAction;
     aHelp: TTntAction;
+    aHelpCheckUpdates: TTntAction;
     aHelpProductWebsite: TTntAction;
     aHelpSupport: TTntAction;
     aHelpVendorWebsite: TTntAction;
@@ -105,6 +105,7 @@ type
     dpEntryProps: TTBXDockablePanel;
     fpMain: TFormPlacement;
     giBookmarks: TTBGroupItem;
+    giToolsPluginItems: TTBGroupItem;
     iAbout: TTBXItem;
     iAddToRepository: TTBXItem;
     iAutoTranslate: TTBXItem;
@@ -120,8 +121,8 @@ type
     iFileSep: TTBXSeparatorItem;
     iFind: TTBXItem;
     iFindNext: TTBXItem;
-    iHelpCheckUpdates: TTBXItem;
     iHelp: TTBXItem;
+    iHelpCheckUpdates: TTBXItem;
     iHelpProductWebsite: TTBXItem;
     iHelpSupport: TTBXItem;
     iHelpVendorWebsite: TTBXItem;
@@ -151,6 +152,7 @@ type
     iReplace: TTBXItem;
     iSave: TTBXItem;
     iSaveAs: TTBXItem;
+    iSepToolsPluginItems: TTBXSeparatorItem;
     iSettings: TTBXItem;
     iToggleBookmarks: TTBXVisibilityToggleItem;
     iToggleCurSrcEntry: TTBXVisibilityToggleItem;
@@ -327,10 +329,10 @@ type
     procedure ChangeSelEntryStates(AddStates, RemoveStates: TDKLang_TranslationStates);
      // Adds translation for Node to translation repository, if possible
     procedure AddNodeTranslationToRepository(Node: PVirtualNode);
-     // Translates the Node by using translation repository, if possible
-    procedure TranslateNodeFromRepository(Node: PVirtualNode);
+     // Translates the Node by using the plugin, if possible. If Plugin is nil, uses translation repository
+    procedure TranslateNode(Node: PVirtualNode; Plugin: IDKLang_TranEd_TranslationPlugin);
      // Translates all nodes (bSelectedOnly=False) or just selected ones (bSelectedOnly=True)
-    procedure TranslateAllNodes(bSelectedOnly: Boolean);
+    procedure TranslateAllNodes(bSelectedOnly: Boolean; Plugin: IDKLang_TranEd_TranslationPlugin);
      // Searching function (also a callback for ShowFindDialog())
     function  Find(var Params: TSearchParams): Boolean;
      // Resets the search match node
@@ -339,15 +341,24 @@ type
     procedure RefreshBookmarks;
      // If node focused in tvMain corresponds to a bookmark, highlights that node in tvBookmarks
     procedure UpdateCurBookmark;
+     // Loads (or reloads) plugin modules and creates corresponding menu items
+    procedure PluginsLoad;
+     // Unloads loaded plugin modules and destroys their menu items
+    procedure PluginsUnload;
+     // Enables or disables all plugin items
+    procedure PluginsEnable(bEnable: Boolean);
+     // Plugin item click handler
+    procedure PluginItemClick(Sender: TObject);
      // Message handlers
     procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;
      // Prop handlers
+    function  GetDisplayTranFileName: WideString;
     procedure SetModified(Value: Boolean);
     procedure SetTranFileName(const Value: WideString);
-    function  GetDisplayTranFileName: WideString;
   protected
     procedure DoCreate; override;
     procedure DoDestroy; override;
+    procedure DoShow; override;
   public
     function  CloseQuery: Boolean; override;
      // Props
@@ -381,7 +392,7 @@ uses
   Registry, ShellAPI,
   TntClipbrd, 
   udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps, udFind, StrUtils, udPromptReplace,
-  ChmHlp;
+  ChmHlp, uTranEdPluginUsage;
 
    //===================================================================================================================
    //  TfMain
@@ -405,7 +416,7 @@ uses
 
   procedure TfMain.aaAutoTranslate(Sender: TObject);
   begin
-    TranslateAllNodes(True);
+    TranslateAllNodes(True, nil);
   end;
 
   procedure TfMain.aaBookmarkAdd(Sender: TObject);
@@ -584,7 +595,7 @@ uses
     with TTntSaveDialog.Create(Self) do
       try
         DefaultExt  := STranFileExt;
-        Filter      := ConstVal('STranFileFilterAnsi')+'|'+ConstVal('STranFileFilterUnicode');
+        Filter      := DKLangConstW('STranFileFilterAnsi')+'|'+DKLangConstW('STranFileFilterUnicode');
          // Determine the default encoding. When saving a new translation, take the LangSource's encoding instead
         FilterIndex := iif(
           ((FTranFileName='') and FLangSource.IsFileUnicode) or
@@ -592,7 +603,7 @@ uses
           IFilterIndex_Unicode,
           IFilterIndex_Ansi);
         Options     := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing];
-        Title       := ConstVal('SDlgTitle_SaveTranFileAs');
+        Title       := DKLangConstW('SDlgTitle_SaveTranFileAs');
         FileName    := DisplayTranFileName;
         if Execute then DoSave(FileName, FilterIndex=IFilterIndex_Unicode);
       finally
@@ -733,8 +744,8 @@ uses
     if not Result then
       case MessageBoxW(
           Handle,
-          PWideChar(ConstVal('SConfirm_FileNotSaved', [DisplayTranFileName])),
-          PWideChar(ConstVal('SDlgTitle_Confirm')),
+          PWideChar(DKLangConstW('SConfirm_FileNotSaved', [DisplayTranFileName])),
+          PWideChar(DKLangConstW('SDlgTitle_Confirm')),
           MB_ICONEXCLAMATION or MB_YESNOCANCEL) of
         IDYES: begin
           aSave.Execute;
@@ -823,6 +834,7 @@ uses
     CloseProject(False);
     FBookmarks.Free;
     FRepository.Free;
+    PluginsUnload;
     inherited DoDestroy;
   end;
 
@@ -880,7 +892,7 @@ uses
      // If no languages specified or source and target languages are the same, show translation properties dialog
     if (FLangIDSource=0) or (FLangIDTran=0) or (FLangIDSource=FLangIDTran) then aTranProps.Execute;
      // Autotranslate entries if needed
-    if bAutoTranslate then TranslateAllNodes(False); 
+    if bAutoTranslate then TranslateAllNodes(False, nil);
   end;
 
   procedure TfMain.DoSave(const wsFileName: WideString; bUnicode: Boolean);
@@ -889,8 +901,8 @@ uses
     if not bSetting_IgnoreEncodingMismatch and (FLangSource.IsFileUnicode<>bUnicode) then
       case MessageBoxW(
           Application.Handle,
-          PWideChar(ConstVal(iif(bUnicode, 'SWarnMsg_SavingInUnicode', 'SWarnMsg_SavingInAnsi'))),
-          PWideChar(ConstVal('SDlgTitle_Confirm')),
+          PWideChar(DKLangConstW(iif(bUnicode, 'SWarnMsg_SavingInUnicode', 'SWarnMsg_SavingInAnsi'))),
+          PWideChar(DKLangConstW('SDlgTitle_Confirm')),
           MB_ICONQUESTION or MB_YESNOCANCEL) of
         IDYES: bUnicode := not bUnicode;
         IDNO: { nothing };
@@ -911,6 +923,13 @@ uses
     UpdateCaption;
      // Register translation in the MRU list
     MRUTran.Add(FTranFileName);
+  end;
+
+  procedure TfMain.DoShow;
+  begin
+    inherited DoShow;
+     // Load the plugin modules
+    PluginsLoad; 
   end;
 
   procedure TfMain.EnableActions;
@@ -951,6 +970,8 @@ uses
      // Misc
     cbEntryStateUntranslated.Enabled   := bSelection;
     cbEntryStateAutotranslated.Enabled := bSelection;
+     // Plugins
+    PluginsEnable(bSelection); 
   end;
 
   procedure TfMain.EnableActionsNotify(Sender: TObject);
@@ -1144,9 +1165,9 @@ uses
     else begin
       Result := iMatchCount>0;
       if not Result then
-        Info(ConstVal('SMsg_NoSearchResults', [Params.wsSearchPattern]))
+        Info(DKLangConstW('SMsg_NoSearchResults', [Params.wsSearchPattern]))
       else if Params.Flags*[sfReplace, sfReplaceAll]=[sfReplace, sfReplaceAll] then
-        Info(ConstVal('SMsg_ReplacedInfo', [iReplacedCount, Params.wsSearchPattern]));
+        Info(DKLangConstW('SMsg_ReplacedInfo', [iReplacedCount, Params.wsSearchPattern]));
     end;
   end;
 
@@ -1316,6 +1337,117 @@ uses
     end;
   end;
 
+  procedure TfMain.PluginItemClick(Sender: TObject);
+  var pInfo: PPluginInfo;
+  begin
+    pInfo := PPluginInfo((Sender as TComponent).Tag);
+    if pInfo<>nil then TranslateAllNodes(True, pInfo.Plugin as IDKLang_TranEd_TranslationPlugin);
+  end;
+
+  procedure TfMain.PluginsEnable(bEnable: Boolean);
+  var i: Integer;
+  begin
+    for i := 0 to giToolsPluginItems.Count-1 do giToolsPluginItems[i].Enabled := bEnable;
+  end;
+
+  procedure TfMain.PluginsLoad;
+
+     // Loads plugins from the module
+    procedure LoadPluginModule(const wsFileName: WideString);
+    var
+      hLib: THandle;
+      GetPluginCountProc: TDKLang_TranEd_GetPluginCountProc;
+      GetPluginProc: TDKLang_TranEd_GetPluginProc;
+      i, iCount: Integer;
+      Plugin: IDKLang_TranEd_Plugin;
+      TranPlugin: IDKLang_TranEd_TranslationPlugin;
+      pInfo: PPluginInfo;
+      Item: TTBCustomItem;
+    begin
+       // Try to load the library
+      hLib := Tnt_LoadLibraryW(PWideChar(wsFileName));
+      if hLib<>0 then begin
+         // Try to get proc addresses
+        GetPluginCountProc := GetProcAddress(hLib, SPlugin_GetPluginCountProcName);
+        GetPluginProc      := GetProcAddress(hLib, SPlugin_GetPluginProcName);
+         // If succeeded
+        if Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then
+          try
+             // Get the plugin count
+            GetPluginCountProc(iCount);
+             // Create plugins
+            for i := 0 to iCount-1 do begin
+              GetPluginProc(i, Plugin);
+               // Only translation plugins are supported now
+              if Supports(Plugin, IDKLang_TranEd_TranslationPlugin, TranPlugin) then begin
+                 // Create plugin item
+                Item := TTBXItem.Create(Self);
+                Item.Caption := TranPlugin.TranslateItemCaption;
+                Item.Hint    := DKLangConstW('STranPluginItemHint', [TranPlugin.InfoName]);
+                Item.OnClick := PluginItemClick;
+                giToolsPluginItems.Add(Item);
+                 // Create plugin info block
+                New(pInfo);
+                pInfo.hLib   := hLib;
+                pInfo.Plugin := Plugin;
+                 // Associate the info block with the item
+                Item.Tag := Integer(pInfo);
+              end;
+            end;
+          except
+            on e: Exception do Error(DKLangConstW('SErrMsg_FailedCreatingPlugin', [wsFileName, e.Message]));
+          end;
+      end;
+    end;
+
+     // Recursive plugin scanning routine
+    procedure ScanForPlugins(const wsPath: WideString);
+    var SRec: TSearchRecW;
+    begin
+       // Scan the directory
+      if WideFindFirst(wsPath+'*.*', faAnyFile, SRec)=0 then
+        try
+          repeat
+             // Plain file. Try to register it
+            if SRec.Attr and faDirectory=0 then begin
+              if WideSameText(WideExtractFileExt(SRec.Name), '.dll') then LoadPluginModule(wsPath+SRec.Name);
+             // Directory
+            end else if SRec.Name[1]<>'.' then
+              ScanForPlugins(wsPath+SRec.Name+'\');
+          until WideFindNext(SRec)<>0;
+        finally
+          WideFindClose(SRec);
+        end;
+    end;
+
+  begin
+     // First, unload all plugin previously loaded
+    PluginsUnload;
+     // Scan the plugin directory
+    ScanForPlugins(WideExtractFilePath(WideParamStr(0)));
+  end;
+
+  procedure TfMain.PluginsUnload;
+  var
+    i: Integer;
+    p: PPluginInfo;
+  begin
+    for i := giToolsPluginItems.Count-1 downto 0 do begin
+       // Obtain plugin info block associated with the item
+      p := PPluginInfo(giToolsPluginItems[i].Tag);
+      if p<>nil then begin
+         // Destroy the plugin
+        p.Plugin := nil;
+         // Unload the library
+        FreeLibrary(p.hLib);
+         // Dispose the block
+        Dispose(p);
+      end;
+       // Destroy the item
+      giToolsPluginItems.Delete(i);
+    end;
+  end;
+
   procedure TfMain.RefreshBookmarks;
   begin
     tvBookmarks.RootNodeCount := FBookmarks.Count;
@@ -1347,12 +1479,12 @@ uses
     end;
   end;
 
-  procedure TfMain.TranslateAllNodes(bSelectedOnly: Boolean);
+  procedure TfMain.TranslateAllNodes(bSelectedOnly: Boolean; Plugin: IDKLang_TranEd_TranslationPlugin);
   var n: PVirtualNode;
   begin
     if bSelectedOnly then n := tvMain.GetFirstSelected else n := tvMain.GetFirst;
     while n<>nil do begin
-      TranslateNodeFromRepository(n);
+      TranslateNode(n, Plugin);
       if bSelectedOnly then n := tvMain.GetNextSelected(n) else n := tvMain.GetNext(n);
     end;
      // Update display
@@ -1360,36 +1492,42 @@ uses
     UpdateStatusBar;
   end;
 
-  procedure TfMain.TranslateNodeFromRepository(Node: PVirtualNode);
+  procedure TfMain.TranslateNode(Node: PVirtualNode; Plugin: IDKLang_TranEd_TranslationPlugin);
   var
     p: PNodeData;
     ws: WideString;
+
+    function GetTranslation(const wsSource: WideString; out wsTranslated: WideString): Boolean;
+    begin
+       // Translation using Respository
+      if Plugin=nil then begin
+        wsTranslated := FRepository.Translations[FLangIDSource, FLangIDTran, wsSource];
+        Result := wsTranslated<>'';
+       // Translation with the plugin  
+      end else
+        Result := Plugin.Translate(FLangIDSource, FLangIDTran, wsSource, wsTranslated);
+    end;
+
   begin
     p := tvMain.GetNodeData(Node);
     if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
       case p.Kind of
         nkProp:
-          if dktsUntranslated in p.pTranProp.TranStates then begin
-            ws := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.wsValue)];
-            if ws<>'' then begin
-              with p.pTranProp^ do begin
-                wsValue    := ws;
-                TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
-              end;
-              Modified := True;
+          if (dktsUntranslated in p.pTranProp.TranStates) and GetTranslation(ReposFixPrefixChar(p.pSrcProp.wsValue), ws) then begin
+            with p.pTranProp^ do begin
+              wsValue    := ws;
+              TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
             end;
+            Modified := True;
           end;
         nkConst:
-          if dktsUntranslated in p.pTranConst.TranStates then begin
-            ws := FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.wsDefValue)];
-            if ws<>'' then begin
-              with p.pTranConst^ do begin
-                wsDefValue := ws;
-                wsValue    := ws;
-                TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
-              end;
-              Modified := True;
+          if (dktsUntranslated in p.pTranConst.TranStates) and GetTranslation(ReposFixPrefixChar(p.pSrcConst.wsDefValue), ws) then begin
+            with p.pTranConst^ do begin
+              wsDefValue := ws;
+              wsValue    := ws;
+              TranStates := TranStates-[dktsUntranslated]+[dktsAutotranslated];
             end;
+            Modified := True;
           end;
       end;
   end;
@@ -1507,7 +1645,7 @@ uses
               end;
               IColIdx_Translated: CellText := EncodeControlChars(p.pTranProp.wsValue);
             end;
-          nkConsts: if Column=IColIdx_Name then CellText := ConstVal('SNode_Constants');
+          nkConsts: if Column=IColIdx_Name then CellText := DKLangConstW('SNode_Constants');
           nkConst:
             case Column of
               IColIdx_Name: CellText := p.pSrcConst.sName;
@@ -1748,10 +1886,10 @@ uses
     end;
      // Update status bar
     with sbarMain.Panels do begin
-      Items[ISBPanelIdx_CompCount].Caption       := ConstVal('SStatusBar_CompCount',       [iCntComp]);
-      Items[ISBPanelIdx_PropCount].Caption       := ConstVal('SStatusBar_PropCount',       [iCntProp, iCntPropUntr]);
-      Items[ISBPanelIdx_ConstCount].Caption      := ConstVal('SStatusBar_ConstCount',      [iCntConst, iCntConstUntr]);
-      Items[ISBPanelIdx_ReposEntryCount].Caption := ConstVal('SStatusBar_ReposEntryCount', [FRepository.EntryCount]);
+      Items[ISBPanelIdx_CompCount].Caption       := DKLangConstW('SStatusBar_CompCount',       [iCntComp]);
+      Items[ISBPanelIdx_PropCount].Caption       := DKLangConstW('SStatusBar_PropCount',       [iCntProp, iCntPropUntr]);
+      Items[ISBPanelIdx_ConstCount].Caption      := DKLangConstW('SStatusBar_ConstCount',      [iCntConst, iCntConstUntr]);
+      Items[ISBPanelIdx_ReposEntryCount].Caption := DKLangConstW('SStatusBar_ReposEntryCount', [FRepository.EntryCount]);
     end;
   end;
 
@@ -1792,3 +1930,5 @@ uses
   end;
 
 end.
+
+

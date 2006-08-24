@@ -1,8 +1,8 @@
 //**********************************************************************************************************************
-//  $Id: BabelFish.dpr,v 1.1 2006-08-23 15:18:21 dale Exp $
+//  $Id: BabelFish.dpr,v 1.2 2006-08-24 13:34:04 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
-//  Copyright ©DK Software, HTTP://www.dk-soft.org/
+//  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 library BabelFish;
 
@@ -11,12 +11,13 @@ uses
   uTranEdPlugin in '..\..\uTranEdPlugin.pas';
 
 type
-  TBabelFishPlugin = class(TInterfacedObject, IDKLang_TranEd_Plugin, IDKLang_TranEd_TranslationPlugin)
+  TBabelFishPlugin = class(TInterfacedObject, IDKLang_TranEd_Plugin, IDKLang_TranEd_PluginInfo, IDKLang_TranEd_TranslationPlugin)
      // IDKLang_TranEd_Plugin
+    function  GetName: WideString; stdcall;
+     // IDKLang_TranEd_PluginInfo
     function  GetInfoAuthor: WideString; stdcall;
     function  GetInfoCopyright: WideString; stdcall;
     function  GetInfoDescription: WideString; stdcall;
-    function  GetInfoName: WideString; stdcall;
     function  GetInfoVersion: Cardinal; stdcall;
     function  GetInfoVersionText: WideString; stdcall;
     function  GetInfoWebsiteURL: WideString; stdcall;
@@ -51,11 +52,6 @@ const
     Result := 'Plugin allowing for translation with AltaVista BabelFish service (requires Internet connection)';
   end;
 
-  function TBabelFishPlugin.GetInfoName: WideString;
-  begin
-    Result := 'BabelFish translation plugin';
-  end;
-
   function TBabelFishPlugin.GetInfoVersion: Cardinal;
   begin
     Result := $00010000;
@@ -68,7 +64,12 @@ const
 
   function TBabelFishPlugin.GetInfoWebsiteURL: WideString;
   begin
-    Result := 'HTTP://www.dk-soft.org/';
+    Result := 'http://www.dk-soft.org/';
+  end;
+
+  function TBabelFishPlugin.GetName: WideString;
+  begin
+    Result := 'BabelFish translation plugin';
   end;
 
   function TBabelFishPlugin.GetTranslateItemCaption: WideString;
@@ -96,13 +97,12 @@ const
       // ????:                                Result := 'zt';  // Chinese-traditional
       else                                    Result := '';        
     end;
-  end;
+  end;     
 
   function TBabelFishPlugin.Translate(wSourceLangID, wTargetLangID: LANGID; const wsSourceText: WideString; out wsResult: WideString): BOOL;
   var
     ws: WideString;
-    sSourceAsUtf8: UTF8String;
-    i,iStrSize: Integer;
+    i: Integer;
     DataStream: TIdMultiPartFormDataStream;
     Stream: TMemoryStream;
     HTTP: TIdHTTP;
@@ -116,22 +116,17 @@ const
      // Test the pair for availability
     if Pos(sLangPair, SAllowedLanguagePairs)=0 then
       wsResult := 'Language pair is not available for translation by AltaVista BabelFish.'
-     // If OK 
+     // If OK
     else begin
       HTTP := TIdHTTP.Create(nil);
       DataStream := TIdMultiPartFormDataStream.Create;
       Stream := TMemoryStream.Create;
       try
-        ws := Tnt_WideStringReplace(wsSourceText, '%', '%%', [rfReplaceAll]);
-         // Convert source to UTF8
-        iStrSize := Length(ws)*2;
-        SetString(sSourceAsUtf8, nil,iStrSize);
-        UnicodeToUtf8(PChar(sSourceAsUtf8), iStrSize, PWideChar(ws), Length(ws));
          // Setup post
         DataStream.AddFormField('doit',     'done');
         DataStream.AddFormField('intl',     '1');
         DataStream.AddFormField('tt',       'urltext');
-        DataStream.AddFormField('trtext',   sSourceAsUtf8);
+        DataStream.AddFormField('trtext',   UTF8Encode(Tnt_WideStringReplace(wsSourceText, '%', '%%', [rfReplaceAll])));
         DataStream.AddFormField('lp',       sLangPair);
         DataStream.AddFormField('btnTrTxt', 'Translate');
          // Prepare request
@@ -147,9 +142,7 @@ const
         end;
         if bSucceeded then begin
            // Get the result
-          iStrSize := Stream.Size;
-          SetString(ws, nil, iStrSize+1);
-          Utf8ToUnicode(PWideChar(ws),iStrSize,PChar(Stream.Memory),iStrSize);
+          ws := TntAdjustLineBreaks(UTF8Decode(PChar(Stream.Memory))); 
            // Extract the translation
           i := Pos('<td bgcolor=white class=s><div style=padding:10px;>', ws);
           if i>0 then Delete(ws, 1, i+50);

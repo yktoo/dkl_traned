@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: uTranEdPlugin.pas,v 1.1 2006-08-23 15:18:21 dale Exp $
+//  $Id: uTranEdPlugin.pas,v 1.2 2006-08-24 13:34:04 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -30,10 +30,22 @@ type
   IDKLang_TranEd_Plugin = interface(IInterface)
     ['{561450F5-AD45-4C60-A84D-36668DA248A0}']
      // Prop handlers
+    function  GetName: WideString; stdcall;
+     // Props
+     // -- Plugin name. Example: 'SuperPlugin'
+    property Name: WideString read GetName;
+  end;
+
+   //===================================================================================================================
+   // Plugin information, optional interface
+   //===================================================================================================================
+
+  IDKLang_TranEd_PluginInfo = interface(IInterface)
+    ['{7CE81CD7-56B2-410C-B873-C7AC24C5C289}']
+     // Prop handlers
     function  GetInfoAuthor: WideString; stdcall;
     function  GetInfoCopyright: WideString; stdcall;
     function  GetInfoDescription: WideString; stdcall;
-    function  GetInfoName: WideString; stdcall;
     function  GetInfoVersion: Cardinal; stdcall;
     function  GetInfoVersionText: WideString; stdcall;
     function  GetInfoWebsiteURL: WideString; stdcall;
@@ -44,8 +56,6 @@ type
     property InfoCopyright: WideString read GetInfoCopyright;
      // -- Module description. Example: 'A plugin doing just everything'
     property InfoDescription: WideString read GetInfoDescription;
-     // -- Module name. Example: 'SuperPlugin'
-    property InfoName: WideString read GetInfoName;
      // -- Module version; each byte represents a single version part. Example: version 1.1.10.78 will be $01010a4e
     property InfoVersion: Cardinal read GetInfoVersion;
      // -- Module text version; should match InfoVersion value, but additionally can include a version qualifier.

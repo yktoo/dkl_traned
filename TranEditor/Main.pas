@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.21 2006-08-23 15:18:21 dale Exp $
+//  $Id: Main.pas,v 1.22 2006-08-24 13:34:04 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -1338,9 +1338,9 @@ uses
   end;
 
   procedure TfMain.PluginItemClick(Sender: TObject);
-  var pInfo: PPluginInfo;
+  var pInfo: PPluginInfoBlock;
   begin
-    pInfo := PPluginInfo((Sender as TComponent).Tag);
+    pInfo := PPluginInfoBlock((Sender as TComponent).Tag);
     if pInfo<>nil then TranslateAllNodes(True, pInfo.Plugin as IDKLang_TranEd_TranslationPlugin);
   end;
 
@@ -1361,7 +1361,7 @@ uses
       i, iCount: Integer;
       Plugin: IDKLang_TranEd_Plugin;
       TranPlugin: IDKLang_TranEd_TranslationPlugin;
-      pInfo: PPluginInfo;
+      pInfo: PPluginInfoBlock;
       Item: TTBCustomItem;
     begin
        // Try to load the library
@@ -1383,7 +1383,7 @@ uses
                  // Create plugin item
                 Item := TTBXItem.Create(Self);
                 Item.Caption := TranPlugin.TranslateItemCaption;
-                Item.Hint    := DKLangConstW('STranPluginItemHint', [TranPlugin.InfoName]);
+                Item.Hint    := DKLangConstW('STranPluginItemHint', [TranPlugin.Name]);
                 Item.OnClick := PluginItemClick;
                 giToolsPluginItems.Add(Item);
                  // Create plugin info block
@@ -1430,11 +1430,11 @@ uses
   procedure TfMain.PluginsUnload;
   var
     i: Integer;
-    p: PPluginInfo;
+    p: PPluginInfoBlock;
   begin
     for i := giToolsPluginItems.Count-1 downto 0 do begin
        // Obtain plugin info block associated with the item
-      p := PPluginInfo(giToolsPluginItems[i].Tag);
+      p := PPluginInfoBlock(giToolsPluginItems[i].Tag);
       if p<>nil then begin
          // Destroy the plugin
         p.Plugin := nil;

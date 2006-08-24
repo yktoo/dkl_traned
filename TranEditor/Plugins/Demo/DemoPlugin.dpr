@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DemoPlugin.dpr,v 1.1 2006-08-23 15:18:21 dale Exp $
+//  $Id: DemoPlugin.dpr,v 1.2 2006-08-24 13:34:04 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -11,12 +11,13 @@ uses
   uTranEdPlugin in '..\..\uTranEdPlugin.pas';
 
 type
-  TDemoPlugin = class(TInterfacedObject, IDKLang_TranEd_Plugin, IDKLang_TranEd_TranslationPlugin)
+  TDemoPlugin = class(TInterfacedObject, IDKLang_TranEd_Plugin, IDKLang_TranEd_PluginInfo, IDKLang_TranEd_TranslationPlugin)
      // IDKLang_TranEd_Plugin
+    function  GetName: WideString; stdcall;
+     // IDKLang_TranEd_PluginInfo
     function  GetInfoAuthor: WideString; stdcall;
     function  GetInfoCopyright: WideString; stdcall;
     function  GetInfoDescription: WideString; stdcall;
-    function  GetInfoName: WideString; stdcall;
     function  GetInfoVersion: Cardinal; stdcall;
     function  GetInfoVersionText: WideString; stdcall;
     function  GetInfoWebsiteURL: WideString; stdcall;
@@ -40,11 +41,6 @@ type
     Result := 'A simple demo plugin';
   end;
 
-  function TDemoPlugin.GetInfoName: WideString;
-  begin
-    Result := 'Demo plugin';
-  end;
-
   function TDemoPlugin.GetInfoVersion: Cardinal;
   begin
     Result := $01010000;
@@ -58,6 +54,11 @@ type
   function TDemoPlugin.GetInfoWebsiteURL: WideString;
   begin
     Result := 'http://www.dk-soft.org/';
+  end;
+
+  function TDemoPlugin.GetName: WideString;
+  begin
+    Result := 'Demo translation plugin';
   end;
 
   function TDemoPlugin.GetTranslateItemCaption: WideString;

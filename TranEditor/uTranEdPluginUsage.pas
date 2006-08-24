@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: uTranEdPluginUsage.pas,v 1.1 2006-08-23 15:18:21 dale Exp $
+//  $Id: uTranEdPluginUsage.pas,v 1.2 2006-08-24 13:34:04 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -13,8 +13,8 @@ uses Windows, ConsVars, uTranEdPlugin;
    // Plugin info record
    //===================================================================================================================
 type
-  PPluginInfo = ^TPluginInfo;
-  TPluginInfo = record
+  PPluginInfoBlock = ^TPluginInfoBlock;
+  TPluginInfoBlock = record
     hLib:   HMODULE;               // Handle to plugin DLL
     Plugin: IDKLang_TranEd_Plugin; // Plugin instance
   end;

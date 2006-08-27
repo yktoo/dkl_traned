@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.22 2006-08-24 13:34:04 dale Exp $
+//  $Id: Main.pas,v 1.23 2006-08-27 14:15:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -43,7 +43,7 @@ type
         pTranConst:  PDKLang_Constant);             // Link to constant translation
   end;
 
-  TfMain = class(TDKLTranEdForm)
+  TfMain = class(TDKLTranEdForm, IDKLang_TranEd_Application)
     aAbout: TTntAction;
     aAddToRepository: TTntAction;
     aAutoTranslate: TTntAction;
@@ -261,11 +261,13 @@ type
     FTranslations: TDKLang_CompTranslations;
      // Source and target translation language
     FLangIDSource: LANGID;
-    FLangIDTran: LANGID;
+    FLangIDTranslation: LANGID;
      // Flag that command line parameters have been checked
     FCmdLineChecked: Boolean;
      // True while updating tvMain from the Translated entry editor 
     FSettingTranTextFromEditor: Boolean;
+     // True while destroying the form
+    FIsDestroying: Boolean;
      // Update current entry editor flag
     FUpdatingCurEntryEditor: Boolean;
      // Update entry properties flag
@@ -276,10 +278,12 @@ type
     FRepository: TTranRepository;
      // A list of bookmarks
     FBookmarks: TStringList;
+     // Plugin host
+    FPluginHost: TPluginHost;
      // Prop storage
     FModified: Boolean;
-    FTranFileName: WideString;
-    FSourceFileName: WideString;
+    FTranslationFileName: WideString;
+    FLanguageSourceFileName: WideString;
     FDisplayFileName: WideString;
      // Redisplays the language source tree
     procedure UpdateTree;
@@ -287,18 +291,12 @@ type
     procedure UpdateCurEntry;
      // Checks whether translation file is modified and asks to save it
     function  CheckSave: Boolean;
-     // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
-     //   clicked OK
-    function  OpenFiles(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): Boolean;
-     // File loading/saving
-    procedure DoLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString);
-    procedure DoSave(const wsFileName: WideString; bUnicode: Boolean);
      // Updates form caption
     procedure UpdateCaption;
      // Adjusts Actions availability
     procedure EnableActions;
-     // Closes all project data. If bUpdateDisplay=True, also updates the displayed items
-    procedure CloseProject(bUpdateDisplay: Boolean);
+     // Closes all files without any confirmation
+    procedure DoCloseFiles;
      // Return the kind of Node
     function  GetNodeKind(Node: PVirtualNode): TNodeKind;
      // Returns translation states of a node
@@ -329,10 +327,10 @@ type
     procedure ChangeSelEntryStates(AddStates, RemoveStates: TDKLang_TranslationStates);
      // Adds translation for Node to translation repository, if possible
     procedure AddNodeTranslationToRepository(Node: PVirtualNode);
-     // Translates the Node by using the plugin, if possible. If Plugin is nil, uses translation repository
-    procedure TranslateNode(Node: PVirtualNode; Plugin: IDKLang_TranEd_TranslationPlugin);
+     // Translates the Node by using the plugin, if possible. If Translator is nil, uses translation repository
+    procedure TranslateNode(Node: PVirtualNode; Translator: IDKLang_TranEd_Translator);
      // Translates all nodes (bSelectedOnly=False) or just selected ones (bSelectedOnly=True)
-    procedure TranslateAllNodes(bSelectedOnly: Boolean; Plugin: IDKLang_TranEd_TranslationPlugin);
+    procedure TranslateAllNodes(bSelectedOnly: Boolean;  Translator: IDKLang_TranEd_Translator);
      // Searching function (also a callback for ShowFindDialog())
     function  Find(var Params: TSearchParams): Boolean;
      // Resets the search match node
@@ -341,20 +339,32 @@ type
     procedure RefreshBookmarks;
      // If node focused in tvMain corresponds to a bookmark, highlights that node in tvBookmarks
     procedure UpdateCurBookmark;
-     // Loads (or reloads) plugin modules and creates corresponding menu items
-    procedure PluginsLoad;
      // Unloads loaded plugin modules and destroys their menu items
     procedure PluginsUnload;
      // Enables or disables all plugin items
     procedure PluginsEnable(bEnable: Boolean);
      // Plugin item click handler
     procedure PluginItemClick(Sender: TObject);
+     // IDKLang_TranEd_Application
+    function  FilesClose: LongBool; stdcall;
+    function  FilesOpen(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): LongBool; stdcall;
+    function  FilesSave(const wsFileName: WideString; bUnicode: LongBool): LongBool; stdcall;
+    function  GetDisplayFileName: WideString; stdcall;
+    function  GetIsFileOpen: LongBool; stdcall;
+    function  GetIsModified: LongBool; stdcall;
+    function  GetLangIDSource: LANGID; stdcall;
+    function  GetLangIDTranslation: LANGID; stdcall;
+    function  GetLanguageSourceFileName: WideString; stdcall;
+    function  GetSelectedItemCount: Integer; stdcall;
+    function  GetTranslationFileName: WideString; stdcall;
+    procedure FilesLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString); stdcall;
+    procedure TranslateSelected(Translator: IDKLang_TranEd_Translator); stdcall;
      // Message handlers
     procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;
      // Prop handlers
     function  GetDisplayTranFileName: WideString;
     procedure SetModified(Value: Boolean);
-    procedure SetTranFileName(const Value: WideString);
+    procedure SetTranslationFileName(const Value: WideString);
   protected
     procedure DoCreate; override;
     procedure DoDestroy; override;
@@ -369,9 +379,9 @@ type
      // -- True, if editor contents was saved since last save
     property Modified: Boolean read FModified write SetModified;
      // -- Name of the language source file currently open
-    property SourceFileName: WideString read FSourceFileName;
+    property LanguageSourceFileName: WideString read FLanguageSourceFileName;
      // -- Name of the translation file currently open
-    property TranFileName: WideString read FTranFileName write SetTranFileName;
+    property TranslationFileName: WideString read FTranslationFileName write SetTranslationFileName;
   end;
 
 const
@@ -468,7 +478,7 @@ uses
 
   procedure TfMain.aaClose(Sender: TObject);
   begin
-    CloseProject(True);
+    FilesClose;
   end;
 
   procedure TfMain.aaCopy(Sender: TObject);
@@ -544,7 +554,7 @@ uses
 
   procedure TfMain.aaNewOrOpen(Sender: TObject);
   begin
-    OpenFiles(FSourceFileName, FDisplayFileName, FTranFileName);
+    FilesOpen(FLanguageSourceFileName, FDisplayFileName, FTranslationFileName);
   end;
 
   procedure TfMain.aaNextEntry(Sender: TObject);
@@ -584,7 +594,7 @@ uses
 
   procedure TfMain.aaSave(Sender: TObject);
   begin
-    if FTranFileName='' then aaSaveAs(Sender) else DoSave(FTranFileName, FTranslations.IsStreamUnicode);
+    if FTranslationFileName='' then aaSaveAs(Sender) else FilesSave(FTranslationFileName, FTranslations.IsStreamUnicode);
   end;
 
   procedure TfMain.aaSaveAs(Sender: TObject);
@@ -598,14 +608,14 @@ uses
         Filter      := DKLangConstW('STranFileFilterAnsi')+'|'+DKLangConstW('STranFileFilterUnicode');
          // Determine the default encoding. When saving a new translation, take the LangSource's encoding instead
         FilterIndex := iif(
-          ((FTranFileName='') and FLangSource.IsFileUnicode) or
-            ((FTranFileName<>'') and FTranslations.IsStreamUnicode),
+          ((FTranslationFileName='') and FLangSource.IsFileUnicode) or
+            ((FTranslationFileName<>'') and FTranslations.IsStreamUnicode),
           IFilterIndex_Unicode,
           IFilterIndex_Ansi);
         Options     := [ofOverwritePrompt, ofHideReadOnly, ofPathMustExist, ofEnableSizing];
         Title       := DKLangConstW('SDlgTitle_SaveTranFileAs');
         FileName    := DisplayTranFileName;
-        if Execute then DoSave(FileName, FilterIndex=IFilterIndex_Unicode);
+        if Execute then FilesSave(FileName, FilterIndex=IFilterIndex_Unicode);
       finally
         Free;
       end;
@@ -626,19 +636,19 @@ uses
 
   procedure TfMain.aaTranProps(Sender: TObject);
   begin
-    if EditTranslationProps(FTranslations, FLangIDSource, FLangIDTran) then Modified := True;
+    if EditTranslationProps(FTranslations, FLangIDSource, FLangIDTranslation) then Modified := True;
   end;
 
   procedure TfMain.AddNodeTranslationToRepository(Node: PVirtualNode);
   var p: PNodeData;
   begin
     p := tvMain.GetNodeData(Node);
-    if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
+    if (p<>nil) and (FLangIDSource<>0) and (FLangIDTranslation<>0) and (FLangIDSource<>FLangIDTranslation) then
       case p.Kind of
         nkProp: if not (dktsUntranslated in p.pTranProp.TranStates) then
-          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcProp.wsValue)]     := ReposFixPrefixChar(p.pTranProp.wsValue);
+          FRepository.Translations[FLangIDSource, FLangIDTranslation, ReposFixPrefixChar(p.pSrcProp.wsValue)]     := ReposFixPrefixChar(p.pTranProp.wsValue);
         nkConst: if not (dktsUntranslated in p.pTranConst.TranStates) then
-          FRepository.Translations[FLangIDSource, FLangIDTran, ReposFixPrefixChar(p.pSrcConst.wsDefValue)] := ReposFixPrefixChar(p.pTranConst.wsDefValue);
+          FRepository.Translations[FLangIDSource, FLangIDTranslation, ReposFixPrefixChar(p.pSrcConst.wsDefValue)] := ReposFixPrefixChar(p.pTranConst.wsDefValue);
       end;
   end;
 
@@ -688,7 +698,7 @@ uses
       sDisplFile := '';
       sTranFile  := '';
       for i := 1 to 3 do UseFile(ParamStr(i));
-      OpenFiles(sSrcFile, sDisplFile, sTranFile);
+      FilesOpen(sSrcFile, sDisplFile, sTranFile);
     end;
   end;
 
@@ -755,22 +765,6 @@ uses
       end;
   end;
 
-  procedure TfMain.CloseProject(bUpdateDisplay: Boolean);
-  begin
-    FreeAndNil(FLangSource);
-    FreeAndNil(FDisplayTranslations);
-    FreeAndNil(FTranslations);
-    FBookmarks.Clear;
-    FModified        := False;
-    FSourceFileName  := '';
-    FDisplayFileName := '';
-    FTranFileName    := '';
-    if bUpdateDisplay then begin
-      UpdateCaption;
-      UpdateTree;
-    end;
-  end;
-
   function TfMain.CloseQuery: Boolean;
   begin
     Result := inherited CloseQuery and CheckSave;
@@ -806,6 +800,22 @@ uses
     UpdateStatusBar;
   end;
 
+  procedure TfMain.DoCloseFiles;
+  begin
+    FreeAndNil(FLangSource);
+    FreeAndNil(FDisplayTranslations);
+    FreeAndNil(FTranslations);
+    FBookmarks.Clear;
+    FModified        := False;
+    FLanguageSourceFileName  := '';
+    FDisplayFileName := '';
+    FTranslationFileName    := '';
+    if not FIsDestroying then begin
+      UpdateCaption;
+      UpdateTree;
+    end;
+  end;
+
   procedure TfMain.DoCreate;
   begin
     inherited DoCreate;
@@ -825,111 +835,29 @@ uses
     InitLanguages;
      // Create bookmark list
     FBookmarks := TStringList.Create;
+     // Create plugin host object
+    FPluginHost := TPluginHost.Create(Self); 
      // Update the tree
     UpdateTree;
   end;
 
   procedure TfMain.DoDestroy;
   begin
-    CloseProject(False);
+    FIsDestroying := True;
+    FPluginHost.Free;
+     // Close files after unloading plugins
+    DoCloseFiles;
     FBookmarks.Free;
     FRepository.Free;
     PluginsUnload;
     inherited DoDestroy;
   end;
 
-  procedure TfMain.DoLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString);
-  var
-    wsDiff: WideString;
-    iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer;
-    bAutoTranslate: Boolean;
-  begin
-     // Destroy former langsource storage and translations
-    CloseProject(True);
-    try
-       // Create (and load) new langsource
-      FLangSource := TLangSource.Create(wsLangSrcFileName);
-       // Create and load, if needed, display-translations
-      if wsDisplayFileName<>'' then begin
-        FDisplayTranslations := TDKLang_CompTranslations.Create;
-        FDisplayTranslations.Text_LoadFromFile(wsDisplayFileName);
-      end;
-       // Create (and load, if needed) translations. Determine the languages
-      FTranslations := TDKLang_CompTranslations.Create;
-      if wsTranFileName='' then begin
-        FLangIDSource := ILangID_USEnglish;
-        FLangIDTran   := 0;
-      end else begin
-        FTranslations.Text_LoadFromFile(wsTranFileName);
-        FLangIDSource := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_SourceLangID], ILangID_USEnglish);
-        FLangIDTran   := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_LangID],       0);
-      end;
-       // Now compare the source and the translation and update the latter
-      wsDiff := FLangSource.CompareStructureWith(
-        FTranslations,
-        iCntAddedComps, iCntAddedProps, iCntAddedConsts,
-        iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts,
-        iCntComps, iCntProps, iCntConsts);
-       // Update the properties
-      FModified        := False;
-      FSourceFileName  := wsLangSrcFileName;
-      FDisplayFileName := wsDisplayFileName;
-      FTranFileName    := wsTranFileName;
-      MRUSource.Add(FSourceFileName);
-      MRUDisplay.Add(FDisplayFileName);
-      if FTranFileName<>'' then MRUTran.Add(FTranFileName);
-      UpdateCaption;
-       // Show the differences unless this is a new translation
-      bAutoTranslate := False;
-      if (wsTranFileName<>'') and (wsDiff<>'') then ShowDiffLog(wsDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts, bAutoTranslate);
-       // Reload the tree
-      UpdateTree;
-    except
-       // Destroy the objects in a case of failure
-      CloseProject(True);
-      raise;
-    end;
-     // If no languages specified or source and target languages are the same, show translation properties dialog
-    if (FLangIDSource=0) or (FLangIDTran=0) or (FLangIDSource=FLangIDTran) then aTranProps.Execute;
-     // Autotranslate entries if needed
-    if bAutoTranslate then TranslateAllNodes(False, nil);
-  end;
-
-  procedure TfMain.DoSave(const wsFileName: WideString; bUnicode: Boolean);
-  begin
-     // Warn if language source and translation encodings differ
-    if not bSetting_IgnoreEncodingMismatch and (FLangSource.IsFileUnicode<>bUnicode) then
-      case MessageBoxW(
-          Application.Handle,
-          PWideChar(DKLangConstW(iif(bUnicode, 'SWarnMsg_SavingInUnicode', 'SWarnMsg_SavingInAnsi'))),
-          PWideChar(DKLangConstW('SDlgTitle_Confirm')),
-          MB_ICONQUESTION or MB_YESNOCANCEL) of
-        IDYES: bUnicode := not bUnicode;
-        IDNO: { nothing };
-        else Exit;
-      end;
-     // Update translation parameter values
-    with FTranslations.Params do begin
-      Values[SDKLang_TranParam_SourceLangID] := IntToStr(FLangIDSource);
-      Values[SDKLang_TranParam_LangID]       := IntToStr(FLangIDTran);
-      Values[SDKLang_TranParam_Generator]    := Format('%s %s', [SAppCaption, SAppVersion]);
-      Values[SDKLang_TranParam_LastModified] := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
-    end;
-     // Save the translations
-    FTranslations.Text_SaveToFile(wsFileName, bUnicode, True);
-     // Update properties
-    FModified := False;
-    FTranFileName := wsFileName;
-    UpdateCaption;
-     // Register translation in the MRU list
-    MRUTran.Add(FTranFileName);
-  end;
-
   procedure TfMain.DoShow;
   begin
     inherited DoShow;
      // Load the plugin modules
-    PluginsLoad; 
+    FPluginHost.ScanForPlugins(WideExtractFilePath(WideParamStr(0))+SPluginsRelativePath); 
   end;
 
   procedure TfMain.EnableActions;
@@ -977,6 +905,114 @@ uses
   procedure TfMain.EnableActionsNotify(Sender: TObject);
   begin
     EnableActions;
+  end;
+
+  function TfMain.FilesClose: LongBool;
+  begin
+    Result := CheckSave;
+    if Result then DoCloseFiles;
+  end;
+
+  procedure TfMain.FilesLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString);
+  var
+    wsDiff: WideString;
+    iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts: Integer;
+    bAutoTranslate: Boolean;
+  begin
+     // Destroy former langsource storage and translations without confirmation
+    DoCloseFiles;
+    try
+       // Create (and load) new langsource
+      FLangSource := TLangSource.Create(wsLangSrcFileName);
+       // Create and load, if needed, display-translations
+      if wsDisplayFileName<>'' then begin
+        FDisplayTranslations := TDKLang_CompTranslations.Create;
+        FDisplayTranslations.Text_LoadFromFile(wsDisplayFileName);
+      end;
+       // Create (and load, if needed) translations. Determine the languages
+      FTranslations := TDKLang_CompTranslations.Create;
+      if wsTranFileName='' then begin
+        FLangIDSource := ILangID_USEnglish;
+        FLangIDTranslation   := 0;
+      end else begin
+        FTranslations.Text_LoadFromFile(wsTranFileName);
+        FLangIDSource := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_SourceLangID], ILangID_USEnglish);
+        FLangIDTranslation   := StrToIntDef(FTranslations.Params.Values[SDKLang_TranParam_LangID],       0);
+      end;
+       // Now compare the source and the translation and update the latter
+      wsDiff := FLangSource.CompareStructureWith(
+        FTranslations,
+        iCntAddedComps, iCntAddedProps, iCntAddedConsts,
+        iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts,
+        iCntComps, iCntProps, iCntConsts);
+       // Update the properties
+      FModified        := False;
+      FLanguageSourceFileName  := wsLangSrcFileName;
+      FDisplayFileName := wsDisplayFileName;
+      FTranslationFileName    := wsTranFileName;
+      MRUSource.Add(FLanguageSourceFileName);
+      MRUDisplay.Add(FDisplayFileName);
+      if FTranslationFileName<>'' then MRUTran.Add(FTranslationFileName);
+      UpdateCaption;
+       // Show the differences unless this is a new translation
+      bAutoTranslate := False;
+      if (wsTranFileName<>'') and (wsDiff<>'') then ShowDiffLog(wsDiff, iCntAddedComps, iCntAddedProps, iCntAddedConsts, iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts, iCntComps, iCntProps, iCntConsts, bAutoTranslate);
+       // Reload the tree
+      UpdateTree;
+    except
+       // Destroy the objects in a case of failure
+      DoCloseFiles;
+      raise;
+    end;
+     // If no languages specified or source and target languages are the same, show translation properties dialog
+    if (FLangIDSource=0) or (FLangIDTranslation=0) or (FLangIDSource=FLangIDTranslation) then aTranProps.Execute;
+     // Autotranslate entries if needed
+    if bAutoTranslate then TranslateAllNodes(False, nil);
+  end;
+
+  function TfMain.FilesOpen(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): LongBool;
+  var wsSourceFile, wsDisplayFile, wsTranFile: WideString;
+  begin
+    Result := CheckSave;
+    if Result then begin
+      wsSourceFile  := wsLangSrcFileName;
+      wsTranFile    := wsTranFileName;
+      wsDisplayFile := wsDisplayFileName;
+      Result := SelectLangFiles(wsSourceFile, wsDisplayFile, wsTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
+      if Result then FilesLoad(wsSourceFile, wsDisplayFile, wsTranFile);
+    end;
+  end;
+
+  function TfMain.FilesSave(const wsFileName: WideString; bUnicode: LongBool): LongBool;
+  begin
+    Result := False;
+     // Warn if language source and translation encodings differ
+    if not bSetting_IgnoreEncodingMismatch and (FLangSource.IsFileUnicode<>bUnicode) then
+      case MessageBoxW(
+          Application.Handle,
+          PWideChar(DKLangConstW(iif(bUnicode, 'SWarnMsg_SavingInUnicode', 'SWarnMsg_SavingInAnsi'))),
+          PWideChar(DKLangConstW('SDlgTitle_Confirm')),
+          MB_ICONQUESTION or MB_YESNOCANCEL) of
+        IDYES: bUnicode := not bUnicode;
+        IDNO: { nothing };
+        else Exit;
+      end;
+     // Update translation parameter values
+    with FTranslations.Params do begin
+      Values[SDKLang_TranParam_SourceLangID] := IntToStr(FLangIDSource);
+      Values[SDKLang_TranParam_LangID]       := IntToStr(FLangIDTranslation);
+      Values[SDKLang_TranParam_Generator]    := Format('%s %s', [SAppCaption, SAppVersion]);
+      Values[SDKLang_TranParam_LastModified] := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
+    end;
+     // Save the translations
+    FTranslations.Text_SaveToFile(wsFileName, bUnicode, True);
+     // Update properties
+    FModified := False;
+    FTranslationFileName := wsFileName;
+    UpdateCaption;
+     // Register translation in the MRU list
+    MRUTran.Add(FTranslationFileName);
+    Result := True;
   end;
 
   function TfMain.Find(var Params: TSearchParams): Boolean;
@@ -1250,9 +1286,39 @@ uses
     FRepository.SaveToFile(WideIncludeTrailingPathDelimiter(wsSetting_RepositoryDir)+SRepositoryFileName);
   end;
 
+  function TfMain.GetDisplayFileName: WideString;
+  begin
+    Result := FDisplayFileName; 
+  end;
+
   function TfMain.GetDisplayTranFileName: WideString;
   begin
-    Result := iif(FTranFileName='', STranFileDefaultName, FTranFileName);
+    Result := iif(FTranslationFileName='', STranFileDefaultName, FTranslationFileName);
+  end;
+
+  function TfMain.GetIsFileOpen: LongBool;
+  begin
+    Result := FLangSource<>nil;
+  end;
+
+  function TfMain.GetIsModified: LongBool;
+  begin
+    Result := FModified;
+  end;
+
+  function TfMain.GetLangIDSource: LANGID;
+  begin
+    Result := FLangIDSource;
+  end;
+
+  function TfMain.GetLangIDTranslation: LANGID;
+  begin
+    Result := FLangIDTranslation;
+  end;
+
+  function TfMain.GetLanguageSourceFileName: WideString;
+  begin
+    Result := FLanguageSourceFileName;
   end;
 
   function TfMain.GetNodeKind(Node: PVirtualNode): TNodeKind;
@@ -1269,6 +1335,16 @@ uses
       nkConst: Result := p.pTranConst.TranStates;
       else     Result := [];
     end;
+  end;
+
+  function TfMain.GetSelectedItemCount: Integer;
+  begin
+    Result := tvMain.SelectedCount;
+  end;
+
+  function TfMain.GetTranslationFileName: WideString;
+  begin
+    Result := FTranslationFileName;
   end;
 
   procedure TfMain.InitLanguages;
@@ -1324,24 +1400,11 @@ uses
     end;
   end;
 
-  function TfMain.OpenFiles(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): Boolean;
-  var wsSourceFile, wsDisplayFile, wsTranFile: WideString;
-  begin
-    Result := CheckSave;
-    if Result then begin
-      wsSourceFile  := wsLangSrcFileName;
-      wsTranFile    := wsTranFileName;
-      wsDisplayFile := wsDisplayFileName;
-      Result := SelectLangFiles(wsSourceFile, wsDisplayFile, wsTranFile, MRUSource.Items, MRUDisplay.Items, MRUTran.Items);
-      if Result then DoLoad(wsSourceFile, wsDisplayFile, wsTranFile);
-    end;
-  end;
-
   procedure TfMain.PluginItemClick(Sender: TObject);
-  var pInfo: PPluginInfoBlock;
+//!!!  var pInfo: PPluginInfoBlock;
   begin
-    pInfo := PPluginInfoBlock((Sender as TComponent).Tag);
-    if pInfo<>nil then TranslateAllNodes(True, pInfo.Plugin as IDKLang_TranEd_TranslationPlugin);
+//    pInfo := PPluginInfoBlock((Sender as TComponent).Tag);
+//    if pInfo<>nil then TranslateAllNodes(True, pInfo.Plugin as IDKLang_TranEd_TranslationPlugin);
   end;
 
   procedure TfMain.PluginsEnable(bEnable: Boolean);
@@ -1350,102 +1413,38 @@ uses
     for i := 0 to giToolsPluginItems.Count-1 do giToolsPluginItems[i].Enabled := bEnable;
   end;
 
-  procedure TfMain.PluginsLoad;
-
-     // Loads plugins from the module
-    procedure LoadPluginModule(const wsFileName: WideString);
-    var
-      hLib: THandle;
-      GetPluginCountProc: TDKLang_TranEd_GetPluginCountProc;
-      GetPluginProc: TDKLang_TranEd_GetPluginProc;
-      i, iCount: Integer;
-      Plugin: IDKLang_TranEd_Plugin;
-      TranPlugin: IDKLang_TranEd_TranslationPlugin;
-      pInfo: PPluginInfoBlock;
-      Item: TTBCustomItem;
-    begin
-       // Try to load the library
-      hLib := Tnt_LoadLibraryW(PWideChar(wsFileName));
-      if hLib<>0 then begin
-         // Try to get proc addresses
-        GetPluginCountProc := GetProcAddress(hLib, SPlugin_GetPluginCountProcName);
-        GetPluginProc      := GetProcAddress(hLib, SPlugin_GetPluginProcName);
-         // If succeeded
-        if Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then
-          try
-             // Get the plugin count
-            GetPluginCountProc(iCount);
-             // Create plugins
-            for i := 0 to iCount-1 do begin
-              GetPluginProc(i, Plugin);
-               // Only translation plugins are supported now
-              if Supports(Plugin, IDKLang_TranEd_TranslationPlugin, TranPlugin) then begin
-                 // Create plugin item
-                Item := TTBXItem.Create(Self);
-                Item.Caption := TranPlugin.TranslateItemCaption;
-                Item.Hint    := DKLangConstW('STranPluginItemHint', [TranPlugin.Name]);
-                Item.OnClick := PluginItemClick;
-                giToolsPluginItems.Add(Item);
-                 // Create plugin info block
-                New(pInfo);
-                pInfo.hLib   := hLib;
-                pInfo.Plugin := Plugin;
-                 // Associate the info block with the item
-                Item.Tag := Integer(pInfo);
-              end;
-            end;
-          except
-            on e: Exception do Error(DKLangConstW('SErrMsg_FailedCreatingPlugin', [wsFileName, e.Message]));
-          end;
-      end;
-    end;
-
-     // Recursive plugin scanning routine
-    procedure ScanForPlugins(const wsPath: WideString);
-    var SRec: TSearchRecW;
-    begin
-       // Scan the directory
-      if WideFindFirst(wsPath+'*.*', faAnyFile, SRec)=0 then
-        try
-          repeat
-             // Plain file. Try to register it
-            if SRec.Attr and faDirectory=0 then begin
-              if WideSameText(WideExtractFileExt(SRec.Name), '.dll') then LoadPluginModule(wsPath+SRec.Name);
-             // Directory
-            end else if SRec.Name[1]<>'.' then
-              ScanForPlugins(wsPath+SRec.Name+'\');
-          until WideFindNext(SRec)<>0;
-        finally
-          WideFindClose(SRec);
-        end;
-    end;
-
-  begin
-     // First, unload all plugin previously loaded
-    PluginsUnload;
-     // Scan the plugin directory
-    ScanForPlugins(WideExtractFilePath(WideParamStr(0)));
-  end;
-
   procedure TfMain.PluginsUnload;
-  var
-    i: Integer;
-    p: PPluginInfoBlock;
+//  var
+//    i: Integer;
+//    p: PPluginInfoBlock;
   begin
-    for i := giToolsPluginItems.Count-1 downto 0 do begin
-       // Obtain plugin info block associated with the item
-      p := PPluginInfoBlock(giToolsPluginItems[i].Tag);
-      if p<>nil then begin
-         // Destroy the plugin
-        p.Plugin := nil;
-         // Unload the library
-        FreeLibrary(p.hLib);
-         // Dispose the block
-        Dispose(p);
-      end;
-       // Destroy the item
-      giToolsPluginItems.Delete(i);
-    end;
+//                 // Create plugin item
+//                Item := TTBXItem.Create(Self);
+//                Item.Caption := TranPlugin.TranslateItemCaption;
+//                Item.Hint    := DKLangConstW('STranPluginItemHint', [TranPlugin.Name]);
+//                Item.OnClick := PluginItemClick;
+//                giToolsPluginItems.Add(Item);
+//                 // Create plugin info block
+//                New(pInfo);
+//                pInfo.hLib   := hLib;
+//                pInfo.Plugin := Plugin;
+//                 // Associate the info block with the item
+//                Item.Tag := Integer(pInfo);
+//
+//    for i := giToolsPluginItems.Count-1 downto 0 do begin
+//       // Obtain plugin info block associated with the item
+//      p := PPluginInfoBlock(giToolsPluginItems[i].Tag);
+//      if p<>nil then begin
+//         // Destroy the plugin
+//        p.Plugin := nil;
+//         // Unload the library
+//        FreeLibrary(p.hLib);
+//         // Dispose the block
+//        Dispose(p);
+//      end;
+//       // Destroy the item
+//      giToolsPluginItems.Delete(i);
+//    end;
   end;
 
   procedure TfMain.RefreshBookmarks;
@@ -1471,20 +1470,20 @@ uses
     end;
   end;
 
-  procedure TfMain.SetTranFileName(const Value: WideString);
+  procedure TfMain.SetTranslationFileName(const Value: WideString);
   begin
-    if FTranFileName<>Value then begin
-      FTranFileName := Value;
+    if FTranslationFileName<>Value then begin
+      FTranslationFileName := Value;
       UpdateCaption;
     end;
   end;
 
-  procedure TfMain.TranslateAllNodes(bSelectedOnly: Boolean; Plugin: IDKLang_TranEd_TranslationPlugin);
+  procedure TfMain.TranslateAllNodes(bSelectedOnly: Boolean; Translator: IDKLang_TranEd_Translator);
   var n: PVirtualNode;
   begin
     if bSelectedOnly then n := tvMain.GetFirstSelected else n := tvMain.GetFirst;
     while n<>nil do begin
-      TranslateNode(n, Plugin);
+      TranslateNode(n, Translator);
       if bSelectedOnly then n := tvMain.GetNextSelected(n) else n := tvMain.GetNext(n);
     end;
      // Update display
@@ -1492,7 +1491,7 @@ uses
     UpdateStatusBar;
   end;
 
-  procedure TfMain.TranslateNode(Node: PVirtualNode; Plugin: IDKLang_TranEd_TranslationPlugin);
+  procedure TfMain.TranslateNode(Node: PVirtualNode;  Translator: IDKLang_TranEd_Translator);
   var
     p: PNodeData;
     ws: WideString;
@@ -1500,17 +1499,17 @@ uses
     function GetTranslation(const wsSource: WideString; out wsTranslated: WideString): Boolean;
     begin
        // Translation using Respository
-      if Plugin=nil then begin
-        wsTranslated := FRepository.Translations[FLangIDSource, FLangIDTran, wsSource];
+      if Translator=nil then begin
+        wsTranslated := FRepository.Translations[FLangIDSource, FLangIDTranslation, wsSource];
         Result := wsTranslated<>'';
-       // Translation with the plugin  
+       // Translation with the plugin
       end else
-        Result := Plugin.Translate(FLangIDSource, FLangIDTran, wsSource, wsTranslated);
+        Result := Translator.Translate(FLangIDSource, FLangIDTranslation, wsSource, wsTranslated);
     end;
 
   begin
     p := tvMain.GetNodeData(Node);
-    if (p<>nil) and (FLangIDSource<>0) and (FLangIDTran<>0) and (FLangIDSource<>FLangIDTran) then
+    if (p<>nil) and (FLangIDSource<>0) and (FLangIDTranslation<>0) and (FLangIDSource<>FLangIDTranslation) then
       case p.Kind of
         nkProp:
           if (dktsUntranslated in p.pTranProp.TranStates) and GetTranslation(ReposFixPrefixChar(p.pSrcProp.wsValue), ws) then begin
@@ -1530,6 +1529,11 @@ uses
             Modified := True;
           end;
       end;
+  end;
+
+  procedure TfMain.TranslateSelected(Translator: IDKLang_TranEd_Translator);
+  begin
+    TranslateAllNodes(True, Translator);
   end;
 
   procedure TfMain.tvBookmarksChange(Sender: TBaseVirtualTree; Node: PVirtualNode);

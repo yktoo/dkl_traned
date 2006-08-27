@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.22 2006-08-23 15:19:11 dale Exp $
+//  $Id: ConsVars.pas,v 1.23 2006-08-27 14:15:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -9,8 +9,8 @@ unit ConsVars;
 interface
 uses
   Windows, Messages, SysUtils, Classes, Contnrs, Controls, Graphics,
-  VirtualTrees, TntSystem, TntClasses, TntSysUtils, TntStdCtrls, TntDialogs,
-  DKLang, dkWebUtils;
+  VirtualTrees, TntSystem, TntWindows, TntClasses, TntSysUtils, TntStdCtrls, TntDialogs,
+  DKLang, dkWebUtils, uTranEdPlugin;
 
 type
    // Exception
@@ -78,6 +78,7 @@ type
 
   TComponentSources = class(TObjectList)
   private
+     // Prop handlers
     function GetItems(Index: Integer): TComponentSource;
   public
     function  Add(Item: TComponentSource): Integer;
@@ -186,6 +187,52 @@ type
   end;
 
    //===================================================================================================================
+   // Plugin host object
+   //===================================================================================================================
+
+  TPluginEntry = class(TObject)
+  private
+     // Prop storage
+    FLibHandle: HMODULE;
+    FPlugin: IDKLang_TranEd_Plugin;
+  public
+    constructor Create(ALibHandle: HMODULE; APlugin: IDKLang_TranEd_Plugin);
+     // Props
+     // -- Handle of module containing the plugin
+    property LibHandle: HMODULE read FLibHandle;
+     // -- Plugin instance
+    property Plugin: IDKLang_TranEd_Plugin read FPlugin;
+  end;
+
+   //===================================================================================================================
+   // Plugin host application, holds a list of plugin entries of type TPluginEntry
+   //===================================================================================================================
+
+  TPluginHost = class(TObjectList)
+  private
+     // Plugin entry list
+    FPluginEntries: TObjectList;
+    FTranEdApplication: IDKLang_TranEd_Application;
+     // Prop handlers
+    function  GetPluginEntries(Index: Integer): TPluginEntry;
+    function  GetPluginEntryCount: Integer;
+  public
+    constructor Create(ATranEdApplication: IDKLang_TranEd_Application);
+    destructor Destroy; override;
+     // Load the specified module (dll)
+    procedure LoadPluginModule(const wsModuleFileName: WideString);
+     // Recursively scans the specified directory and loads the plugins
+    procedure ScanForPlugins(const wsDir: WideString);
+     // Props
+     // -- Number of plugin entry count registered
+    property PluginEntryCount: Integer read GetPluginEntryCount;
+     // -- Entries by index
+    property PluginEntries[Index: Integer]: TPluginEntry read GetPluginEntries; default;
+     // -- Translation Editor application environment interface
+    property TranEdApplication: IDKLang_TranEd_Application read FTranEdApplication;
+  end;
+
+   //===================================================================================================================
    // Search and replace
    //===================================================================================================================
 
@@ -232,6 +279,12 @@ const
   SRepositoryFileName              = 'DKTranEd.dat';
   SHelpFileName                    = 'dktraned.chm';
 
+  SPluginsRelativePath             = 'Plugins\';
+
+   // Exported proc names
+  SPlugin_GetPluginCountProcName   = 'DKLTE_GetPluginCount';
+  SPlugin_GetPluginProcName        = 'DKLTE_GetPlugin';
+  
    // Registry paths
   SRegKey_Root                     = 'Software\DKSoftware\DKTranEd';
   SRegKey_Toolbars                 = SRegKey_Root+'\Toolbars';
@@ -327,6 +380,8 @@ var
   bSetting_IgnoreEncodingMismatch: Boolean;
    // Search parameters
   SearchParams:                    TSearchParams;
+   // List of loaded plugins
+  Plugins:                         TPluginHost;
     
    // A global IDKWeb instance
   DKWeb: IDKWeb;
@@ -348,7 +403,7 @@ var
 
    // Returns the part of ws before any delimiter char from wsDelimiters
   function  GetFirstWord(const ws, wsDelimiters: WideString): WideString;
-   // The same as GetFirstWord() but strips off from ws the part being returned
+   // The same as GetFirstWord() but strips off from ws the part being returned and the delimiter char if any
   function  ExtractFirstWord(var ws: String; const wsDelimiters: WideString): WideString;
 
    // Checks that the specified file exists. If not, raises an Exception
@@ -1166,8 +1221,102 @@ type
     if (wLangID1<>0) and (wLangID2<>0) and (wsValue1<>'') and (wsValue2<>'') then FEntries.Add(wLangID1, wLangID2, wsValue1, wsValue2);
   end;
 
+   //===================================================================================================================
+   // TPluginEntry
+   //===================================================================================================================
+
+  constructor TPluginEntry.Create(ALibHandle: HMODULE; APlugin: IDKLang_TranEd_Plugin);
+  begin
+    inherited Create;
+    FLibHandle := ALibHandle;
+    FPlugin    := APlugin;
+  end;
+
+   //===================================================================================================================
+   // TPluginHost
+   //===================================================================================================================
+
+  constructor TPluginHost.Create(ATranEdApplication: IDKLang_TranEd_Application);
+  begin
+    inherited Create;
+    FTranEdApplication := ATranEdApplication;
+    FPluginEntries     := TObjectList.Create(True);
+  end;
+
+  destructor TPluginHost.Destroy;
+  begin
+    FPluginEntries.Free;
+    inherited Destroy;
+  end;
+
+  function TPluginHost.GetPluginEntries(Index: Integer): TPluginEntry;
+  begin
+    Result := TPluginEntry(FPluginEntries[Index]);
+  end;
+
+  function TPluginHost.GetPluginEntryCount: Integer;
+  begin
+    Result := FPluginEntries.Count;
+  end;
+
+  procedure TPluginHost.LoadPluginModule(const wsModuleFileName: WideString);
+  var
+    hLib: THandle;
+    GetPluginCountProc: TDKLang_TranEd_GetPluginCountProc;
+    GetPluginProc: TDKLang_TranEd_GetPluginProc;
+    i, iCount: Integer;
+    Plugin: IDKLang_TranEd_Plugin;
+  begin
+     // Try to load the library
+    hLib := Tnt_LoadLibraryW(PWideChar(wsModuleFileName));
+    if hLib<>0 then begin
+       // Try to get proc addresses
+      GetPluginCountProc := GetProcAddress(hLib, SPlugin_GetPluginCountProcName);
+      GetPluginProc      := GetProcAddress(hLib, SPlugin_GetPluginProcName);
+       // If succeeded
+      if Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then
+        try
+           // Get the plugin count
+          GetPluginCountProc(iCount);
+           // Create and register plugins
+          for i := 0 to iCount-1 do begin
+            GetPluginProc(i, FTranEdApplication, Plugin);
+            FPluginEntries.Add(TPluginEntry.Create(hLib, Plugin));
+          end;
+        except
+          on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedCreatingPlugins', [wsModuleFileName, e.Message]));
+        end;
+    end;
+  end;
+
+  procedure TPluginHost.ScanForPlugins(const wsDir: WideString);
+
+     // Recursive plugin scanning routine
+    procedure DoScanPath(const wsPath: WideString);
+    var SRec: TSearchRecW;
+    begin
+       // Scan the directory
+      if WideFindFirst(wsPath+'*.*', faAnyFile, SRec)=0 then
+        try
+          repeat
+             // Plain file. Try to register it
+            if SRec.Attr and faDirectory=0 then begin
+              if WideSameText(WideExtractFileExt(SRec.Name), '.dll') then LoadPluginModule(wsPath+SRec.Name);
+             // Directory
+            end else if SRec.Name[1]<>'.' then
+              DoScanPath(wsPath+SRec.Name+'\');
+          until WideFindNext(SRec)<>0;
+        finally
+          WideFindClose(SRec);
+        end;
+    end;
+
+  begin
+    DoScanPath(WideIncludeTrailingPathDelimiter(wsDir));
+  end;
+
 initialization
-  DKWeb := DKCreateDKWeb(SAppProductSID, SAppVersionSID);
+  DKWeb   := DKCreateDKWeb(SAppProductSID, SAppVersionSID);
   LangManager.ScanForLangFiles(WideExtractFilePath(WideParamStr(0))+SLanguageRelPath, '*.lng', True);
 finalization
   DKWeb := nil;

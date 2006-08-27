@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: uTranEdPlugin.pas,v 1.2 2006-08-24 13:34:04 dale Exp $
+//  $Id: uTranEdPlugin.pas,v 1.3 2006-08-27 14:15:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -12,7 +12,9 @@ interface
 uses Windows;
 
 type
-  IDKLang_TranEd_Plugin = interface;
+  IDKLang_TranEd_Plugin      = interface;
+  IDKLang_TranEd_Application = interface;
+  IDKLang_TranEd_Translator  = interface;
 
    //===================================================================================================================
    // Prototypes of procedures exported from a plugin DLL
@@ -20,28 +22,98 @@ type
 
    // Returns number of plugins implemented in a module. Must be named 'DKLTE_GetPluginCount'
   TDKLang_TranEd_GetPluginCountProc = procedure(out iCount: Integer); stdcall;
-   // Instantiates and returns plugin with a specific index (ranged 0..PluginCount-1). Must be named 'DKLTE_GetPlugin'
-  TDKLang_TranEd_GetPluginProc = procedure(iIndex: Integer; out Plugin: IDKLang_TranEd_Plugin); stdcall;
+   // Instantiates and returns plugin with a specific index (ranged 0..PluginCount-1). Must be named 'DKLTE_GetPlugin'.
+   //   TranEdApplication is Translation Editor application environment
+  TDKLang_TranEd_GetPluginProc = procedure(iIndex: Integer; TranEdApplication: IDKLang_TranEd_Application; out Plugin: IDKLang_TranEd_Plugin); stdcall;
+
+   //===================================================================================================================
+   // Translation Editor application environment
+   //===================================================================================================================
+
+  IDKLang_TranEd_Application = interface(IInterface)
+    ['{7270D20E-7320-484B-B7DB-DFA3AEEA1E6E}']
+     // Closes all open files. Returns True if succeeded, False when the translation file is unsaved and the user has
+     //   cancelled the action
+    function  FilesClose: LongBool; stdcall;
+     // Uses the specified file names as suggested, shows select files dialog and loads the files. Returns True if user
+     //   clicked OK
+    function  FilesOpen(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): LongBool; stdcall;
+     // Loads the specified files
+    procedure FilesLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString); stdcall;
+     // Saves the translation currently open into the specified file. bUnicode specifies whether it should be in ANSI
+     //   encoding (bUnicode=False) or in Unicode (bUnicode=True). Returns True if saved OK, False when the user was
+     //   warned about source and translation file encodings differ and cancelled the action
+    function  FilesSave(const wsFileName: WideString; bUnicode: LongBool): LongBool; stdcall;
+     // Translates selected entries using the supplied Translator interface
+    procedure TranslateSelected(Translator: IDKLang_TranEd_Translator); stdcall;
+     // Prop handlers
+    function  GetDisplayFileName: WideString; stdcall;
+    function  GetIsFileOpen: LongBool; stdcall;
+    function  GetIsModified: LongBool; stdcall;
+    function  GetLangIDSource: LANGID; stdcall;
+    function  GetLangIDTranslation: LANGID; stdcall;
+    function  GetLanguageSourceFileName: WideString; stdcall;
+    function  GetSelectedItemCount: Integer; stdcall;
+    function  GetTranslationFileName: WideString; stdcall;
+     // Props
+     // -- Full path to translation file used to display original values. Empty string if there is no open language
+     //    source file or no display file is used
+    property DisplayFileName: WideString read GetTranslationFileName;
+     // -- True when there is an open language source file
+    property IsFileOpen: LongBool read GetIsFileOpen;
+     // -- True if the translation file was modified and not yet saved
+    property IsModified: LongBool read GetIsModified;
+     // -- Source translation language ID
+    property LangIDSource: LANGID read GetLangIDSource;
+     // -- Target translation language ID
+    property LangIDTranslation: LANGID read GetLangIDTranslation;
+     // -- Full path to language source file. Empty string if there is no open language source file
+    property LanguageSourceFileName: WideString read GetLanguageSourceFileName;
+     // -- Number of items currently selected
+    property SelectedItemCount: Integer read GetSelectedItemCount;
+     // -- Full path to translation file. Empty string if there is no open language source file or an unsaved
+     //    translation is being edited
+    property TranslationFileName: WideString read GetTranslationFileName;
+  end;
+
+   //===================================================================================================================
+   // Single item translator interface
+   //===================================================================================================================
+
+  IDKLang_TranEd_Translator = interface(IInterface)
+    ['{C05CA756-72B8-4218-94C7-63979DF07D59}']
+     // Performs translation from source LANGID to target one. Should return True on successful translation, False if
+     //   translation failed
+    function  Translate(wSourceLangID, wTargetLangID: LANGID; const wsSourceText: WideString; out wsResult: WideString): LongBool; stdcall;
+  end;
 
    //===================================================================================================================
    // An abstract Translation Editor plugin
    //===================================================================================================================
 
+  IDKLang_TranEd_PluginAction = interface;
+
   IDKLang_TranEd_Plugin = interface(IInterface)
     ['{561450F5-AD45-4C60-A84D-36668DA248A0}']
      // Prop handlers
+    function  GetActionCount: Integer; stdcall;
+    function  GetActions(iIndex: Integer): IDKLang_TranEd_PluginAction; stdcall;
     function  GetName: WideString; stdcall;
      // Props
      // -- Plugin name. Example: 'SuperPlugin'
     property Name: WideString read GetName;
+     // -- Number of action plugin implements
+    property ActionCount: Integer read GetActionCount;
+     // -- Plugin actions by index (iIndex is in range [0..ActionCount-1])
+    property Actions[iIndex: Integer]: IDKLang_TranEd_PluginAction read GetActions;
   end;
 
    //===================================================================================================================
-   // Plugin information, optional interface
+   // Plugin information, optional interface a plugin may implement
    //===================================================================================================================
 
   IDKLang_TranEd_PluginInfo = interface(IInterface)
-    ['{7CE81CD7-56B2-410C-B873-C7AC24C5C289}']
+    ['{561450F5-AD45-4C60-A84D-36668DA248A1}']
      // Prop handlers
     function  GetInfoAuthor: WideString; stdcall;
     function  GetInfoCopyright: WideString; stdcall;
@@ -66,22 +138,30 @@ type
   end;
 
    //===================================================================================================================
-   // Translation plugin
+   // Plugin action (executed with a menu item, a button etc.)
    //===================================================================================================================
 
-  IDKLang_TranEd_TranslationPlugin = interface(IDKLang_TranEd_Plugin)
-    ['{561450F5-AD45-4C60-A84D-36668DA248A1}']
-     // Tries to make a translation from source LANGID to target one. Should return True on successful translation,
-     //   False if translation failed; in the latter case sTranslatedText may contain error message text (e. g.
-     //   'Translation unavailable' or 'HTTP request failed')
-    function  Translate(wSourceLangID, wTargetLangID: LANGID; const wsSourceText: WideString; out wsResult: WideString): BOOL; stdcall;
+  IDKLang_TranEd_PluginAction = interface(IInterface)
+    ['{32768B1A-9654-40EA-900B-AB94B8245A22}']
+     // Should execute the action
+    procedure Execute;
      // Prop handlers
-    function  GetTranslateItemCaption: WideString; stdcall;
+    function  GetHint: WideString; stdcall;
+    function  GetIsEnabled: LongBool; stdcall;
+    function  GetName: WideString; stdcall;
+    function  GetStartsGroup: LongBool; stdcall;
      // Props
-     // -- Translation menu item caption. Example: 'Translate with a dictionary'
-    property TranslateItemCaption: WideString read GetTranslateItemCaption;
+     // -- Action hint (displayed as a tooltip and in the status bar; use pipe ('|') character to separate tooltip and
+     //    status bar text). Example: 'Translate using Universal Mind|Translates selected entries using Universal Mind'
+    property Hint: WideString read GetHint;
+     // -- True if action is enabled, False otherwise
+    property IsEnabled: LongBool read GetIsEnabled;
+     // -- Action name (menu item or button text). Example: '&Translate using Universal Mind'
+    property Name: WideString read GetName;
+     // -- If True, a separator is inserted before the item
+    property StartsGroup: LongBool read GetStartsGroup;
   end;
-  
+
 implementation
 
 end.

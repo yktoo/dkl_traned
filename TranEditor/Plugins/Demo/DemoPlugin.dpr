@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DemoPlugin.dpr,v 1.2 2006-08-24 13:34:04 dale Exp $
+//  $Id: DemoPlugin.dpr,v 1.3 2006-08-27 19:11:06 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -11,8 +11,13 @@ uses
   uTranEdPlugin in '..\..\uTranEdPlugin.pas';
 
 type
-  TDemoPlugin = class(TInterfacedObject, IDKLang_TranEd_Plugin, IDKLang_TranEd_PluginInfo, IDKLang_TranEd_TranslationPlugin)
+  TDemoPlugin = class(TInterfacedObject, IDKLang_TranEd_Plugin, IDKLang_TranEd_PluginInfo, IDKLang_TranEd_PluginAction)
+  private
+     // Host application environment
+    FTranEdApplication: IDKLang_TranEd_Application;
      // IDKLang_TranEd_Plugin
+    function  GetActionCount: Integer; stdcall;
+    function  GetActions(iIndex: Integer): IDKLang_TranEd_PluginAction; stdcall;
     function  GetName: WideString; stdcall;
      // IDKLang_TranEd_PluginInfo
     function  GetInfoAuthor: WideString; stdcall;
@@ -21,9 +26,60 @@ type
     function  GetInfoVersion: Cardinal; stdcall;
     function  GetInfoVersionText: WideString; stdcall;
     function  GetInfoWebsiteURL: WideString; stdcall;
-     // IDKLang_TranEd_TranslationPlugin
-    function  Translate(wSourceLangID, wTargetLangID: LANGID; const wsSourceText: WideString; out wsResult: WideString): BOOL; stdcall;
-    function  GetTranslateItemCaption: WideString; stdcall;
+     // IDKLang_TranEd_PluginAction
+    function  IDKLang_TranEd_PluginAction.GetHint        = Action_GetHint;
+    function  IDKLang_TranEd_PluginAction.GetIsEnabled   = Action_GetIsEnabled;
+    function  IDKLang_TranEd_PluginAction.GetName        = Action_GetName;
+    function  IDKLang_TranEd_PluginAction.GetStartsGroup = Action_GetStartsGroup;
+    procedure IDKLang_TranEd_PluginAction.Execute        = Action_Execute;
+    function  Action_GetHint: WideString; stdcall;
+    function  Action_GetIsEnabled: LongBool; stdcall;
+    function  Action_GetName: WideString; stdcall;
+    function  Action_GetStartsGroup: LongBool; stdcall;
+    procedure Action_Execute; stdcall;
+  public
+    constructor Create(ATranEdApplication: IDKLang_TranEd_Application);
+  end;
+
+  procedure TDemoPlugin.Action_Execute;
+  begin
+    MessageBox(0, 'Hello World!', 'Info', 0);
+  end;
+
+  function TDemoPlugin.Action_GetHint: WideString;
+  begin
+    Result := 'Do not be afraid to click me!';
+  end;
+
+  function TDemoPlugin.Action_GetIsEnabled: LongBool;
+  begin
+    Result := True;
+  end;
+
+  function TDemoPlugin.Action_GetName: WideString;
+  begin
+    Result := 'Demo plugin item';
+  end;
+
+  function TDemoPlugin.Action_GetStartsGroup: LongBool;
+  begin
+    Result := False;
+  end;
+
+  constructor TDemoPlugin.Create(ATranEdApplication: IDKLang_TranEd_Application);
+  begin
+    inherited Create;
+    FTranEdApplication := ATranEdApplication;
+  end;
+
+  function TDemoPlugin.GetActionCount: Integer;
+  begin
+    Result := 1;
+  end;
+
+  function TDemoPlugin.GetActions(iIndex: Integer): IDKLang_TranEd_PluginAction;
+  begin
+    Result := Self; // Our object implements the single action by itself
   end;
 
   function TDemoPlugin.GetInfoAuthor: WideString;
@@ -61,17 +117,6 @@ type
     Result := 'Demo translation plugin';
   end;
 
-  function TDemoPlugin.GetTranslateItemCaption: WideString;
-  begin
-    Result := 'Demo translation';
-  end;
-
-  function TDemoPlugin.Translate(wSourceLangID, wTargetLangID: LANGID; const wsSourceText: WideString; out wsResult: WideString): BOOL;
-  begin
-    Result := True;
-    wsResult := 'Hmmm, what it should look like: "'+wsSourceText+'"?';
-  end;
-
    //===================================================================================================================
    // Exported procs
    //===================================================================================================================
@@ -82,11 +127,11 @@ type
     iCount := 1;
   end;
 
-  procedure DKLTE_GetPlugin(iIndex: Integer; out Plugin: IDKLang_TranEd_Plugin); stdcall;
+  procedure DKLTE_GetPlugin(iIndex: Integer; TranEdApplication: IDKLang_TranEd_Application; out Plugin: IDKLang_TranEd_Plugin); stdcall;
   begin
     case iIndex of
        // The only valid plugin
-      0:   Plugin := TDemoPlugin.Create;
+      0:   Plugin := TDemoPlugin.Create(TranEdApplication);
       else Plugin := nil;
     end;
   end;

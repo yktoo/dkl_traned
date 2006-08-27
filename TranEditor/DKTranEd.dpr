@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DKTranEd.dpr,v 1.11 2006-08-23 15:19:11 dale Exp $
+//  $Id: DKTranEd.dpr,v 1.12 2006-08-27 19:11:06 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -21,8 +21,7 @@ uses
   dkWebUtils in '..\..\dkWebUtils.pas',
   udFind in 'udFind.pas' {dFind},
   udPromptReplace in 'udPromptReplace.pas' {dPromptReplace},
-  uTranEdPlugin in 'uTranEdPlugin.pas',
-  uTranEdPluginUsage in 'uTranEdPluginUsage.pas';
+  uTranEdPlugin in 'uTranEdPlugin.pas';
 
 {$R *.res}
 {$R *.dkl_const.res}

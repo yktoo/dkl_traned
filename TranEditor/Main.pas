@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.23 2006-08-27 14:15:34 dale Exp $
+//  $Id: Main.pas,v 1.24 2006-08-27 19:11:06 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -43,7 +43,7 @@ type
         pTranConst:  PDKLang_Constant);             // Link to constant translation
   end;
 
-  TfMain = class(TDKLTranEdForm, IDKLang_TranEd_Application)
+  TfMain = class(TDKLTranEdForm, IDKLang_TranEd_Application, ITranEdApplication)
     aAbout: TTntAction;
     aAddToRepository: TTntAction;
     aAutoTranslate: TTntAction;
@@ -339,12 +339,6 @@ type
     procedure RefreshBookmarks;
      // If node focused in tvMain corresponds to a bookmark, highlights that node in tvBookmarks
     procedure UpdateCurBookmark;
-     // Unloads loaded plugin modules and destroys their menu items
-    procedure PluginsUnload;
-     // Enables or disables all plugin items
-    procedure PluginsEnable(bEnable: Boolean);
-     // Plugin item click handler
-    procedure PluginItemClick(Sender: TObject);
      // IDKLang_TranEd_Application
     function  FilesClose: LongBool; stdcall;
     function  FilesOpen(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): LongBool; stdcall;
@@ -359,6 +353,9 @@ type
     function  GetTranslationFileName: WideString; stdcall;
     procedure FilesLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString); stdcall;
     procedure TranslateSelected(Translator: IDKLang_TranEd_Translator); stdcall;
+     // ITranEdApplication
+    procedure PluginLoaded(PluginEntry: TPluginEntry);
+    procedure PluginUnloading(PluginEntry: TPluginEntry);
      // Message handlers
     procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;
      // Prop handlers
@@ -402,7 +399,7 @@ uses
   Registry, ShellAPI,
   TntClipbrd, 
   udSettings, udAbout, udOpenFiles, udDiffLog, udTranProps, udFind, StrUtils, udPromptReplace,
-  ChmHlp, uTranEdPluginUsage;
+  ChmHlp;
 
    //===================================================================================================================
    //  TfMain
@@ -849,7 +846,6 @@ uses
     DoCloseFiles;
     FBookmarks.Free;
     FRepository.Free;
-    PluginsUnload;
     inherited DoDestroy;
   end;
 
@@ -864,6 +860,8 @@ uses
   var
     bOpenFiles, bFocusedNode, bSelection, bTableFocused, bTranEdFocused, bBookmarkVis, bBookmarkSel: Boolean;
     k: TNodeKind;
+    i: Integer;
+    tbi: TTBCustomItem;
   begin
     k := GetNodeKind(tvMain.FocusedNode);
     bOpenFiles     := FLangSource<>nil;
@@ -899,7 +897,10 @@ uses
     cbEntryStateUntranslated.Enabled   := bSelection;
     cbEntryStateAutotranslated.Enabled := bSelection;
      // Plugins
-    PluginsEnable(bSelection); 
+    for i := 0 to giToolsPluginItems.Count-1 do begin
+      tbi := giToolsPluginItems[i];
+      if tbi is TPluginMenuItem then tbi.Enabled := TPluginMenuItem(tbi).PluginAction.IsEnabled;
+    end;
   end;
 
   procedure TfMain.EnableActionsNotify(Sender: TObject);
@@ -1400,51 +1401,44 @@ uses
     end;
   end;
 
-  procedure TfMain.PluginItemClick(Sender: TObject);
-//!!!  var pInfo: PPluginInfoBlock;
+  procedure TfMain.PluginLoaded(PluginEntry: TPluginEntry);
+  var
+    i: Integer;
+    Action: IDKLang_TranEd_PluginAction;
+    pmi: TPluginMenuItem;
   begin
-//    pInfo := PPluginInfoBlock((Sender as TComponent).Tag);
-//    if pInfo<>nil then TranslateAllNodes(True, pInfo.Plugin as IDKLang_TranEd_TranslationPlugin);
+    for i := 0 to PluginEntry.ActionCount-1 do begin
+      Action := PluginEntry.Actions[i];
+       // Create separator if needed
+      if ((i=0) or Action.StartsGroup) and (giToolsPluginItems.Count>0) then
+        giToolsPluginItems.Add(TTBXSeparatorItem.Create(Self));
+       // Create menu item and link it to plugin and its action
+      pmi := TPluginMenuItem.Create(Self);
+      pmi.PluginEntry  := PluginEntry;
+      pmi.PluginAction := Action;
+      giToolsPluginItems.Add(pmi);
+    end;
   end;
 
-  procedure TfMain.PluginsEnable(bEnable: Boolean);
-  var i: Integer;
+  procedure TfMain.PluginUnloading(PluginEntry: TPluginEntry);
+  var
+    i: Integer;
+    tbi: TTBCustomItem;
   begin
-    for i := 0 to giToolsPluginItems.Count-1 do giToolsPluginItems[i].Enabled := bEnable;
-  end;
-
-  procedure TfMain.PluginsUnload;
-//  var
-//    i: Integer;
-//    p: PPluginInfoBlock;
-  begin
-//                 // Create plugin item
-//                Item := TTBXItem.Create(Self);
-//                Item.Caption := TranPlugin.TranslateItemCaption;
-//                Item.Hint    := DKLangConstW('STranPluginItemHint', [TranPlugin.Name]);
-//                Item.OnClick := PluginItemClick;
-//                giToolsPluginItems.Add(Item);
-//                 // Create plugin info block
-//                New(pInfo);
-//                pInfo.hLib   := hLib;
-//                pInfo.Plugin := Plugin;
-//                 // Associate the info block with the item
-//                Item.Tag := Integer(pInfo);
-//
-//    for i := giToolsPluginItems.Count-1 downto 0 do begin
-//       // Obtain plugin info block associated with the item
-//      p := PPluginInfoBlock(giToolsPluginItems[i].Tag);
-//      if p<>nil then begin
-//         // Destroy the plugin
-//        p.Plugin := nil;
-//         // Unload the library
-//        FreeLibrary(p.hLib);
-//         // Dispose the block
-//        Dispose(p);
-//      end;
-//       // Destroy the item
-//      giToolsPluginItems.Delete(i);
-//    end;
+     // Find and destroy all menu items linked to plugin
+    i := giToolsPluginItems.Count-1;
+    while i>=0 do begin
+      tbi := giToolsPluginItems[i];
+      if (tbi is TPluginMenuItem) and (TPluginMenuItem(tbi).PluginEntry=PluginEntry) then begin
+        giToolsPluginItems.Delete(i);
+         // Destroy related separator item, if any
+        if (i>0) and (giToolsPluginItems[i-1] is TTBXSeparatorItem) then begin
+          giToolsPluginItems.Delete(i-1);
+          Dec(i);
+        end;
+      end;
+      Dec(i);
+    end;
   end;
 
   procedure TfMain.RefreshBookmarks;

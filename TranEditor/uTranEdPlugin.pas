@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: uTranEdPlugin.pas,v 1.3 2006-08-27 14:15:34 dale Exp $
+//  $Id: uTranEdPlugin.pas,v 1.4 2006-08-27 19:11:06 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -20,7 +20,7 @@ type
    // Prototypes of procedures exported from a plugin DLL
    //===================================================================================================================
 
-   // Returns number of plugins implemented in a module. Must be named 'DKLTE_GetPluginCount'
+   // Returns number of distinct plugins implemented in a module. Must be named 'DKLTE_GetPluginCount'
   TDKLang_TranEd_GetPluginCountProc = procedure(out iCount: Integer); stdcall;
    // Instantiates and returns plugin with a specific index (ranged 0..PluginCount-1). Must be named 'DKLTE_GetPlugin'.
    //   TranEdApplication is Translation Editor application environment
@@ -102,9 +102,9 @@ type
      // Props
      // -- Plugin name. Example: 'SuperPlugin'
     property Name: WideString read GetName;
-     // -- Number of action plugin implements
+     // -- Number of different actions plugin implements
     property ActionCount: Integer read GetActionCount;
-     // -- Plugin actions by index (iIndex is in range [0..ActionCount-1])
+     // -- Plugin actions by index (iIndex is in range [0..ActionCount-1]; actions may be instantiated on read)
     property Actions[iIndex: Integer]: IDKLang_TranEd_PluginAction read GetActions;
   end;
 
@@ -144,7 +144,7 @@ type
   IDKLang_TranEd_PluginAction = interface(IInterface)
     ['{32768B1A-9654-40EA-900B-AB94B8245A22}']
      // Should execute the action
-    procedure Execute;
+    procedure Execute; stdcall;
      // Prop handlers
     function  GetHint: WideString; stdcall;
     function  GetIsEnabled: LongBool; stdcall;

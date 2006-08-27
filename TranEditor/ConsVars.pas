@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.23 2006-08-27 14:15:34 dale Exp $
+//  $Id: ConsVars.pas,v 1.24 2006-08-27 19:11:03 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -9,12 +9,34 @@ unit ConsVars;
 interface
 uses
   Windows, Messages, SysUtils, Classes, Contnrs, Controls, Graphics,
-  VirtualTrees, TntSystem, TntWindows, TntClasses, TntSysUtils, TntStdCtrls, TntDialogs,
+  TntSystem, TntWindows, TntClasses, TntSysUtils, TntStdCtrls, TntDialogs, VirtualTrees, TBX,
   DKLang, dkWebUtils, uTranEdPlugin;
 
 type
    // Exception
   ETranEdError = class(Exception);
+
+   //===================================================================================================================
+   // A TObjectList which can notify about insertion/extraction/deletion of an item
+   //===================================================================================================================
+
+  TObjectListEx = class;
+
+  TObjectListExNotifyEvent = procedure(Sender: TObjectListEx; Item: TObject; Action: TListNotification) of object;
+
+  TObjectListEx = class(TObjectList)
+  private
+     // Prop storage
+    FOnNotify: TObjectListExNotifyEvent;
+  protected
+    procedure Notify(Ptr: Pointer; Action: TListNotification); override;
+     // Event firing
+    procedure DoNotify(Ptr: Pointer; Action: TListNotification);
+  public
+     // Events
+     // -- Notification event
+    property OnNotify: TObjectListExNotifyEvent read FOnNotify write FOnNotify;
+  end;
 
    //===================================================================================================================
    // A single property language source
@@ -79,7 +101,7 @@ type
   TComponentSources = class(TObjectList)
   private
      // Prop handlers
-    function GetItems(Index: Integer): TComponentSource;
+    function  GetItems(Index: Integer): TComponentSource;
   public
     function  Add(Item: TComponentSource): Integer;
      // Tries to find the component by name; returns True, if succeeded, and its index in iIndex; otherwise returns
@@ -187,17 +209,41 @@ type
   end;
 
    //===================================================================================================================
+   // Translation editor application
+   //===================================================================================================================
+
+  TPluginEntry = class;
+
+  ITranEdApplication = interface(IDKLang_TranEd_Application)
+    ['{3018B73E-0242-43CF-B3FE-D026E5A88B14}']
+     // Notifies the application after a plugin is loaded
+    procedure PluginLoaded(PluginEntry: TPluginEntry);
+     // Notifies the application a plugin is about to be unloaded
+    procedure PluginUnloading(PluginEntry: TPluginEntry);
+  end;
+
+   //===================================================================================================================
    // Plugin host object
    //===================================================================================================================
 
   TPluginEntry = class(TObject)
   private
+     // Plugin action list
+    FActions: IInterfaceList;
      // Prop storage
     FLibHandle: HMODULE;
     FPlugin: IDKLang_TranEd_Plugin;
+     // Prop handlers
+    function  GetActionCount: Integer;
+    function  GetActions(Index: Integer): IDKLang_TranEd_PluginAction;
   public
     constructor Create(ALibHandle: HMODULE; APlugin: IDKLang_TranEd_Plugin);
+    destructor Destroy; override;
      // Props
+     // -- Number of actions implemented by the plugin
+    property ActionCount: Integer read GetActionCount;
+     // -- Plugin actions by index
+    property Actions[Index: Integer]: IDKLang_TranEd_PluginAction read GetActions;
      // -- Handle of module containing the plugin
     property LibHandle: HMODULE read FLibHandle;
      // -- Plugin instance
@@ -208,16 +254,20 @@ type
    // Plugin host application, holds a list of plugin entries of type TPluginEntry
    //===================================================================================================================
 
-  TPluginHost = class(TObjectList)
+  TPluginHost = class(TObject)
   private
      // Plugin entry list
-    FPluginEntries: TObjectList;
-    FTranEdApplication: IDKLang_TranEd_Application;
+    FPluginEntries: TObjectListEx;
+    FTranEdApplication: ITranEdApplication;
+     // FPluginEntries events
+    procedure PluginEntriesNotify(Sender: TObjectListEx; Item: TObject; Action: TListNotification);
+     // Returns True if library handle is used by at least one entry
+    function  IsLibraryReferenced(ALibHandle: HMODULE): Boolean;
      // Prop handlers
     function  GetPluginEntries(Index: Integer): TPluginEntry;
     function  GetPluginEntryCount: Integer;
   public
-    constructor Create(ATranEdApplication: IDKLang_TranEd_Application);
+    constructor Create(ATranEdApplication: ITranEdApplication);
     destructor Destroy; override;
      // Load the specified module (dll)
     procedure LoadPluginModule(const wsModuleFileName: WideString);
@@ -229,7 +279,26 @@ type
      // -- Entries by index
     property PluginEntries[Index: Integer]: TPluginEntry read GetPluginEntries; default;
      // -- Translation Editor application environment interface
-    property TranEdApplication: IDKLang_TranEd_Application read FTranEdApplication;
+    property TranEdApplication: ITranEdApplication read FTranEdApplication;
+  end;
+
+   //===================================================================================================================
+   // Plugin menu item
+   //===================================================================================================================
+
+  TPluginMenuItem = class(TTBXItem)
+  private
+     // Prop storage
+    FPluginAction: IDKLang_TranEd_PluginAction;
+    FPluginEntry: TPluginEntry;
+    procedure SetPluginAction(Value: IDKLang_TranEd_PluginAction);
+  public
+    procedure Click; override;
+     // Props
+     // -- Plugin action reference
+    property PluginAction: IDKLang_TranEd_PluginAction read FPluginAction write SetPluginAction;
+     // -- Plugin entry reference
+    property PluginEntry: TPluginEntry read FPluginEntry write FPluginEntry;
   end;
 
    //===================================================================================================================
@@ -609,6 +678,22 @@ type
         end else
           Inc(i);
     end;
+  end;
+
+   //===================================================================================================================
+   // TObjectListEx
+   //===================================================================================================================
+
+  procedure TObjectListEx.DoNotify(Ptr: Pointer; Action: TListNotification);
+  begin
+    if Assigned(FOnNotify) then FOnNotify(Self, TObject(Ptr), Action);
+  end;
+
+  procedure TObjectListEx.Notify(Ptr: Pointer; Action: TListNotification);
+  begin
+    if Action in [lnExtracted, lnDeleted] then DoNotify(Ptr, Action);
+    inherited Notify(Ptr, Action);
+    if Action=lnAdded then DoNotify(Ptr, Action);
   end;
 
    //===================================================================================================================
@@ -1226,21 +1311,44 @@ type
    //===================================================================================================================
 
   constructor TPluginEntry.Create(ALibHandle: HMODULE; APlugin: IDKLang_TranEd_Plugin);
+  var i: Integer;
   begin
     inherited Create;
+    FActions   := TInterfaceList.Create;
     FLibHandle := ALibHandle;
     FPlugin    := APlugin;
+     // Instantiate and store plugin's actions
+    for i := 0 to FPlugin.ActionCount-1 do FActions.Add(FPlugin.Actions[i]);
+  end;
+
+  destructor TPluginEntry.Destroy;
+  begin
+     // Ensure actions are destroyed before plugin
+    FActions := nil;
+    FPlugin  := nil;
+    inherited Destroy;
+  end;
+
+  function TPluginEntry.GetActionCount: Integer;
+  begin
+    Result := FActions.Count;
+  end;
+
+  function TPluginEntry.GetActions(Index: Integer): IDKLang_TranEd_PluginAction;
+  begin
+    Result := IDKLang_TranEd_PluginAction(FActions[Index]);
   end;
 
    //===================================================================================================================
    // TPluginHost
    //===================================================================================================================
 
-  constructor TPluginHost.Create(ATranEdApplication: IDKLang_TranEd_Application);
+  constructor TPluginHost.Create(ATranEdApplication: ITranEdApplication);
   begin
     inherited Create;
     FTranEdApplication := ATranEdApplication;
-    FPluginEntries     := TObjectList.Create(True);
+    FPluginEntries     := TObjectListEx.Create(True);
+    FPluginEntries.OnNotify := PluginEntriesNotify;
   end;
 
   destructor TPluginHost.Destroy;
@@ -1257,6 +1365,17 @@ type
   function TPluginHost.GetPluginEntryCount: Integer;
   begin
     Result := FPluginEntries.Count;
+  end;
+
+  function TPluginHost.IsLibraryReferenced(ALibHandle: HMODULE): Boolean;
+  var i: Integer;
+  begin
+    for i := 0 to PluginEntryCount-1 do
+      if PluginEntries[i].LibHandle=ALibHandle then begin
+        Result := True;
+        Exit;
+      end;
+    Result := False;
   end;
 
   procedure TPluginHost.LoadPluginModule(const wsModuleFileName: WideString);
@@ -1289,6 +1408,18 @@ type
     end;
   end;
 
+  procedure TPluginHost.PluginEntriesNotify(Sender: TObjectListEx; Item: TObject; Action: TListNotification);
+  begin
+    case Action of
+      lnAdded: FTranEdApplication.PluginLoaded(TPluginEntry(Item));
+      lnDeleted: begin
+        FTranEdApplication.PluginUnloading(TPluginEntry(Item));
+         // Unload the library once it is no more referenced
+//!!!        if not IsLibraryReferenced(TPluginEntry(Item).LibHandle) then FreeLibrary(TPluginEntry(Item).LibHandle);
+      end;
+    end;
+  end;
+
   procedure TPluginHost.ScanForPlugins(const wsDir: WideString);
 
      // Recursive plugin scanning routine
@@ -1313,6 +1444,27 @@ type
 
   begin
     DoScanPath(WideIncludeTrailingPathDelimiter(wsDir));
+  end;
+
+   //===================================================================================================================
+   // TPluginMenuItem
+   //===================================================================================================================
+
+  procedure TPluginMenuItem.Click;
+  begin
+    inherited Click;
+    if Enabled and Assigned(FPluginAction) then FPluginAction.Execute; 
+  end;
+
+  procedure TPluginMenuItem.SetPluginAction(Value: IDKLang_TranEd_PluginAction);
+  begin
+    if FPluginAction<>Value then begin
+      FPluginAction := Value;
+      if FPluginAction<>nil then begin
+        Caption := FPluginAction.Name;
+        Hint    := FPluginAction.Hint;
+      end;
+    end;
   end;
 
 initialization

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.24 2006-08-27 19:11:06 dale Exp $
+//  $Id: Main.pas,v 1.25 2006-08-28 18:48:20 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -620,7 +620,7 @@ uses
 
   procedure TfMain.aaSettings(Sender: TObject);
   begin
-    if EditSettings then ApplySettings;
+    if EditSettings(FPluginHost) then ApplySettings;
   end;
 
   procedure TfMain.aaToggleFocus(Sender: TObject);

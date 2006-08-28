@@ -1,5 +1,5 @@
 ﻿;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.16 2006-08-27 19:11:04 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.17 2006-08-28 18:48:20 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -31,6 +31,8 @@ cbIgnoreEncodingMismatch.Caption=00000015,Don't &warn if language source and tra
 gbRepository.Caption=00000016,Repository
 gbInterface.Caption=00000017,Interface
 bHelp.Caption=00000018,Help
+tsGeneral.Caption=00000019,General
+tsPlugins.Caption=00000020,Plugins
 
 [dOpenFiles]
 Caption=00000001,Open language files
@@ -223,6 +225,11 @@ SErrMsg_SrcAndTranLangsAreSame=Source and translation languages should be differ
 SErrMsg_WrongSectionName=Wrong section name format: "%s"
 SLangSourceFileFilter=DKLang language source files (*.dklang)|*.dklang|All Files (*.*)|*.*
 SMsg_NoSearchResults=String "%s" wasn't found.
+SMsg_PluginAuthor=Author:
+SMsg_PluginCopyright=Copyright:
+SMsg_PluginDescription=Description:
+SMsg_PluginVersion=Version:
+SMsg_PluginWebsite=Website:
 SMsg_PromptReplace=Replace this occurence of "%s"?
 SMsg_ReplacedInfo=Replaced %d occurences of "%s".
 SNode_Constants=Constants

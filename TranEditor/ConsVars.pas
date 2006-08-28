@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.24 2006-08-27 19:11:03 dale Exp $
+//  $Id: ConsVars.pas,v 1.25 2006-08-28 18:48:18 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -231,19 +231,22 @@ type
      // Plugin action list
     FActions: IInterfaceList;
      // Prop storage
+    FFileName: WideString;
     FLibHandle: HMODULE;
     FPlugin: IDKLang_TranEd_Plugin;
      // Prop handlers
     function  GetActionCount: Integer;
     function  GetActions(Index: Integer): IDKLang_TranEd_PluginAction;
   public
-    constructor Create(ALibHandle: HMODULE; APlugin: IDKLang_TranEd_Plugin);
+    constructor Create(ALibHandle: HMODULE; const wsFileName: WideString; APlugin: IDKLang_TranEd_Plugin);
     destructor Destroy; override;
      // Props
      // -- Number of actions implemented by the plugin
     property ActionCount: Integer read GetActionCount;
      // -- Plugin actions by index
     property Actions[Index: Integer]: IDKLang_TranEd_PluginAction read GetActions;
+     // -- File name of module containing the plugin
+    property FileName: WideString read FFileName;
      // -- Handle of module containing the plugin
     property LibHandle: HMODULE read FLibHandle;
      // -- Plugin instance
@@ -291,6 +294,7 @@ type
      // Prop storage
     FPluginAction: IDKLang_TranEd_PluginAction;
     FPluginEntry: TPluginEntry;
+     // Prop handlers
     procedure SetPluginAction(Value: IDKLang_TranEd_PluginAction);
   public
     procedure Click; override;
@@ -393,6 +397,8 @@ const
   CLine_SearchMatch                = clRed;    // Border line color of search match node 
   CBack_SearchMatch                = $c0c0ff;  // Background color of search match node
 
+  CBack_LightShade                 = $f0f0f0;
+
    // ImageIndices                 
   iiSettings                       =  0;
   iiFolder                         =  1;
@@ -421,6 +427,11 @@ const
   iiBookmarkAdd                    = 24;
   iiBookmarkDelete                 = 25;
   iiBookmarkJump                   = 26;
+  iiCut                            = 27;
+  iiCopy                           = 28;
+  iiPaste                          = 29;
+  iiDKSoft                         = 30;
+  iiPlugin                         = 31;
 
    // Help topics
   IDH_iface_dlg_about              = 0010;
@@ -1310,12 +1321,13 @@ type
    // TPluginEntry
    //===================================================================================================================
 
-  constructor TPluginEntry.Create(ALibHandle: HMODULE; APlugin: IDKLang_TranEd_Plugin);
+  constructor TPluginEntry.Create(ALibHandle: HMODULE; const wsFileName: WideString; APlugin: IDKLang_TranEd_Plugin);
   var i: Integer;
   begin
     inherited Create;
     FActions   := TInterfaceList.Create;
     FLibHandle := ALibHandle;
+    FFileName  := wsFileName;
     FPlugin    := APlugin;
      // Instantiate and store plugin's actions
     for i := 0 to FPlugin.ActionCount-1 do FActions.Add(FPlugin.Actions[i]);
@@ -1400,7 +1412,7 @@ type
            // Create and register plugins
           for i := 0 to iCount-1 do begin
             GetPluginProc(i, FTranEdApplication, Plugin);
-            FPluginEntries.Add(TPluginEntry.Create(hLib, Plugin));
+            FPluginEntries.Add(TPluginEntry.Create(hLib, wsModuleFileName, Plugin));
           end;
         except
           on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedCreatingPlugins', [wsModuleFileName, e.Message]));

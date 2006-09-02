@@ -1,6 +1,6 @@
 @echo off
 rem ********************************************************************************************************************
-rem $Id: _make_.bat,v 1.3 2006-08-16 03:29:02 dale Exp $
+rem $Id: _make_.bat,v 1.4 2006-09-02 08:56:37 dale Exp $
 rem --------------------------------------------------------------------------------------------------------------------
 rem DKLang Localization Package
 rem Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -22,7 +22,7 @@ rem -W = Output warning messages
 rem -H = Output hint messages
 set DELPHI_OPTIONS=-B -W -H
 set DELPHI_SWITCHES=A8B-C-D-G+H+I+J-L-M-O+P+Q-R-T-U-V+W-X+Y-Z1
-set DELPHI_LIBRARY_PATH=%DELPHI%\tb2k\Source;%DELPHI%\tbx;%DELPHI%\Graphics32;%DELPHI%\RX\Units;%DELPHI%\vtv\Source;%DELPHI%\tnt;%DELPHI%\SynEdit\Source;c:\Delphi\CVSpro~1\dale\dklang
+set DELPHI_LIBRARY_PATH=%DELPHI%\tb2k\Source;%DELPHI%\tbx;%DELPHI%\Graphics32;%DELPHI%\RX\Units;%DELPHI%\vtv\Source;%DELPHI%\tnt\Source;%DELPHI%\SynEdit\Source;c:\Delphi\CVSpro~1\dale\dklang
 set DELPHI_COMPILER="%DELPHI%\Bin\dcc32.exe"
 
 set HELP_COMPILER=C:\Program Files\HTML Help Workshop\hhc.exe  

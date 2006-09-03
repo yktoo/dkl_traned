@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udSettings.pas,v 1.10 2006-08-28 18:48:21 dale Exp $
+//  $Id: udSettings.pas,v 1.11 2006-09-03 18:35:28 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -9,7 +9,8 @@ unit udSettings;
 interface
 
 uses
-  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, TntSystem, TntSysUtils, ConsVars, 
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs, TntSystem, TntWindows,
+  TntSysUtils, uTranEdPlugin, ConsVars,
   DKLTranEdFrm, DKLang, StdCtrls, TntStdCtrls, ComCtrls, TntComCtrls,
   VirtualTrees, ExtCtrls, TntExtCtrls;
 
@@ -41,24 +42,22 @@ type
     procedure bInterfaceFontClick(Sender: TObject);
     procedure bOKClick(Sender: TObject);
     procedure bTableFontClick(Sender: TObject);
+    procedure tvPluginsBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
+    procedure tvPluginsExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode; var Allowed: Boolean);
+    procedure tvPluginsGetCursor(Sender: TBaseVirtualTree; var Cursor: TCursor);
+    procedure tvPluginsGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
     procedure tvPluginsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType; var CellText: WideString);
     procedure tvPluginsInitNode(Sender: TBaseVirtualTree; ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
-    procedure tvPluginsExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode; var Allowed: Boolean);
-    procedure tvPluginsPaintText(Sender: TBaseVirtualTree;
-      const TargetCanvas: TCanvas; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType);
-    procedure tvPluginsBeforeItemErase(Sender: TBaseVirtualTree;
-      TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect;
-      var ItemColor: TColor; var EraseAction: TItemEraseAction);
-    procedure tvPluginsGetImageIndex(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-      var Ghosted: Boolean; var ImageIndex: Integer);
+    procedure tvPluginsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure tvPluginsPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
   private
      // Fonts
     FInterfaceFont: WideString;
     FTableFont: WideString;
      // Plugin host object
     FPluginHost: TPluginHost;
+     // Returns True if point p (client coordinates) is at hyperlink in tvPlugins
+    function  PointAtPluginHyperlink(const p: TPoint; out Plugin: IDKLang_TranEd_Plugin): Boolean;
      // Updates info about selected fonts
     procedure UpdateFonts;
   protected
@@ -70,7 +69,7 @@ type
 
 implementation
 {$R *.dfm}
-uses TntFileCtrl, uTranEdPlugin, Main;
+uses TntFileCtrl, ShellAPI, Main;
 
 const
    // tvPlugins column indices
@@ -167,6 +166,16 @@ const
     tvPlugins.RootNodeCount          := FPluginHost.PluginEntryCount;
   end;
 
+  function TdSettings.PointAtPluginHyperlink(const p: TPoint; out Plugin: IDKLang_TranEd_Plugin): Boolean;
+  var hi: THitInfo;
+  begin
+    tvPlugins.GetHitTestInfoAt(p.x, p.y, True, hi);
+    Result :=
+      (hi.HitNode<>nil) and (tvPlugins.NodeParent[hi.HitNode]<>nil) and (hi.HitColumn=IColIdx_Plugins_Value) and
+      (hiOnItemLabel in hi.HitPositions) and (hi.HitNode.Index=IPluginInfoEntryIdx_Website);
+    if Result then Plugin := FPluginHost[tvPlugins.NodeParent[hi.HitNode].Index].Plugin else Plugin := nil;
+  end;
+
   procedure TdSettings.tvPluginsBeforeItemErase(Sender: TBaseVirtualTree; TargetCanvas: TCanvas; Node: PVirtualNode; ItemRect: TRect; var ItemColor: TColor; var EraseAction: TItemEraseAction);
   begin
      // Shade plugin rows
@@ -179,6 +188,12 @@ const
   procedure TdSettings.tvPluginsExpanding(Sender: TBaseVirtualTree; Node: PVirtualNode; var Allowed: Boolean);
   begin
     if Sender.ChildCount[Node]=0 then Sender.ChildCount[Node] := IPluginInfoEntryCount;
+  end;
+
+  procedure TdSettings.tvPluginsGetCursor(Sender: TBaseVirtualTree; var Cursor: TCursor);
+  var Plugin: IDKLang_TranEd_Plugin;
+  begin
+    if PointAtPluginHyperlink(Sender.ScreenToClient(Mouse.CursorPos), Plugin) then Cursor := crHandPoint;
   end;
 
   procedure TdSettings.tvPluginsGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
@@ -234,10 +249,31 @@ const
       Include(InitialStates, ivsHasChildren);
   end;
 
+  procedure TdSettings.tvPluginsMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  var Plugin: IDKLang_TranEd_Plugin;
+  begin
+     // When plugin's URL clicked open it
+    if (Shift=[ssLeft]) and PointAtPluginHyperlink(Point(x, y), Plugin) then
+      Tnt_ShellExecuteW(
+        Application.Handle,
+        nil,
+        PWideChar((Plugin as IDKLang_TranEd_PluginInfo).InfoWebsiteURL),
+        nil,
+        nil,
+        SW_SHOWNORMAL);
+  end;
+
   procedure TdSettings.tvPluginsPaintText(Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType);
   begin
      // Draw plugin names in bold
-    if (Sender.NodeParent[Node]=nil) and (Column=IColIdx_Plugins_Name) then TargetCanvas.Font.Style := [fsBold];
+    if Sender.NodeParent[Node]=nil then begin
+      if Column=IColIdx_Plugins_Name then TargetCanvas.Font.Style := [fsBold];
+     // Draw URLs as hyperlinks
+    end else
+      if (Column=IColIdx_Plugins_Value) and (Node.Index=IPluginInfoEntryIdx_Website) then begin
+        TargetCanvas.Font.Style := [fsUnderline];
+        if not (vsSelected in Node.States) then TargetCanvas.Font.Color := clHotLight;
+      end;
   end;
 
   procedure TdSettings.UpdateFonts;

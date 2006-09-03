@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DemoPlugin.dpr,v 1.3 2006-08-27 19:11:06 dale Exp $
+//  $Id: DemoPlugin.dpr,v 1.4 2006-09-03 18:35:29 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -43,12 +43,12 @@ type
 
   procedure TDemoPlugin.Action_Execute;
   begin
-    MessageBox(0, 'Hello World!', 'Info', 0);
+    MessageBox(FTranEdApplication.AppHandle, 'Hello World!', 'Info', 0);
   end;
 
   function TDemoPlugin.Action_GetHint: WideString;
   begin
-    Result := 'Do not be afraid to click me!';
+    Result := 'Don''t hesitate to click me!';
   end;
 
   function TDemoPlugin.Action_GetIsEnabled: LongBool;

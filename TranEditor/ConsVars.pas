@@ -1,10 +1,12 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.25 2006-08-28 18:48:18 dale Exp $
+//  $Id: ConsVars.pas,v 1.26 2006-09-03 18:35:25 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
 //**********************************************************************************************************************
 unit ConsVars;
+
+{$I TntCompilers.inc}
 
 interface
 uses
@@ -22,7 +24,9 @@ type
 
   TObjectListEx = class;
 
-  TObjectListExNotifyEvent = procedure(Sender: TObjectListEx; Item: TObject; Action: TListNotification) of object;
+  TObjectListExNotification = (olenAfterAdd, olenBeforeDelete, olenAfterDelete, olenBeforeExtract, olenAfterExtract);
+
+  TObjectListExNotifyEvent = procedure(Sender: TObjectListEx; Item: TObject; Action: TObjectListExNotification) of object;
 
   TObjectListEx = class(TObjectList)
   private
@@ -31,7 +35,7 @@ type
   protected
     procedure Notify(Ptr: Pointer; Action: TListNotification); override;
      // Event firing
-    procedure DoNotify(Ptr: Pointer; Action: TListNotification);
+    procedure DoNotify(Ptr: Pointer; Action: TObjectListExNotification);
   public
      // Events
      // -- Notification event
@@ -261,10 +265,13 @@ type
   private
      // Plugin entry list
     FPluginEntries: TObjectListEx;
+     // List of plugin module handles
+    FPluginLibHandles: TList;
+     // Prop storage
     FTranEdApplication: ITranEdApplication;
      // FPluginEntries events
-    procedure PluginEntriesNotify(Sender: TObjectListEx; Item: TObject; Action: TListNotification);
-     // Returns True if library handle is used by at least one entry
+    procedure PluginEntriesNotify(Sender: TObjectListEx; Item: TObject; Action: TObjectListExNotification);
+     // Returns True if a library handle is used by at least one entry
     function  IsLibraryReferenced(ALibHandle: HMODULE): Boolean;
      // Prop handlers
     function  GetPluginEntries(Index: Integer): TPluginEntry;
@@ -695,16 +702,23 @@ type
    // TObjectListEx
    //===================================================================================================================
 
-  procedure TObjectListEx.DoNotify(Ptr: Pointer; Action: TListNotification);
+  procedure TObjectListEx.DoNotify(Ptr: Pointer; Action: TObjectListExNotification);
   begin
     if Assigned(FOnNotify) then FOnNotify(Self, TObject(Ptr), Action);
   end;
 
   procedure TObjectListEx.Notify(Ptr: Pointer; Action: TListNotification);
   begin
-    if Action in [lnExtracted, lnDeleted] then DoNotify(Ptr, Action);
+    case Action of
+      lnExtracted: DoNotify(Ptr, olenBeforeExtract);
+      lnDeleted:   DoNotify(Ptr, olenBeforeDelete);
+    end;
     inherited Notify(Ptr, Action);
-    if Action=lnAdded then DoNotify(Ptr, Action);
+    case Action of
+      lnAdded:     DoNotify(Ptr, olenAfterAdd);
+      lnExtracted: DoNotify(Ptr, olenAfterExtract);
+      lnDeleted:   DoNotify(Ptr, olenAfterDelete);
+    end;
   end;
 
    //===================================================================================================================
@@ -1361,10 +1375,12 @@ type
     FTranEdApplication := ATranEdApplication;
     FPluginEntries     := TObjectListEx.Create(True);
     FPluginEntries.OnNotify := PluginEntriesNotify;
+    FPluginLibHandles  := TList.Create;
   end;
 
   destructor TPluginHost.Destroy;
   begin
+    FPluginLibHandles.Free;
     FPluginEntries.Free;
     inherited Destroy;
   end;
@@ -1405,30 +1421,52 @@ type
       GetPluginCountProc := GetProcAddress(hLib, SPlugin_GetPluginCountProcName);
       GetPluginProc      := GetProcAddress(hLib, SPlugin_GetPluginProcName);
        // If succeeded
-      if Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then
+      if Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then begin
+        iCount := 0;
         try
            // Get the plugin count
           GetPluginCountProc(iCount);
-           // Create and register plugins
-          for i := 0 to iCount-1 do begin
-            GetPluginProc(i, FTranEdApplication, Plugin);
-            FPluginEntries.Add(TPluginEntry.Create(hLib, wsModuleFileName, Plugin));
-          end;
         except
-          on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedCreatingPlugins', [wsModuleFileName, e.Message]));
+          on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedGettingPluginCount', [wsModuleFileName, e.Message]));
         end;
+         // Create and register plugins
+        for i := 0 to iCount-1 do begin
+          Plugin := nil;
+          try
+            GetPluginProc(i, FTranEdApplication, Plugin);
+          except
+            on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedCreatingPlugin', [i, wsModuleFileName, e.Message]));
+          end;
+          if Plugin<>nil then FPluginEntries.Add(TPluginEntry.Create(hLib, wsModuleFileName, Plugin));
+        end;
+      end;
     end;
   end;
 
-  procedure TPluginHost.PluginEntriesNotify(Sender: TObjectListEx; Item: TObject; Action: TListNotification);
+  procedure TPluginHost.PluginEntriesNotify(Sender: TObjectListEx; Item: TObject; Action: TObjectListExNotification);
+  var
+    i: Integer;
+    hLib: HMODULE;
   begin
     case Action of
-      lnAdded: FTranEdApplication.PluginLoaded(TPluginEntry(Item));
-      lnDeleted: begin
-        FTranEdApplication.PluginUnloading(TPluginEntry(Item));
-         // Unload the library once it is no more referenced
-//!!!        if not IsLibraryReferenced(TPluginEntry(Item).LibHandle) then FreeLibrary(TPluginEntry(Item).LibHandle);
+       // Plugin added
+      olenAfterAdd: begin
+         // Register plugin's module handle
+        FPluginLibHandles.Add(Pointer(TPluginEntry(Item).LibHandle));
+         // Notify the application
+        FTranEdApplication.PluginLoaded(TPluginEntry(Item));
       end;
+       // Plugin is about do delete. Notify the application
+      olenBeforeDelete: FTranEdApplication.PluginUnloading(TPluginEntry(Item));
+       // Plugin is destroyed. Unload its module once it is no more referenced
+      olenAfterDelete:
+        for i := 0 to FPluginLibHandles.Count-1 do begin
+          hLib := Cardinal(FPluginLibHandles[i]);
+          if not IsLibraryReferenced(hLib) then begin
+            FreeLibrary(hLib);
+            FPluginLibHandles.Delete(i);
+          end;
+        end;
     end;
   end;
 

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: uTranEdPlugin.pas,v 1.4 2006-08-27 19:11:06 dale Exp $
+//  $Id: uTranEdPlugin.pas,v 1.5 2006-09-03 18:35:28 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -47,15 +47,19 @@ type
      // Translates selected entries using the supplied Translator interface
     procedure TranslateSelected(Translator: IDKLang_TranEd_Translator); stdcall;
      // Prop handlers
+    function  GetAppHandle: HWND; stdcall;
     function  GetDisplayFileName: WideString; stdcall;
     function  GetIsFileOpen: LongBool; stdcall;
     function  GetIsModified: LongBool; stdcall;
     function  GetLangIDSource: LANGID; stdcall;
     function  GetLangIDTranslation: LANGID; stdcall;
     function  GetLanguageSourceFileName: WideString; stdcall;
+    function  GetMainWindowHandle: HWND; stdcall;
     function  GetSelectedItemCount: Integer; stdcall;
     function  GetTranslationFileName: WideString; stdcall;
      // Props
+     // -- Application window's handle
+    property AppHandle: HWND read GetAppHandle;
      // -- Full path to translation file used to display original values. Empty string if there is no open language
      //    source file or no display file is used
     property DisplayFileName: WideString read GetTranslationFileName;
@@ -69,6 +73,8 @@ type
     property LangIDTranslation: LANGID read GetLangIDTranslation;
      // -- Full path to language source file. Empty string if there is no open language source file
     property LanguageSourceFileName: WideString read GetLanguageSourceFileName;
+     // -- Main program window's handle
+    property MainWindowHandle: HWND read GetMainWindowHandle;
      // -- Number of items currently selected
     property SelectedItemCount: Integer read GetSelectedItemCount;
      // -- Full path to translation file. Empty string if there is no open language source file or an unsaved

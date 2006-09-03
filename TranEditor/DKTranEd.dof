@@ -111,7 +111,7 @@ AutoIncBuild=1
 MajorVer=3
 MinorVer=0
 Release=0
-Build=20
+Build=29
 Debug=0
 PreRelease=0
 Special=0
@@ -122,7 +122,7 @@ CodePage=1252
 [Version Info Keys]
 CompanyName=DK Software
 FileDescription=DKLang Translation Editor
-FileVersion=3.0.0.20
+FileVersion=3.0.0.29
 InternalName=DKTranEd
 LegalCopyright=©2002-2006 Dmitry Kann
 LegalTrademarks=

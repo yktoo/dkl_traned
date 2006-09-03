@@ -1,5 +1,5 @@
 ﻿;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.17 2006-08-28 18:48:20 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.18 2006-09-03 18:35:27 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -212,7 +212,8 @@ SErrMsg_ConstNameMissing=Constant name missing
 SErrMsg_DuplicateCompName=Duplicate component name: "%s"
 SErrMsg_DuplicatePropID=Duplicate property ID: %d
 SErrMsg_DuplicatePropName=Duplicate property name: "%s"
-SErrMsg_FailedCreatingPlugins=Creating plugin(s) from the module "%s" failed:\n%s
+SErrMsg_FailedCreatingPlugin=Creating plugin with index %d from the module "%s" failed:\n%s
+SErrMsg_FailedGettingPluginCount=Getting plugin count from the module "%s" failed:\n%s
 SErrMsg_FileDoesntExist=File "%s" doesn't exist
 SErrMsg_InvalidCompName=Invalid component name: "%s"
 SErrMsg_LoadLangSourceFailed=Error loading language source:\nLine %d: %s

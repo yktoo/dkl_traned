@@ -46,7 +46,7 @@ inherited dSettings: TdSettings
     Top = 8
     Width = 577
     Height = 393
-    ActivePage = tsGeneral
+    ActivePage = tsPlugins
     Anchors = [akLeft, akTop, akRight, akBottom]
     TabOrder = 3
     object tsGeneral: TTntTabSheet
@@ -199,10 +199,12 @@ inherited dSettings: TdSettings
         TreeOptions.SelectionOptions = [toFullRowSelect]
         OnBeforeItemErase = tvPluginsBeforeItemErase
         OnExpanding = tvPluginsExpanding
+        OnGetCursor = tvPluginsGetCursor
         OnGetText = tvPluginsGetText
         OnPaintText = tvPluginsPaintText
         OnGetImageIndex = tvPluginsGetImageIndex
         OnInitNode = tvPluginsInitNode
+        OnMouseDown = tvPluginsMouseDown
         Columns = <
           item
             Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible]

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.25 2006-08-28 18:48:20 dale Exp $
+//  $Id: Main.pas,v 1.26 2006-09-03 18:35:27 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -343,12 +343,14 @@ type
     function  FilesClose: LongBool; stdcall;
     function  FilesOpen(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString): LongBool; stdcall;
     function  FilesSave(const wsFileName: WideString; bUnicode: LongBool): LongBool; stdcall;
+    function  GetAppHandle: HWND; stdcall;
     function  GetDisplayFileName: WideString; stdcall;
     function  GetIsFileOpen: LongBool; stdcall;
     function  GetIsModified: LongBool; stdcall;
     function  GetLangIDSource: LANGID; stdcall;
     function  GetLangIDTranslation: LANGID; stdcall;
     function  GetLanguageSourceFileName: WideString; stdcall;
+    function  GetMainWindowHandle: HWND; stdcall;
     function  GetSelectedItemCount: Integer; stdcall;
     function  GetTranslationFileName: WideString; stdcall;
     procedure FilesLoad(const wsLangSrcFileName, wsDisplayFileName, wsTranFileName: WideString); stdcall;
@@ -1287,6 +1289,11 @@ uses
     FRepository.SaveToFile(WideIncludeTrailingPathDelimiter(wsSetting_RepositoryDir)+SRepositoryFileName);
   end;
 
+  function TfMain.GetAppHandle: HWND;
+  begin
+    Result := Application.Handle;
+  end;
+
   function TfMain.GetDisplayFileName: WideString;
   begin
     Result := FDisplayFileName; 
@@ -1320,6 +1327,11 @@ uses
   function TfMain.GetLanguageSourceFileName: WideString;
   begin
     Result := FLanguageSourceFileName;
+  end;
+
+  function TfMain.GetMainWindowHandle: HWND;
+  begin
+    Result := Handle;
   end;
 
   function TfMain.GetNodeKind(Node: PVirtualNode): TNodeKind;

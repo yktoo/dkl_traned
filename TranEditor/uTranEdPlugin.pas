@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: uTranEdPlugin.pas,v 1.5 2006-09-03 18:35:28 dale Exp $
+//  $Id: uTranEdPlugin.pas,v 1.6 2006-09-12 13:29:40 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -20,6 +20,9 @@ type
    // Prototypes of procedures exported from a plugin DLL
    //===================================================================================================================
 
+   // Returns version of plugin subsystem module plugins implement. Should return value of
+   //   IDKLang_TranEd_PluginSubsystemVersion constant (declared below). Must be named 'DKLTE_GetPluginSubsystemVersion'
+  TDKLang_TranEd_GetPluginSubsystemVersionProc = procedure(out iVersion: Integer); stdcall;
    // Returns number of distinct plugins implemented in a module. Must be named 'DKLTE_GetPluginCount'
   TDKLang_TranEd_GetPluginCountProc = procedure(out iCount: Integer); stdcall;
    // Instantiates and returns plugin with a specific index (ranged 0..PluginCount-1). Must be named 'DKLTE_GetPlugin'.
@@ -167,6 +170,10 @@ type
      // -- If True, a separator is inserted before the item
     property StartsGroup: LongBool read GetStartsGroup;
   end;
+
+const
+   // Version of the plugin subsystem plugins implement
+  IDKLang_TranEd_PluginSubsystemVersion = 1;
 
 implementation
 

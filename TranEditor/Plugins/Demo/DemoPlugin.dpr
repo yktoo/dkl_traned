@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: DemoPlugin.dpr,v 1.4 2006-09-03 18:35:29 dale Exp $
+//  $Id: DemoPlugin.dpr,v 1.5 2006-09-12 13:29:40 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -121,6 +121,12 @@ type
    // Exported procs
    //===================================================================================================================
 
+  procedure DKLTE_GetPluginSubsystemVersion(out iVersion: Integer); stdcall;
+  begin
+     // We always should return this value
+    iVersion := IDKLang_TranEd_PluginSubsystemVersion;
+  end;
+
   procedure DKLTE_GetPluginCount(out iCount: Integer); stdcall;
   begin
      // Only one plugin is implemented here
@@ -137,6 +143,7 @@ type
   end;
 
 exports
+  DKLTE_GetPluginSubsystemVersion,
   DKLTE_GetPluginCount,
   DKLTE_GetPlugin;
 

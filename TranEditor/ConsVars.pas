@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.26 2006-09-03 18:35:25 dale Exp $
+//  $Id: ConsVars.pas,v 1.27 2006-09-12 13:29:40 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -238,11 +238,12 @@ type
     FFileName: WideString;
     FLibHandle: HMODULE;
     FPlugin: IDKLang_TranEd_Plugin;
+    FSubsystemVersion: Integer;
      // Prop handlers
     function  GetActionCount: Integer;
     function  GetActions(Index: Integer): IDKLang_TranEd_PluginAction;
   public
-    constructor Create(ALibHandle: HMODULE; const wsFileName: WideString; APlugin: IDKLang_TranEd_Plugin);
+    constructor Create(ALibHandle: HMODULE; const wsFileName: WideString; APlugin: IDKLang_TranEd_Plugin; iSubsystemVersion: Integer);
     destructor Destroy; override;
      // Props
      // -- Number of actions implemented by the plugin
@@ -255,6 +256,8 @@ type
     property LibHandle: HMODULE read FLibHandle;
      // -- Plugin instance
     property Plugin: IDKLang_TranEd_Plugin read FPlugin;
+     // -- Version of plugin subsystem the plugin implements
+    property SubsystemVersion: Integer read FSubsystemVersion;
   end;
 
    //===================================================================================================================
@@ -342,120 +345,121 @@ type
   TFindCallback = function(var Params: TSearchParams): Boolean of object;
 
 const
-  S_CRLF                           = #13#10;
-
-  SAppProductSID                   = 'dktraned';
-  SAppCaption                      = 'DKLang Translation Editor';
-  SAppVersion                      = 'v3.0';
-  SAppVersionSID                   = '3.0';
-  SAppEmail                        = 'devtools@narod.ru';
-
-  SRepositoryFileHeader            = SAppCaption+' '+SAppVersion+' Translation Repository File';
-
-  SLangSourceFileExt               = 'dklang';
-  SLangSourceFileDotExt            = '.'+SLangSourceFileExt;
-  STranFileExt                     = 'lng';
-  STranFileDefaultName             = 'untitled.'+STranFileExt;
-  SRepositoryFileName              = 'DKTranEd.dat';
-  SHelpFileName                    = 'dktraned.chm';
-
-  SPluginsRelativePath             = 'Plugins\';
+  S_CRLF                                    = #13#10;
+                                            
+  SAppProductSID                            = 'dktraned';
+  SAppCaption                               = 'DKLang Translation Editor';
+  SAppVersion                               = 'v3.0';
+  SAppVersionSID                            = '3.0';
+  SAppEmail                                 = 'devtools@narod.ru';
+                                            
+  SRepositoryFileHeader                     = SAppCaption+' '+SAppVersion+' Translation Repository File';
+                                            
+  SLangSourceFileExt                        = 'dklang';
+  SLangSourceFileDotExt                     = '.'+SLangSourceFileExt;
+  STranFileExt                              = 'lng';
+  STranFileDefaultName                      = 'untitled.'+STranFileExt;
+  SRepositoryFileName                       = 'DKTranEd.dat';
+  SHelpFileName                             = 'dktraned.chm';
+                                            
+  SPluginsRelativePath                      = 'Plugins\';
 
    // Exported proc names
-  SPlugin_GetPluginCountProcName   = 'DKLTE_GetPluginCount';
-  SPlugin_GetPluginProcName        = 'DKLTE_GetPlugin';
-  
-   // Registry paths
-  SRegKey_Root                     = 'Software\DKSoftware\DKTranEd';
-  SRegKey_Toolbars                 = SRegKey_Root+'\Toolbars';
-  SRegSection_MainWindow           = 'MainWindow';
-  SRegSection_MRUSource            = 'MRUSource';
-  SRegSection_MRUDisplay           = 'MRUDisplay';
-  SRegSection_MRUTranslation       = 'MRUTranslation';
-
-  SRegSection_Search               = 'Search';
-  SRegSection_MRUSearch            = SRegSection_Search+'\MRUSearch';
-  SRegSection_MRUReplace           = SRegSection_Search+'\MRUReplace';
-  SRegSection_MRUTargetApp         = 'MRUTargetApp';
-  SRegSection_Preferences          = 'Preferences';
-
-   // Language file relative path
-  SLanguageRelPath                 = 'Language';
-
-   // Main tree column indexes
-  IColIdx_Name                     = 0;
-  IColIdx_ID                       = 1;
-  IColIdx_Original                 = 2;
-  IColIdx_Translated               = 3;
-
-   // Status bar panel indexes
-  ISBPanelIdx_Main                 = 0;
-  ISBPanelIdx_CompCount            = 1;
-  ISBPanelIdx_PropCount            = 2;
-  ISBPanelIdx_ConstCount           = 3;
-  ISBPanelIdx_ReposEntryCount      = 4;
-
-   // Colors
-  CBack_CompEntry                  = $ffe5ec;  // Background color of component entry
-  CBack_PropEntry                  = clWindow; // Background color of property entry
-  CBack_ConstsNode                 = $eaeaff;  // Background color of 'Constants' node
-  CBack_ConstEntry                 = clWindow; // Background color of constant entry
-  CBack_UntranslatedValue          = $f0f0f0;  // Background color of untranslated item values
-  CLine_SearchMatch                = clRed;    // Border line color of search match node 
-  CBack_SearchMatch                = $c0c0ff;  // Background color of search match node
-
-  CBack_LightShade                 = $f0f0f0;
-
-   // ImageIndices                 
-  iiSettings                       =  0;
-  iiFolder                         =  1;
-  iiNew                            =  2;
-  iiOpen                           =  3;
-  iiSave                           =  4;
-  iiSaveAs                         =  5;
-  iiExit                           =  6;
-  iiAbout                          =  7;
-  iiJumpPrevUntranslated           =  8;
-  iiJumpNextUntranslated           =  9;
-  iiHelp                           = 10;
-  iiClose                          = 11;
-  iiNode_Comp                      = 12;
-  iiNode_Consts                    = 13;
-  iiNode_Prop                      = 14;
-  iiNode_Const                     = 15;
-  iiTranslated                     = 16;
-  iiUntranslated                   = 17;
-  iiJumpPrev                       = 18;
-  iiJumpNext                       = 19;
-  iiFind                           = 20;
-  iiFindNext                       = 21;
-  iiReplace                        = 22;
-  iiBookmark                       = 23;
-  iiBookmarkAdd                    = 24;
-  iiBookmarkDelete                 = 25;
-  iiBookmarkJump                   = 26;
-  iiCut                            = 27;
-  iiCopy                           = 28;
-  iiPaste                          = 29;
-  iiDKSoft                         = 30;
-  iiPlugin                         = 31;
-
-   // Help topics
-  IDH_iface_dlg_about              = 0010;
-  IDH_iface_dlg_diff_log           = 0020;
-  IDH_iface_dlg_find               = 0030;
-  IDH_iface_dlg_open_files         = 0040;
-  IDH_iface_dlg_prompt_replace     = 0050;
-  IDH_iface_dlg_settings           = 0060;
-  IDH_iface_dlg_tran_props         = 0070;
-  IDH_iface_main_menu              = 0071; 
-  IDH_iface_wnd_main               = 0080;
-  IDH_index                        = 0090;
-  IDH_main_contact_information     = 0100;
-  IDH_main_installation            = 0110;
-  IDH_main_license_agreement       = 0120;
-  IDH_main_package_contents        = 0130;
-  IDH_main_revision_history        = 0140;
+  SPlugin_GetPluginSubsystemVersionProcName = 'DKLTE_GetPluginSubsystemVersion';
+  SPlugin_GetPluginCountProcName            = 'DKLTE_GetPluginCount';
+  SPlugin_GetPluginProcName                 = 'DKLTE_GetPlugin';
+                                            
+   // Registry paths                        
+  SRegKey_Root                              = 'Software\DKSoftware\DKTranEd';
+  SRegKey_Toolbars                          = SRegKey_Root+'\Toolbars';
+  SRegSection_MainWindow                    = 'MainWindow';
+  SRegSection_MRUSource                     = 'MRUSource';
+  SRegSection_MRUDisplay                    = 'MRUDisplay';
+  SRegSection_MRUTranslation                = 'MRUTranslation';
+                                            
+  SRegSection_Search                        = 'Search';
+  SRegSection_MRUSearch                     = SRegSection_Search+'\MRUSearch';
+  SRegSection_MRUReplace                    = SRegSection_Search+'\MRUReplace';
+  SRegSection_MRUTargetApp                  = 'MRUTargetApp';
+  SRegSection_Preferences                   = 'Preferences';
+                                            
+   // Language file relative path           
+  SLanguageRelPath                          = 'Language';
+                                            
+   // Main tree column indexes              
+  IColIdx_Name                              = 0;
+  IColIdx_ID                                = 1;
+  IColIdx_Original                          = 2;
+  IColIdx_Translated                        = 3;
+                                            
+   // Status bar panel indexes              
+  ISBPanelIdx_Main                          = 0;
+  ISBPanelIdx_CompCount                     = 1;
+  ISBPanelIdx_PropCount                     = 2;
+  ISBPanelIdx_ConstCount                    = 3;
+  ISBPanelIdx_ReposEntryCount               = 4;
+                                            
+   // Colors                                
+  CBack_CompEntry                           = $ffe5ec;  // Background color of component entry
+  CBack_PropEntry                           = clWindow; // Background color of property entry
+  CBack_ConstsNode                          = $eaeaff;  // Background color of 'Constants' node
+  CBack_ConstEntry                          = clWindow; // Background color of constant entry
+  CBack_UntranslatedValue                   = $f0f0f0;  // Background color of untranslated item values
+  CLine_SearchMatch                         = clRed;    // Border line color of search match node 
+  CBack_SearchMatch                         = $c0c0ff;  // Background color of search match node
+                                            
+  CBack_LightShade                          = $f0f0f0;
+                                            
+   // ImageIndices                          
+  iiSettings                                =  0;
+  iiFolder                                  =  1;
+  iiNew                                     =  2;
+  iiOpen                                    =  3;
+  iiSave                                    =  4;
+  iiSaveAs                                  =  5;
+  iiExit                                    =  6;
+  iiAbout                                   =  7;
+  iiJumpPrevUntranslated                    =  8;
+  iiJumpNextUntranslated                    =  9;
+  iiHelp                                    = 10;
+  iiClose                                   = 11;
+  iiNode_Comp                               = 12;
+  iiNode_Consts                             = 13;
+  iiNode_Prop                               = 14;
+  iiNode_Const                              = 15;
+  iiTranslated                              = 16;
+  iiUntranslated                            = 17;
+  iiJumpPrev                                = 18;
+  iiJumpNext                                = 19;
+  iiFind                                    = 20;
+  iiFindNext                                = 21;
+  iiReplace                                 = 22;
+  iiBookmark                                = 23;
+  iiBookmarkAdd                             = 24;
+  iiBookmarkDelete                          = 25;
+  iiBookmarkJump                            = 26;
+  iiCut                                     = 27;
+  iiCopy                                    = 28;
+  iiPaste                                   = 29;
+  iiDKSoft                                  = 30;
+  iiPlugin                                  = 31;
+                                            
+   // Help topics                           
+  IDH_iface_dlg_about                       = 0010;
+  IDH_iface_dlg_diff_log                    = 0020;
+  IDH_iface_dlg_find                        = 0030;
+  IDH_iface_dlg_open_files                  = 0040;
+  IDH_iface_dlg_prompt_replace              = 0050;
+  IDH_iface_dlg_settings                    = 0060;
+  IDH_iface_dlg_tran_props                  = 0070;
+  IDH_iface_main_menu                       = 0071; 
+  IDH_iface_wnd_main                        = 0080;
+  IDH_index                                 = 0090;
+  IDH_main_contact_information              = 0100;
+  IDH_main_installation                     = 0110;
+  IDH_main_license_agreement                = 0120;
+  IDH_main_package_contents                 = 0130;
+  IDH_main_revision_history                 = 0140;
 
 var
    // Settings
@@ -1335,14 +1339,15 @@ type
    // TPluginEntry
    //===================================================================================================================
 
-  constructor TPluginEntry.Create(ALibHandle: HMODULE; const wsFileName: WideString; APlugin: IDKLang_TranEd_Plugin);
+  constructor TPluginEntry.Create(ALibHandle: HMODULE; const wsFileName: WideString; APlugin: IDKLang_TranEd_Plugin; iSubsystemVersion: Integer);
   var i: Integer;
   begin
     inherited Create;
-    FActions   := TInterfaceList.Create;
-    FLibHandle := ALibHandle;
-    FFileName  := wsFileName;
-    FPlugin    := APlugin;
+    FActions          := TInterfaceList.Create;
+    FLibHandle        := ALibHandle;
+    FFileName         := wsFileName;
+    FPlugin           := APlugin;
+    FSubsystemVersion := iSubsystemVersion;
      // Instantiate and store plugin's actions
     for i := 0 to FPlugin.ActionCount-1 do FActions.Add(FPlugin.Actions[i]);
   end;
@@ -1409,35 +1414,47 @@ type
   procedure TPluginHost.LoadPluginModule(const wsModuleFileName: WideString);
   var
     hLib: THandle;
+    GetPluginSubsystemVersionProc: TDKLang_TranEd_GetPluginSubsystemVersionProc;
     GetPluginCountProc: TDKLang_TranEd_GetPluginCountProc;
     GetPluginProc: TDKLang_TranEd_GetPluginProc;
-    i, iCount: Integer;
+    i, iCount, iSubsystemVersion: Integer;
     Plugin: IDKLang_TranEd_Plugin;
   begin
      // Try to load the library
     hLib := Tnt_LoadLibraryW(PWideChar(wsModuleFileName));
     if hLib<>0 then begin
        // Try to get proc addresses
-      GetPluginCountProc := GetProcAddress(hLib, SPlugin_GetPluginCountProcName);
-      GetPluginProc      := GetProcAddress(hLib, SPlugin_GetPluginProcName);
+      GetPluginSubsystemVersionProc := GetProcAddress(hLib, SPlugin_GetPluginSubsystemVersionProcName);
+      GetPluginCountProc            := GetProcAddress(hLib, SPlugin_GetPluginCountProcName);
+      GetPluginProc                 := GetProcAddress(hLib, SPlugin_GetPluginProcName);
        // If succeeded
-      if Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then begin
-        iCount := 0;
+      if Assigned(GetPluginSubsystemVersionProc) and Assigned(GetPluginCountProc) and Assigned(GetPluginProc) then begin
+         // Get plugin subsystem version
+        iSubsystemVersion := 0; 
         try
-           // Get the plugin count
-          GetPluginCountProc(iCount);
+          GetPluginSubsystemVersionProc(iSubsystemVersion);
         except
-          on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedGettingPluginCount', [wsModuleFileName, e.Message]));
+          on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedGettingPluginSubsystemVersion', [wsModuleFileName, e.Message]));
         end;
-         // Create and register plugins
-        for i := 0 to iCount-1 do begin
-          Plugin := nil;
+         // If version is appropriate
+        if iSubsystemVersion>0 then begin
+           // Get the plugin count
+          iCount := 0;
           try
-            GetPluginProc(i, FTranEdApplication, Plugin);
+            GetPluginCountProc(iCount);
           except
-            on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedCreatingPlugin', [i, wsModuleFileName, e.Message]));
+            on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedGettingPluginCount', [wsModuleFileName, e.Message]));
           end;
-          if Plugin<>nil then FPluginEntries.Add(TPluginEntry.Create(hLib, wsModuleFileName, Plugin));
+           // Create and register plugins
+          for i := 0 to iCount-1 do begin
+            Plugin := nil;
+            try
+              GetPluginProc(i, FTranEdApplication, Plugin);
+            except
+              on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedCreatingPlugin', [i, wsModuleFileName, e.Message]));
+            end;
+            if Plugin<>nil then FPluginEntries.Add(TPluginEntry.Create(hLib, wsModuleFileName, Plugin, iSubsystemVersion));
+          end;
         end;
       end;
     end;

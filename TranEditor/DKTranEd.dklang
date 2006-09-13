@@ -1,5 +1,5 @@
 ﻿;***********************************************************************************************************************
-;  $Id: DKTranEd.dklang,v 1.19 2006-09-12 13:29:40 dale Exp $
+;  $Id: DKTranEd.dklang,v 1.20 2006-09-13 14:38:06 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;  DKLang Translation Editor
 ;  Copyright 2002-2006 DK Software, http://www.dk-soft.org/
@@ -230,7 +230,7 @@ SMsg_NoSearchResults=String "%s" wasn't found.
 SMsg_PluginAuthor=Author:
 SMsg_PluginCopyright=Copyright:
 SMsg_PluginDescription=Description:
-SMsg_PluginVersion=Version:
+SMsg_PluginVersion=Version (Subsystem version):
 SMsg_PluginWebsite=Website:
 SMsg_PromptReplace=Replace this occurence of "%s"?
 SMsg_ReplacedInfo=Replaced %d occurences of "%s".

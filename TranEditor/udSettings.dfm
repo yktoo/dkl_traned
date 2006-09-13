@@ -193,6 +193,7 @@ inherited dSettings: TdSettings
         Header.Font.Name = 'MS Shell Dlg 2'
         Header.Font.Style = []
         Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+        HintMode = hmTooltip
         Images = fMain.ilMain
         TabOrder = 0
         TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages]

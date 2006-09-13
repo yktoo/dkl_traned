@@ -1,19 +1,19 @@
 ;***********************************************************************************************************************
-;   $Id: dktraned.iss,v 1.1 2006-08-05 21:42:34 dale Exp $
+;   $Id: dktraned.iss,v 1.2 2006-09-13 14:38:07 dale Exp $
 ;-----------------------------------------------------------------------------------------------------------------------
 ;   DKLang Translation Editor
 ;   Copyright 2002-2006 DK Software, http://www.dk-soft.org/
 ;***********************************************************************************************************************
 [Setup]
-  MinVersion             = 4.0,4.0
   AppName                = DKLang Translation Editor
-  AppVersion             = 3.0
-  AppVerName             = DKLang Translation Editor 3.0
+  AppId                  = DKLang Translation Editor
+  AppVerName             = {cm:NameAndVersion,DKLang Translation Editor,3.1}
+  AppVersion             = 3.1
   AppCopyright           = Copyright ©2002-2006 DK Software
   AppPublisher           = DK Software
   AppPublisherURL        = http://www.dk-soft.org/
   AppSupportURL          = http://www.dk-soft.org/redir.php?action=support
-  AppUpdatesURL          = http://www.dk-soft.org/redir.php?action=vercheck&product=dktraned&version=3.0
+  AppUpdatesURL          = http://www.dk-soft.org/redir.php?action=vercheck&product=dktraned&version=3.1
   AppMutex               = DK_TRAN_ED_MUTEX
   AllowNoIcons           = yes
   ChangesAssociations    = yes
@@ -21,11 +21,11 @@
   DefaultDirName         = {pf}\DK Software\DKLang Translation Editor
   DefaultGroupName       = DKLang Translation Editor
   OutputDir              = .
-  OutputBaseFilename     = dktraned-3.0-setup
-  VersionInfoVersion     = 3.0
-  VersionInfoTextVersion = 3.0
-;  WizardImageFile        = SetupImage.bmp
-;  WizardSmallImageFile   = SetupSmallImage.bmp
+  OutputBaseFilename     = dktraned-3.1-setup
+  VersionInfoVersion     = 3.1
+  VersionInfoTextVersion = 3.1
+  WizardImageFile        = SetupImage.bmp
+  WizardSmallImageFile   = SetupImageSmall.bmp
   ; -- Compression
   SolidCompression       = yes
   Compression            = lzma

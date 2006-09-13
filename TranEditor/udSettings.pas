@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: udSettings.pas,v 1.11 2006-09-03 18:35:28 dale Exp $
+//  $Id: udSettings.pas,v 1.12 2006-09-13 14:38:06 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -233,7 +233,7 @@ const
         IColIdx_Plugins_Value:
           if Supports(PE.Plugin, IDKLang_TranEd_PluginInfo, PI) then
             case Node.Index of
-              IPluginInfoEntryIdx_Version:     CellText := PI.InfoVersionText;
+              IPluginInfoEntryIdx_Version:     CellText := WideFormat('%s (%d)', [PI.InfoVersionText, PE.SubsystemVersion]);
               IPluginInfoEntryIdx_Author:      CellText := PI.InfoAuthor;
               IPluginInfoEntryIdx_Copyright:   CellText := PI.InfoCopyright;
               IPluginInfoEntryIdx_Description: CellText := PI.InfoDescription;

@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.26 2006-09-03 18:35:27 dale Exp $
+//  $Id: Main.pas,v 1.27 2006-09-13 14:38:06 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -1402,12 +1402,22 @@ uses
   end;
 
   procedure TfMain.mCurTranEntryChange(Sender: TObject);
+  var
+    n: PVirtualNode;
+    wsValue: WideString;
   begin
     if FUpdatingCurEntryEditor then Exit;
     ResetSearchMatch;
     FSettingTranTextFromEditor := True;
     try
-      tvMain.Text[tvMain.FocusedNode, IColIdx_Translated] := EncodeControlChars(mCurTranEntry.Text);
+       // Escape control chars 
+      wsValue := EncodeControlChars(mCurTranEntry.Text);
+       // Apply text to all selected nodes
+      n := tvMain.GetFirstSelected;
+      while n<>nil do begin
+        if GetNodeKind(n) in [nkProp, nkConst] then tvMain.Text[n, IColIdx_Translated] := wsValue;
+        n := tvMain.GetNextSelected(n);
+      end;
     finally
       FSettingTranTextFromEditor := False;
     end;
@@ -1617,9 +1627,17 @@ uses
 
   procedure TfMain.tvMainEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
   begin
-     // It is allowed to edit translated values only
-    Allowed := (GetNodeKind(Node) in [nkProp, nkConst]) and (Column=IColIdx_Translated);
-    if Allowed then ResetSearchMatch;
+    Allowed := False;
+     // If single property or constant is selected
+    if (Sender.SelectedCount=1) and (GetNodeKind(Node) in [nkProp, nkConst]) then begin
+       // It is allowed to edit translated values only
+      if Column=IColIdx_Translated then begin
+        ResetSearchMatch;
+        Allowed := True;
+       // Re-invoke editing for the correct column 
+      end else
+        tvMain.EditNode(Node, IColIdx_Translated);
+    end;
   end;
 
   procedure TfMain.tvMainGetImageIndex(Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
@@ -1780,35 +1798,63 @@ uses
   end;
 
   procedure TfMain.UpdateCurEntry;
+  type TMultiValueState = (mvsNone, mvsConsistent, mvsMixed);
   var
     p: PNodeData;
+    n: PVirtualNode;
     wsSrc, wsTran: WideString;
-    bEnable: Boolean;
-  begin
-    wsSrc  := '';
-    wsTran := '';
-    bEnable := False;
-    p := tvMain.GetNodeData(tvMain.FocusedNode);
-    if p<>nil then begin
-      bEnable := p.Kind in [nkProp, nkConst];
-      case p.Kind of
-        nkProp: begin
-          wsSrc  := p.pSrcProp.wsValue;
-          wsTran := p.pTranProp.wsValue;
+    SrcValueState, TranValueState: TMultiValueState;
+
+     // Updates "consolidated" value and its state from current value
+    procedure UpdateValue(var wsValue: WideString; const wsCurrentValue: WideString; var State: TMultiValueState);
+    begin
+      case State of
+        mvsNone: begin
+          State   := mvsConsistent;
+          wsValue := wsCurrentValue;
         end;
+        mvsConsistent: if wsValue<>wsCurrentValue then State := mvsMixed;
+        mvsMixed: {nothing to do};
+      end;
+    end;
+
+     // Updates value editor memo
+    procedure UpdateValueEditor(const wsValue: WideString; State: TMultiValueState; Memo: TTntMemo);
+    begin
+      if State=mvsConsistent then Memo.Text := wsValue else Memo.Clear;
+      EnableWndCtl(Memo, State in [mvsConsistent, mvsMixed]);
+    end;
+
+  begin
+     // Initialize values
+    wsSrc          := '';
+    wsTran         := '';
+    SrcValueState  := mvsNone;
+    TranValueState := mvsNone;
+     // Iterate through selected nodes
+    n := tvMain.GetFirstSelected;
+    while n<>nil do begin
+      p := tvMain.GetNodeData(n);
+      case p.Kind of
+         // Property
+        nkProp: begin
+          UpdateValue(wsSrc,  p.pSrcProp.wsValue,  SrcValueState);
+          UpdateValue(wsTran, p.pTranProp.wsValue, TranValueState);
+        end;
+         // Constant
         nkConst: begin
-          wsSrc  := p.pSrcConst.wsDefValue;
-          wsTran := p.pTranConst.wsDefValue;
+          UpdateValue(wsSrc,  p.pSrcConst.wsDefValue,  SrcValueState);
+          UpdateValue(wsTran, p.pTranConst.wsDefValue, TranValueState);
         end;
       end;
+       // Switch to the next node
+      n := tvMain.GetNextSelected(n);
     end;
      // Update curent entry editors
     FUpdatingCurEntryEditor := True;
     try
-      mCurSrcEntry.Text  := wsSrc;
-      mCurTranEntry.Text := wsTran;
-      EnableWndCtl(mCurSrcEntry,  bEnable);
-      EnableWndCtl(mCurTranEntry, bEnable);
+      UpdateValueEditor(wsSrc,  SrcValueState,  mCurSrcEntry);
+      UpdateValueEditor(wsTran, TranValueState, mCurTranEntry);
     finally
       FUpdatingCurEntryEditor := False;
     end;

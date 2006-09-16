@@ -2,14 +2,14 @@ inherited dSettings: TdSettings
   BorderStyle = bsDialog
   Caption = 'Program settings'
   ClientHeight = 435
-  ClientWidth = 592
+  ClientWidth = 632
   DesignSize = (
-    592
+    632
     435)
   PixelsPerInch = 96
   TextHeight = 13
   object bOK: TTntButton
-    Left = 348
+    Left = 388
     Top = 405
     Width = 75
     Height = 23
@@ -21,7 +21,7 @@ inherited dSettings: TdSettings
     OnClick = bOKClick
   end
   object bCancel: TTntButton
-    Left = 428
+    Left = 468
     Top = 405
     Width = 75
     Height = 23
@@ -32,7 +32,7 @@ inherited dSettings: TdSettings
     TabOrder = 1
   end
   object bHelp: TTntButton
-    Left = 508
+    Left = 548
     Top = 405
     Width = 75
     Height = 23
@@ -44,7 +44,7 @@ inherited dSettings: TdSettings
   object pcMain: TTntPageControl
     Left = 8
     Top = 8
-    Width = 577
+    Width = 617
     Height = 393
     ActivePage = tsPlugins
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -52,18 +52,18 @@ inherited dSettings: TdSettings
     object tsGeneral: TTntTabSheet
       Caption = 'General'
       DesignSize = (
-        569
+        609
         365)
       object gbRepository: TGroupBox
         Left = 8
         Top = 4
-        Width = 553
+        Width = 593
         Height = 125
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Repository'
         TabOrder = 0
         DesignSize = (
-          553
+          593
           125)
         object lReposPath: TTntLabel
           Left = 12
@@ -81,7 +81,7 @@ inherited dSettings: TdSettings
           Caption = '(in this case you'#39'll have to assign shortcuts manually later)'
         end
         object bBrowseReposPath: TTntButton
-          Left = 466
+          Left = 506
           Top = 36
           Width = 75
           Height = 23
@@ -93,7 +93,7 @@ inherited dSettings: TdSettings
         object eReposPath: TTntEdit
           Left = 12
           Top = 36
-          Width = 450
+          Width = 490
           Height = 21
           Anchors = [akLeft, akTop, akRight]
           Color = clBtnFace
@@ -103,7 +103,7 @@ inherited dSettings: TdSettings
         object cbRemovePrefix: TTntCheckBox
           Left = 12
           Top = 64
-          Width = 530
+          Width = 570
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = 
@@ -115,7 +115,7 @@ inherited dSettings: TdSettings
         object cbAutoAddStrings: TTntCheckBox
           Left = 12
           Top = 100
-          Width = 530
+          Width = 570
           Height = 17
           Anchors = [akLeft, akTop, akRight]
           Caption = '&Automatically add new translations to the Repository'
@@ -126,7 +126,7 @@ inherited dSettings: TdSettings
       object gbInterface: TGroupBox
         Left = 8
         Top = 132
-        Width = 553
+        Width = 593
         Height = 81
         Anchors = [akLeft, akTop, akRight]
         Caption = 'Interface'
@@ -167,7 +167,7 @@ inherited dSettings: TdSettings
       object cbIgnoreEncodingMismatch: TTntCheckBox
         Left = 8
         Top = 220
-        Width = 553
+        Width = 593
         Height = 17
         Anchors = [akLeft, akTop, akRight]
         Caption = 
@@ -182,7 +182,7 @@ inherited dSettings: TdSettings
       object tvPlugins: TVirtualStringTree
         Left = 0
         Top = 0
-        Width = 569
+        Width = 609
         Height = 365
         Align = alClient
         Colors.GridLineColor = clBtnShadow

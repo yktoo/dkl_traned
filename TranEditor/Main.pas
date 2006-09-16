@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: Main.pas,v 1.27 2006-09-13 14:38:06 dale Exp $
+//  $Id: Main.pas,v 1.28 2006-09-16 11:58:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -13,7 +13,7 @@ uses
   TntSysUtils, TntDialogs, TntForms, DKLang, ConsVars, uTranEdPlugin, 
   DKLTranEdFrm, Menus, TB2Item, TBX, TB2MRU, Placemnt, ImgList, ActnList,
   TntActnList, StdCtrls, TntStdCtrls, TBXDkPanels, VirtualTrees, ExtCtrls,
-  TntExtCtrls, TBXStatusBars, TB2Dock, TB2Toolbar;
+  TntExtCtrls, TBXStatusBars, TB2Dock, TB2Toolbar, ComCtrls;
 
 type
    // Tree node kind
@@ -201,6 +201,7 @@ type
     tbSepTranProps: TTBXSeparatorItem;
     tvBookmarks: TVirtualStringTree;
     tvMain: TVirtualStringTree;
+    pbProgress: TProgressBar;
     procedure aaAbout(Sender: TObject);
     procedure aaAddToRepository(Sender: TObject);
     procedure aaAutoTranslate(Sender: TObject);
@@ -362,7 +363,9 @@ type
     procedure CMFocusChanged(var Msg: TMessage); message CM_FOCUSCHANGED;
      // Prop handlers
     function  GetDisplayTranFileName: WideString;
+    function  GetProgress: Single;
     procedure SetModified(Value: Boolean);
+    procedure SetProgress(Value: Single);
     procedure SetTranslationFileName(const Value: WideString);
   protected
     procedure DoCreate; override;
@@ -377,6 +380,9 @@ type
     property DisplayTranFileName: WideString read GetDisplayTranFileName;
      // -- True, if editor contents was saved since last save
     property Modified: Boolean read FModified write SetModified;
+     // -- Progress displayed in the progress bar located at the status bar (0..1). If Progress<0, progress bar gets
+     //    hidden
+    property Progress: Single read GetProgress write SetProgress;
      // -- Name of the language source file currently open
     property LanguageSourceFileName: WideString read FLanguageSourceFileName;
      // -- Name of the translation file currently open
@@ -699,6 +705,8 @@ uses
       for i := 1 to 3 do UseFile(ParamStr(i));
       FilesOpen(sSrcFile, sDisplFile, sTranFile);
     end;
+     // Hide the progressbar
+    Progress := -1.0; 
   end;
 
   procedure TfMain.ApplySettings;
@@ -805,9 +813,9 @@ uses
     FreeAndNil(FDisplayTranslations);
     FreeAndNil(FTranslations);
     FBookmarks.Clear;
-    FModified        := False;
-    FLanguageSourceFileName  := '';
-    FDisplayFileName := '';
+    FModified               := False;
+    FLanguageSourceFileName := '';
+    FDisplayFileName        := '';
     FTranslationFileName    := '';
     if not FIsDestroying then begin
       UpdateCaption;
@@ -835,7 +843,7 @@ uses
      // Create bookmark list
     FBookmarks := TStringList.Create;
      // Create plugin host object
-    FPluginHost := TPluginHost.Create(Self); 
+    FPluginHost := TPluginHost.Create(Self);
      // Update the tree
     UpdateTree;
   end;
@@ -949,9 +957,9 @@ uses
         iCntRemovedComps, iCntRemovedProps, iCntRemovedConsts,
         iCntComps, iCntProps, iCntConsts);
        // Update the properties
-      FModified        := False;
-      FLanguageSourceFileName  := wsLangSrcFileName;
-      FDisplayFileName := wsDisplayFileName;
+      FModified               := False;
+      FLanguageSourceFileName := wsLangSrcFileName;
+      FDisplayFileName        := wsDisplayFileName;
       FTranslationFileName    := wsTranFileName;
       MRUSource.Add(FLanguageSourceFileName);
       MRUDisplay.Add(FDisplayFileName);
@@ -1350,6 +1358,11 @@ uses
     end;
   end;
 
+  function TfMain.GetProgress: Single;
+  begin
+    if pbProgress.Visible then Result := pbProgress.Position/pbProgress.Max else Result := -1.0; 
+  end;
+
   function TfMain.GetSelectedItemCount: Integer;
   begin
     Result := tvMain.SelectedCount;
@@ -1486,6 +1499,18 @@ uses
     end;
   end;
 
+  procedure TfMain.SetProgress(Value: Single);
+  begin
+    if Value<0 then
+      pbProgress.Hide
+    else begin
+      Application.Hint := '';
+      pbProgress.Position := Trunc(Value*pbProgress.Max);
+      pbProgress.Show;
+      sbarMain.Update;
+    end;
+  end;
+
   procedure TfMain.SetTranslationFileName(const Value: WideString);
   begin
     if FTranslationFileName<>Value then begin
@@ -1495,15 +1520,32 @@ uses
   end;
 
   procedure TfMain.TranslateAllNodes(bSelectedOnly: Boolean; Translator: IDKLang_TranEd_Translator);
-  var n: PVirtualNode;
+  var
+    n: PVirtualNode;
+    iCount, iCurNodeIndex: Integer;
   begin
-    if bSelectedOnly then n := tvMain.GetFirstSelected else n := tvMain.GetFirst;
+     // Determine number of nodes to process and node to start from
+    if bSelectedOnly then begin
+      iCount := tvMain.SelectedCount;
+      n := tvMain.GetFirstSelected;
+    end else begin
+      iCount := tvMain.TotalCount;
+      n := tvMain.GetFirst;
+    end;
+     // Iterate through nodes
+    iCurNodeIndex := 0; 
     while n<>nil do begin
+       // Update the progressbar
+      Progress := iCurNodeIndex/iCount;
+       // Process the node
       TranslateNode(n, Translator);
+       // Move to the next node
+      Inc(iCurNodeIndex);
       if bSelectedOnly then n := tvMain.GetNextSelected(n) else n := tvMain.GetNext(n);
     end;
      // Update display
     tvMain.Invalidate;
+    UpdateEntryProps;
     UpdateStatusBar;
   end;
 

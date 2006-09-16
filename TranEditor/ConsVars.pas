@@ -1,5 +1,5 @@
 //**********************************************************************************************************************
-//  $Id: ConsVars.pas,v 1.27 2006-09-12 13:29:40 dale Exp $
+//  $Id: ConsVars.pas,v 1.28 2006-09-16 11:58:34 dale Exp $
 //----------------------------------------------------------------------------------------------------------------------
 //  DKLang Translation Editor
 //  Copyright ©DK Software, http://www.dk-soft.org/
@@ -1437,7 +1437,7 @@ type
           on e: Exception do ConsVars.Error(DKLangConstW('SErrMsg_FailedGettingPluginSubsystemVersion', [wsModuleFileName, e.Message]));
         end;
          // If version is appropriate
-        if iSubsystemVersion>0 then begin
+        if (iSubsystemVersion>0) and (iSubsystemVersion<=IDKLang_TranEd_PluginSubsystemVersion) then begin
            // Get the plugin count
           iCount := 0;
           try

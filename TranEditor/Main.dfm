@@ -1,5 +1,9 @@
 inherited fMain: TfMain
   Caption = 'DKLang Translation Editor'
+  ClientHeight = 435
+  ClientWidth = 632
+  Constraints.MinHeight = 300
+  Constraints.MinWidth = 500
   Icon.Data = {
     0000010008001010100000000000280100008600000010100000010008006805
     0000AE010000101000000100180068030000160700002020100000000000E802
@@ -453,7 +457,7 @@ inherited fMain: TfMain
   object dkTop: TTBXDock
     Left = 0
     Top = 0
-    Width = 688
+    Width = 632
     Height = 26
     PopupMenu = pmView
     object tbMenu: TTBXToolbar
@@ -688,17 +692,17 @@ inherited fMain: TfMain
   end
   object dkBottom: TTBXDock
     Left = 0
-    Top = 420
-    Width = 688
+    Top = 404
+    Width = 632
     Height = 9
     PopupMenu = pmView
     Position = dpBottom
   end
   object dkRight: TTBXDock
-    Left = 679
+    Left = 623
     Top = 33
     Width = 9
-    Height = 255
+    Height = 239
     PopupMenu = pmView
     Position = dpRight
   end
@@ -706,14 +710,14 @@ inherited fMain: TfMain
     Left = 0
     Top = 33
     Width = 9
-    Height = 255
+    Height = 239
     PopupMenu = pmView
     Position = dpLeft
   end
   object sbarMain: TTBXStatusBar
     Left = 0
-    Top = 429
-    Width = 688
+    Top = 413
+    Width = 632
     Panels = <
       item
         StretchPriority = 1
@@ -746,15 +750,27 @@ inherited fMain: TfMain
         Hint = 'Number of Repository entries'
         Size = 150
         Tag = 0
+      end
+      item
+        Tag = 0
       end>
     PopupMenu = pmView
     UseSystemFont = False
+    object pbProgress: TProgressBar
+      Left = 4
+      Top = 4
+      Width = 200
+      Height = 16
+      Max = 1000
+      TabOrder = 0
+      Visible = False
+    end
   end
   object pMain: TTntPanel
     Left = 141
     Top = 33
-    Width = 531
-    Height = 255
+    Width = 475
+    Height = 239
     Align = alClient
     BevelOuter = bvNone
     Color = clAppWorkSpace
@@ -763,8 +779,8 @@ inherited fMain: TfMain
     object tvMain: TVirtualStringTree
       Left = 0
       Top = 0
-      Width = 531
-      Height = 255
+      Width = 475
+      Height = 239
       Align = alClient
       AutoScrollDelay = 150
       AutoScrollInterval = 100
@@ -808,7 +824,7 @@ inherited fMain: TfMain
         item
           Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAutoSpring]
           Position = 0
-          Width = 156
+          Width = 138
           WideText = 'Component/Property/Constant'
         end
         item
@@ -820,13 +836,13 @@ inherited fMain: TfMain
         item
           Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAutoSpring]
           Position = 2
-          Width = 166
+          Width = 148
           WideText = 'Default value'
         end
         item
           Options = [coDraggable, coEnabled, coParentBidiMode, coParentColor, coResizable, coShowDropMark, coVisible, coAutoSpring]
           Position = 3
-          Width = 166
+          Width = 148
           WideText = 'Translated value'
         end>
       WideDefaultText = ''
@@ -835,7 +851,7 @@ inherited fMain: TfMain
   object mdkTop: TTBXMultiDock
     Left = 0
     Top = 26
-    Width = 688
+    Width = 632
     Height = 7
     PopupMenu = pmView
   end
@@ -843,7 +859,7 @@ inherited fMain: TfMain
     Left = 9
     Top = 33
     Width = 132
-    Height = 255
+    Height = 239
     PopupMenu = pmView
     Position = dpLeft
     object dpEntryProps: TTBXDockablePanel
@@ -914,7 +930,7 @@ inherited fMain: TfMain
         Left = 0
         Top = 22
         Width = 128
-        Height = 109
+        Height = 93
         Align = alClient
         DefaultNodeHeight = 16
         Header.AutoSizeIndex = 0
@@ -966,17 +982,17 @@ inherited fMain: TfMain
     end
   end
   object mdkRight: TTBXMultiDock
-    Left = 672
+    Left = 616
     Top = 33
     Width = 7
-    Height = 255
+    Height = 239
     PopupMenu = pmView
     Position = dpRight
   end
   object mdkBottom: TTBXMultiDock
     Left = 0
-    Top = 288
-    Width = 688
+    Top = 272
+    Width = 632
     Height = 132
     PopupMenu = pmView
     Position = dpBottom
@@ -990,7 +1006,7 @@ inherited fMain: TfMain
       object mCurSrcEntry: TTntMemo
         Left = 0
         Top = 0
-        Width = 314
+        Width = 286
         Height = 128
         Align = alClient
         PopupMenu = pmCurSrcEntry
@@ -1001,16 +1017,16 @@ inherited fMain: TfMain
       end
     end
     object dpCurTranEntry: TTBXDockablePanel
-      Left = 336
+      Left = 308
       Top = 0
       Caption = 'Current translated entry'
-      DockPos = 336
+      DockPos = 308
       SupportedDocks = [dkMultiDock]
       TabOrder = 1
       object mCurTranEntry: TTntMemo
         Left = 0
         Top = 0
-        Width = 314
+        Width = 286
         Height = 128
         Align = alClient
         PopupMenu = pmCurTranEntry
@@ -2119,7 +2135,7 @@ inherited fMain: TfMain
     Left = 244
     Top = 156
     LangData = {
-      0500664D61696E00019C0000000500646B546F700000060074624D656E750101
+      0500664D61696E00019D0000000500646B546F700000060074624D656E750101
       00000002000000070043617074696F6E000600736D46696C6501010000000300
       0000070043617074696F6E000A00694E65774F724F70656E0000050069536176
       6500000700695361766541730000060069436C6F7365000008006946696C6553
@@ -2250,7 +2266,8 @@ inherited fMain: TfMain
       040062437574000008007462536570437574000005006148656C700103000000
       8F000000070043617074696F6E8E000000080043617465676F72799000000004
       0048696E740005006948656C70000012006769546F6F6C73506C7567696E4974
-      656D730000140069536570546F6F6C73506C7567696E4974656D730000}
+      656D730000140069536570546F6F6C73506C7567696E4974656D7300000A0070
+      6250726F67726573730000}
   end
   object MRUSearch: TTBMRUList
     AddFullPath = False

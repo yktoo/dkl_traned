@@ -1,9 +1,9 @@
-ï»¿TargetApplication=DKTranEd v2.4
+TargetApplication=DKTranEd v2.4
 Author=Petran Liket
 SourceLANGID=1033
 LANGID=1043
 Generator=DKLang Translation Editor v2.4
-LastModified=2006-07-28 11:01:03
+LastModified=2004-12-05 14:04:55
 
 [dAbout]
 00000001=Over
@@ -24,7 +24,7 @@ LastModified=2006-07-28 11:01:03
 00000004=Bladeren...
 00000005=Bladeren...
 00000006=Gebruik het volgende taalbestand om de elementen in te vullen (i.p.v. het bronbestand):
-00000007=CreeÃ«r nieuwe vertaling
+00000007=Creeër nieuwe vertaling
 00000008=Open een bestaand taalbestand:
 00000009=OK
 00000010=Annuleren
@@ -74,7 +74,7 @@ LastModified=2006-07-28 11:01:03
 00000024=Aantal elementen in het woordenboek
 00000025=Bestand
 00000026=Nieuw of openen...
-00000027=Nieuw of open...|CreeÃ«r nieuwe vertaling of open een bestaande
+00000027=Nieuw of open...|Creeër nieuwe vertaling of open een bestaande
 00000028=Bestand
 00000029=Opslaan
 00000030=Opslaan|Sla de huidige vertaling op

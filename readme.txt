@@ -1,17 +1,18 @@
 DKLang Translation Editor
 =========================
 
-This is a free tool for creating and editing DKLang Localization Package using
-application translations.
+This is a free GUI tool for creating and editing translation files (.lng) for 
+applications using the DKLang Localization Package
+(https://github.com/yktoo/dklang).
 
 Program's features:
 
   - Translation using a dictionary (so-called Translation Repository).
-  - Automatic tracking of source and translation discrepancies. On project open
-    a difference log is generated showing you the entries added to or deleted
-    from the translation. An option for autotranslation of new entries using the
-    Translation Repository is also available.
-  - A possibility of using an additional translation file to display the source
-    values from. For example, when you wish to make a translation but it is more
-    convenient to translate not from the original language but from another one,
-    more close to the destination language.
+  - Automatic tracking of source and translation mismatches. A difference log is
+    generated when you open a project. This log shows you added and deleted 
+    entries as compared to the language source file. New entries can then be
+    automatically translated with the Translation Repository.
+  - An extra translation file for displaying strings can be used. For example,
+    when you translate into Ukrainian it would be more convenient to use Russian
+    as a reference rather than English, given a Russian translation is already
+    available.

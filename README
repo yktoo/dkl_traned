@@ -1,7 +1,8 @@
 DKLang Translation Editor
 =========================
 
-This is a free tool for creating and editing DKLang Localization Package using
-application translations.
+This is a free GUI tool for creating and editing translation files (.lng) for
+applications using the DKLang Localization Package
+(https://github.com/yktoo/dklang)
 
 For details see http://yktoo.com/software/dklangTraned

@@ -9,7 +9,7 @@
   AppId                  = DKLang Translation Editor
   AppVerName             = {cm:NameAndVersion,DKLang Translation Editor,3.1}
   AppVersion             = 3.1
-  AppCopyright           = Copyright ©2002-2006 DK Software
+  AppCopyright           = Copyright пїЅ2002-2006 DK Software
   AppPublisher           = DK Software
   AppPublisherURL        = http://www.dk-soft.org/
   AppSupportURL          = http://www.dk-soft.org/redir.php?action=support
@@ -75,9 +75,14 @@ en.IconsAllUsers=For all users
 en.IconsCurUser=For the current user only
 
 ; Russian
-ru.Help=Справка по DKLang Translation Editor
-ru.IconsAllUsers=Для всех пользователей
-ru.IconsCurUser=Только для текущего пользователя
+ru.Help=пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ DKLang Translation Editor
+ru.IconsAllUsers=пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+ru.IconsCurUser=пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+
+; Italian
+it.Help=Guida in linea DKLang Translation Editor
+it.IconsAllUsers=Per tutti gli utenti
+it.IconsCurUser=Solo per l'utente corrente
 
 [Code]
 

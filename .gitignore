@@ -12,3 +12,4 @@
 *.~*~
 __history
 bin/*.zip
+.idea/
